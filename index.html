@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Falcon Timepieces | Luxury Watches Dubai</title>
-    <link rel="icon" type="image/svg+xml" href="falcon-favicon.png">
+    <title>Mainspring Dubai | Your Personal Guide to Better Watches</title>
+    <link rel="icon" type="image/svg+xml" href="mainspring-favicon.png">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lato:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lato:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -22,15 +22,17 @@
 
     <style>
         :root {
-            --primary-green: #006039;
-            --primary-green-dark: #013822;
-            --cream: #f5f0e6;
-            --cream-dark: #e8e0d0;
-            --black: #333333;
+            --primary-green: #1a1a1a;
+            --primary-green-dark: #0d0d0d;
+            --cream: #f5f1eb;
+            --cream-dark: #e0d8cc;
+            --black: #222222;
             --white: #ffffff;
-            --light-gray: #f8f8f8;
-            --gray: #888888;
-            --gold: #c5a059;
+            --light-gray: #faf9f7;
+            --gray: #777777;
+            --gold: #b8956a;
+            --charcoal: #2c2c2c;
+            --warm-white: #fefcf9;
             --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -46,7 +48,7 @@
 
         body {
             font-family: 'Lato', sans-serif;
-            background-color: var(--white);
+            background-color: var(--warm-white);
             color: var(--primary-green);
             line-height: 1.6;
             overflow-x: hidden;
@@ -54,8 +56,8 @@
 
         /* Typography */
         h1, h2, h3, h4 {
-            font-family: 'Playfair Display', serif;
-            font-weight: 500;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
         }
 
         .logo-text {
@@ -65,21 +67,22 @@
             text-transform: uppercase;
         }
 
-        /* Header */
+        /* Header - Mainspring: Left-aligned logo with inline nav */
         .header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 1000;
-            padding: 20px 40px;
+            padding: 0 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(26, 26, 26, 0.97);
+            backdrop-filter: blur(12px);
             transition: var(--transition);
-            border-bottom: 1px solid transparent;
+            border-bottom: 1px solid rgba(184, 149, 106, 0.15);
+            height: 70px;
         }
 
         /* Global search overlay */
@@ -133,8 +136,8 @@
         }
 
         .header.scrolled {
-            border-bottom: 1px solid var(--cream-dark);
-            padding: 15px 40px;
+            border-bottom: 1px solid rgba(184, 149, 106, 0.25);
+            background: rgba(20, 20, 20, 0.98);
         }
 
         .header-left {
@@ -155,7 +158,7 @@
             display: block;
             width: 100%;
             height: 2px;
-            background: var(--primary-green);
+            background: var(--cream);
             position: absolute;
             left: 0;
             transition: var(--transition);
@@ -180,14 +183,19 @@
         }
 
         .header-center {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
+            position: relative;
+            left: auto;
+            transform: none;
+            display: flex;
+            align-items: center;
         }
 
         .logo-link {
             text-decoration: none;
-            color: var(--primary-green);
+            color: var(--cream);
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .logo-main {
@@ -197,9 +205,49 @@
         }
 
         .logo-img {
-            height: 65px;
+            height: 50px;
             width: auto;
             display: block;
+            filter: invert(1);
+        }
+
+        /* Inline desktop nav links in header */
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            list-style: none;
+        }
+
+        .header-nav li a {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--cream);
+            text-decoration: none;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .header-nav li a:hover {
+            color: var(--gold);
+        }
+
+        .header-nav li a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--gold);
+            transition: var(--transition);
+        }
+
+        .header-nav li a:hover::after {
+            width: 100%;
         }
 
         .header-right {
@@ -219,19 +267,19 @@
             gap: 6px;
             padding: 6px 12px;
             background: transparent;
-            border: 1px solid var(--cream-dark);
+            border: 1px solid rgba(184, 149, 106, 0.3);
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.9rem;
-            color: var(--primary-green);
+            color: var(--cream);
             transition: var(--transition);
             font-family: 'Lato', sans-serif;
             font-weight: 500;
         }
 
         .currency-toggle:hover {
-            border-color: var(--primary-green);
-            background: var(--light-gray);
+            border-color: var(--gold);
+            background: rgba(255,255,255,0.05);
         }
 
         .currency-flag {
@@ -317,7 +365,11 @@
             font-size: 1.2rem;
             cursor: pointer;
             transition: var(--transition);
-            color: var(--primary-green);
+            color: var(--cream);
+        }
+
+        .header-icon:hover {
+            color: var(--gold);
         }
 
         /* WhatsApp Floating Button */
@@ -383,7 +435,7 @@
         /* WhatsApp Community Section */
         .whatsapp-community {
             padding: 100px 40px;
-            background: linear-gradient(135deg, var(--primary-green-dark) 0%, var(--primary-green-dark) 100%);
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--primary-green-dark) 100%);
             text-align: center;
         }
 
@@ -633,21 +685,23 @@
             position: relative;
         }
 
-        /* Navigation Overlay - Left Side Drawer */
+        /* Navigation Overlay - Full-screen slide-down */
         .nav-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 30%;
-            max-width: 400px;
-            min-width: 340px;
+            width: 100%;
             height: 100%;
-            background: var(--cream);
+            background: rgba(26, 26, 26, 0.98);
             z-index: 999;
-            transform: translateX(-100%);
-            transition: var(--transition);
-            overflow: visible;
+            transform: translateY(-100%);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: auto;
             padding: 100px 40px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .nav-overlay.active {
@@ -674,36 +728,38 @@
 
         .nav-links {
             list-style: none;
-            text-align: left;
-            padding-top: 40px;
+            text-align: center;
+            padding-top: 0;
         }
 
         .nav-links li {
-            margin: 25px 0;
+            margin: 20px 0;
             opacity: 0;
-            transform: translateX(-30px);
+            transform: translateY(20px);
             transition: var(--transition);
         }
 
         .nav-overlay.active .nav-links li {
             opacity: 1;
-            transform: translateX(0);
+            transform: translateY(0);
         }
 
-        .nav-overlay.active .nav-links li:nth-child(1) { transition-delay: 0.1s; }
-        .nav-overlay.active .nav-links li:nth-child(2) { transition-delay: 0.2s; }
-        .nav-overlay.active .nav-links li:nth-child(3) { transition-delay: 0.3s; }
-        .nav-overlay.active .nav-links li:nth-child(4) { transition-delay: 0.4s; }
-        .nav-overlay.active .nav-links li:nth-child(5) { transition-delay: 0.5s; }
+        .nav-overlay.active .nav-links li:nth-child(1) { transition-delay: 0.15s; }
+        .nav-overlay.active .nav-links li:nth-child(2) { transition-delay: 0.25s; }
+        .nav-overlay.active .nav-links li:nth-child(3) { transition-delay: 0.35s; }
+        .nav-overlay.active .nav-links li:nth-child(4) { transition-delay: 0.45s; }
+        .nav-overlay.active .nav-links li:nth-child(5) { transition-delay: 0.55s; }
+        .nav-overlay.active .nav-links li:nth-child(6) { transition-delay: 0.65s; }
 
         .nav-links a {
-            font-family: 'Cinzel', serif;
-            font-size: 1.4rem;
-            color: var(--primary-green);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2rem;
+            color: var(--cream);
             text-decoration: none;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.2em;
             transition: var(--transition);
             position: relative;
+            font-weight: 500;
         }
 
         .nav-links a:hover {
@@ -716,7 +772,7 @@
             bottom: -5px;
             left: 50%;
             width: 0;
-            height: 2px;
+            height: 1px;
             background: var(--gold);
             transition: var(--transition);
             transform: translateX(-50%);
@@ -732,12 +788,12 @@
         }
 
         .nav-item-wrapper > a::after {
-            content: '\f054' !important;
+            content: '\f078' !important;
             font-family: 'Font Awesome 5 Free' !important;
             font-weight: 900;
-            font-size: 0.8rem;
-            margin-left: 12px;
-            opacity: 0.5;
+            font-size: 0.6rem;
+            margin-left: 10px;
+            opacity: 0.4;
             position: static !important;
             width: auto !important;
             height: auto !important;
@@ -749,47 +805,38 @@
 
         .nav-item-wrapper > a:hover::after {
             opacity: 1;
-            transform: translateX(4px) !important;
+            transform: none !important;
             width: auto !important;
         }
 
         .nav-dropdown {
-            position: absolute;
-            top: -28px;
-            left: 280px;
-            width: 300px;
-            max-height: calc(100vh - 200px);
-            background: var(--white);
+            position: relative;
+            top: auto;
+            left: auto;
+            width: auto;
+            max-height: 0;
+            background: transparent;
             margin-left: 0;
-            padding: 10px 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border-radius: 4px;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(-10px);
-            transition: opacity 0.3s ease 0.5s, visibility 0.3s ease 0.5s, transform 0.3s ease 0.5s;
+            padding: 0;
+            box-shadow: none;
+            border-radius: 0;
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+            transition: max-height 0.3s ease;
             z-index: 1000;
             display: flex;
             flex-direction: column;
-            justify-content: flex-start;
-            overflow-y: auto;
+            align-items: center;
+            overflow: hidden;
         }
 
-        .nav-item-wrapper > a:hover ~ .nav-dropdown,
-        .nav-dropdown:hover {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(0);
-            transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+        .nav-item-wrapper:hover .nav-dropdown {
+            max-height: 500px;
         }
 
         .nav-dropdown::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: -240px;
-            width: 240px;
+            display: none;
         }
 
         .nav-dropdown li {
@@ -799,28 +846,23 @@
         }
 
         .nav-dropdown a {
-            font-family: 'Cinzel', serif !important;
-            font-size: 0.95rem !important;
-            letter-spacing: 0.1em !important;
-            padding: 14px 30px !important;
+            font-family: 'Lato', sans-serif !important;
+            font-size: 0.9rem !important;
+            letter-spacing: 0.08em !important;
+            padding: 8px 20px !important;
             display: block;
-            border-bottom: 1px solid var(--cream-dark);
-            color: var(--primary-green);
-            transition: background 0.2s ease, padding-left 0.2s ease, color 0.2s ease;
+            border-bottom: none;
+            color: rgba(245, 241, 235, 0.6);
+            transition: color 0.2s ease;
         }
 
         .nav-dropdown a:hover {
-            background: var(--cream);
-            padding-left: 38px !important;
+            background: transparent;
             color: var(--gold);
         }
 
         .nav-dropdown a::after {
             display: none !important;
-        }
-
-        .nav-dropdown li:last-child a {
-            border-bottom: none;
         }
 
         .nav-links > li {
@@ -869,7 +911,7 @@
             transform: translate(-50%, -65%) translateZ(0);
             width: 290px;
             height: 290px;
-            background-image: url('falcon-logo-vector.png');
+            background-image: url('mainspring-logo.png');
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
@@ -889,9 +931,9 @@
             font-family: 'Cinzel', serif;
             font-size: 3.5rem;
             font-weight: 600;
-            letter-spacing: 0.4em;
+            letter-spacing: 0.35em;
             color: var(--cream);
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             animation: slideUp 1s ease;
         }
 
@@ -1347,11 +1389,11 @@
         }
 
         .shop-block:first-child {
-            background: var(--primary-green);
+            background: var(--charcoal);
         }
 
         .shop-block:last-child {
-            background: var(--cream-dark);
+            background: var(--cream);
         }
 
         .shop-block-bg {
@@ -1364,11 +1406,11 @@
         }
 
         .shop-block:first-child .shop-block-bg {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%231a3a2a" width="800" height="600"/><circle cx="400" cy="300" r="150" fill="none" stroke="%23f5f0e6" stroke-width="1" opacity="0.1"/><circle cx="400" cy="300" r="200" fill="none" stroke="%23f5f0e6" stroke-width="1" opacity="0.08"/><circle cx="400" cy="300" r="250" fill="none" stroke="%23f5f0e6" stroke-width="1" opacity="0.06"/></svg>');
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%232c2c2c" width="800" height="600"/><circle cx="400" cy="300" r="150" fill="none" stroke="%23b8956a" stroke-width="1" opacity="0.1"/><circle cx="400" cy="300" r="200" fill="none" stroke="%23b8956a" stroke-width="1" opacity="0.08"/><circle cx="400" cy="300" r="250" fill="none" stroke="%23b8956a" stroke-width="1" opacity="0.06"/></svg>');
         }
 
         .shop-block:last-child .shop-block-bg {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%23f5f0e6" width="800" height="600"/><circle cx="400" cy="300" r="150" fill="none" stroke="%231a3a2a" stroke-width="1" opacity="0.1"/><circle cx="400" cy="300" r="200" fill="none" stroke="%231a3a2a" stroke-width="1" opacity="0.08"/><circle cx="400" cy="300" r="250" fill="none" stroke="%231a3a2a" stroke-width="1" opacity="0.06"/></svg>');
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%23f5f1eb" width="800" height="600"/><circle cx="400" cy="300" r="150" fill="none" stroke="%232c2c2c" stroke-width="1" opacity="0.1"/><circle cx="400" cy="300" r="200" fill="none" stroke="%232c2c2c" stroke-width="1" opacity="0.08"/><circle cx="400" cy="300" r="250" fill="none" stroke="%232c2c2c" stroke-width="1" opacity="0.06"/></svg>');
         }
 
         .shop-block:hover .shop-block-bg {
@@ -1391,7 +1433,7 @@
         }
 
         .shop-block:last-child h2 {
-            color: var(--primary-green);
+            color: var(--charcoal);
         }
 
         .shop-block:hover h2 {
@@ -1411,17 +1453,18 @@
         }
 
         .shop-block:last-child .shop-cta {
-            border-color: var(--primary-green);
-            color: var(--primary-green);
+            border-color: var(--charcoal);
+            color: var(--charcoal);
         }
 
         .shop-block:hover .shop-cta {
-            background: var(--white);
-            color: var(--primary-green);
+            background: var(--gold);
+            color: var(--white);
+            border-color: var(--gold);
         }
 
         .shop-block:last-child:hover .shop-cta {
-            background: var(--primary-green);
+            background: var(--charcoal);
             color: var(--white);
         }
 
@@ -2404,7 +2447,7 @@
 
         /* Footer */
         .footer {
-            background: var(--primary-green);
+            background: var(--charcoal);
             color: var(--white);
             padding: 80px 40px 40px;
         }
@@ -2416,7 +2459,7 @@
 
         .footer-grid {
             display: grid;
-            grid-template-columns: 1.5fr 1fr;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
             gap: 60px;
             margin-bottom: 60px;
         }
@@ -2489,11 +2532,7 @@
             color: var(--gold);
         }
 
-        /* Hide Collection and Accessories columns in footer */
-        .footer-grid > div:nth-child(2),
-        .footer-grid > div:nth-child(3) {
-            display: none;
-        }
+        /* Footer columns visible */
 
         /* Loading State */
         .loading {
@@ -2530,7 +2569,18 @@
             }
         }
 
+        /* Burger menu hidden on desktop, shown on mobile */
+        .burger-menu {
+            display: none;
+        }
+
         @media (max-width: 992px) {
+            .header-nav {
+                display: none !important;
+            }
+            .burger-menu {
+                display: block !important;
+            }
             .hero-logo-bg {
                 width: 280px;
                 height: 280px;
@@ -2610,14 +2660,15 @@
                 top: 22%;
             }
             .header {
-                padding: 10px 12px;
+                padding: 0 12px;
+                height: 60px;
             }
             .logo-main {
                 font-size: 0.85rem;
                 letter-spacing: 0.1em;
             }
             .logo-img {
-                height: 70px;
+                height: 42px;
                 width: auto;
                 display: block;
             }
@@ -2625,7 +2676,7 @@
                 display: flex !important;
                 gap: 12px;
             }
-            .header-right .header-icon-wrapper {
+            .header-right .header-icon-wrapper:not(#mobileWishlist) {
                 display: none !important;
             }
             .header-icon-wrapper {
@@ -3069,6 +3120,192 @@
             }
         }
 
+        /* Blog Section */
+        .blog-section {
+            padding: 40px 40px;
+            background: var(--warm-white);
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 35px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .blog-card {
+            background: var(--white);
+            border: 1px solid var(--cream-dark);
+            overflow: hidden;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .blog-card:hover {
+            box-shadow: 0 15px 45px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+
+        .blog-card-image {
+            height: 220px;
+            overflow: hidden;
+            background: var(--cream);
+        }
+
+        .blog-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .blog-card:hover .blog-card-image img {
+            transform: scale(1.06);
+        }
+
+        .blog-card-image .blog-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--primary-green) 100%);
+        }
+
+        .blog-card-image .blog-placeholder i {
+            font-size: 3rem;
+            color: var(--gold);
+            opacity: 0.4;
+        }
+
+        .blog-card-body {
+            padding: 25px;
+        }
+
+        .blog-card-meta {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .blog-card-category {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .blog-card-date {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        .blog-card-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .blog-card-excerpt {
+            font-size: 0.9rem;
+            color: var(--gray);
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .blog-card-readmore {
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--primary-green);
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .blog-card-readmore:hover {
+            color: var(--gold);
+        }
+
+        /* Blog Detail */
+        .blog-detail-section {
+            padding: 80px 40px;
+            background: var(--white);
+        }
+
+        .blog-detail-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .blog-detail-hero-img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            margin-bottom: 40px;
+        }
+
+        .blog-detail-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.8rem;
+            font-weight: 600;
+            color: var(--black);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .blog-detail-meta {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 1px solid var(--cream-dark);
+        }
+
+        .blog-detail-content {
+            font-size: 1.05rem;
+            line-height: 2;
+            color: var(--black);
+        }
+
+        .blog-detail-content p {
+            margin-bottom: 20px;
+        }
+
+        .blog-empty {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray);
+        }
+
+        .blog-empty i {
+            font-size: 4rem;
+            color: var(--cream-dark);
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 992px) {
+            .blog-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+            .blog-detail-title {
+                font-size: 2rem;
+            }
+        }
+
         /* Animations for items */
         .animate-on-scroll {
             opacity: 0;
@@ -3086,26 +3323,26 @@
     <!-- Header -->
     <header class="header" id="header">
         <div class="header-left">
-            <div class="burger-menu" id="burgerMenu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-            <div class="header-icon-wrapper" id="mobileWishlist" onclick="openWishlist()" style="cursor: pointer; display: none;">
-                <i class="header-icon far fa-heart"></i>
-                <span class="cart-badge" id="wishlistBadgeMobile" style="display: none;">0</span>
-            </div>
-        </div>
-        <div class="header-center">
             <a href="#" class="logo-link" onclick="event.preventDefault(); showPage('home');">
-                <img src="header-icon.png" alt="Falcon Timepieces" class="logo-img">
+                <img src="mainspring-logo.png" alt="Mainspring Dubai" class="logo-img">
             </a>
+            <!-- Desktop inline nav -->
+            <ul class="header-nav" id="headerNav">
+                <li><a href="#" onclick="event.preventDefault(); showPage('watches');">WATCHES</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('accessories');">ACCESSORIES</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('blog');">BLOG</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('about');">ABOUT</a></li>
+            </ul>
         </div>
         <div class="header-right">
             <i class="header-icon fas fa-search" id="searchIcon" onclick="toggleSearch()"></i>
             <div class="header-icon-wrapper" onclick="openWishlist()" style="cursor: pointer;">
                 <i class="header-icon far fa-heart"></i>
                 <span class="cart-badge" id="wishlistBadge" style="display: none;">0</span>
+            </div>
+            <div class="header-icon-wrapper" id="mobileWishlist" onclick="openWishlist()" style="cursor: pointer; display: none;">
+                <i class="header-icon far fa-heart"></i>
+                <span class="cart-badge" id="wishlistBadgeMobile" style="display: none;">0</span>
             </div>
             <!-- Currency Dropdown -->
             <div class="currency-selector">
@@ -3132,6 +3369,12 @@
                         <span class="label">EUR</span>
                     </div>
                 </div>
+            </div>
+            <!-- Mobile burger menu -->
+            <div class="burger-menu" id="burgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
             </div>
         </div>
     </header>
@@ -3161,16 +3404,17 @@
                 <div class="nav-item-wrapper">
                     <a href="#" onclick="event.preventDefault(); showPage('accessories'); closeNav();">ACCESSORIES</a>
                     <ul class="nav-dropdown" id="accessoriesDropdown">
+                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('pocket-watches'); closeNav();">Pocket Watches</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('standing-clocks'); closeNav();">Standing Clocks</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('watch-boxes'); closeNav();">Watch Boxes</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('bags'); closeNav();">Bags</a></li>
                         <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('watch-straps'); closeNav();">Watch Straps</a></li>
-                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('bracelets'); closeNav();">Bracelets</a></li>
-                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('rings'); closeNav();">Rings</a></li>
-                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('glasses'); closeNav();">Glasses</a></li>
-                        <li><a href="#" onclick="event.preventDefault(); showAccessoryCategory('belts'); closeNav();">Belts</a></li>
                     </ul>
                 </div>
             </li>
+            <li><a href="#" onclick="event.preventDefault(); showPage('blog'); closeNav();">BLOG</a></li>
             <li><a href="#" onclick="event.preventDefault(); showPage('about'); closeNav();">ABOUT</a></li>
-            <li><a href="https://wa.me/971585525770" onclick="event.preventDefault(); trackClick('contact_us_menu'); window.open('https://wa.me/971585525770', '_blank'); closeNav();">CONTACT US</a></li>
+            <li><a href="https://wa.me/971585625042" onclick="event.preventDefault(); trackClick('contact_us_menu'); window.open('https://wa.me/971585625042', '_blank'); closeNav();">CONTACT US</a></li>
         </ul>
     </nav>
 
@@ -3200,7 +3444,8 @@
                 </div>
 
                 <div class="hero-content">
-                    <h1 class="hero-title">FALCON TIMEPIECES</h1>
+                    <h1 class="hero-title">MAINSPRING</h1>
+                    <p class="hero-tagline" style="font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--cream); letter-spacing: 0.15em; margin-bottom: 15px; font-style: italic; animation: slideUp 1s ease 0.15s both;">Your personal guide to better watches</p>
                     <div class="hero-subtitle-container">
                         <span class="subtitle-item">Buy</span>
                         <span class="subtitle-separator">•</span>
@@ -3208,7 +3453,7 @@
                         <span class="subtitle-separator">•</span>
                         <span class="subtitle-item">Trade</span>
                         <span class="subtitle-separator">•</span>
-                        <span class="subtitle-item">Consign</span>
+                        <span class="subtitle-item">Vintage</span>
                     </div>
                     <a href="#" class="hero-cta" onclick="event.preventDefault(); showPage('watches');">Explore Collection</a>
                 </div>
@@ -3230,8 +3475,8 @@
             <!-- Instagram Section -->
             <div class="instagram-section">
                 <div class="instagram-header">
-                    <h2>@FALCONTIMEPIECES</h2>
-                    <a href="https://www.instagram.com/falcontimepieces/" target="_blank">Follow Us on Instagram</a>
+                    <h2>@MAINSPRING.DXB</h2>
+                    <a href="https://www.instagram.com/mainspring.dxb" target="_blank">Follow Us on Instagram</a>
                 </div>
                 <div class="instagram-carousel">
                     <div class="instagram-track" id="instagramTrack">
@@ -3262,9 +3507,9 @@
             <div class="watch-inquiry-section">
                 <div class="watch-inquiry-content">
                     <h2 class="inquiry-title">FIND YOUR DREAM WATCH</h2>
-                    <p class="inquiry-subtitle">Can't find what you're looking for? Let our experts help you discover the perfect timepiece that matches your style and passion.</p>
+                    <p class="inquiry-subtitle">Can't find what you're looking for? Whether it's a vintage piece, a specific model, or something unique — let us help you track it down.</p>
                     <p class="inquiry-text">Is there a specific watch you're looking for?</p>
-                    <a href="https://wa.me/971585837472?text=Hi%20Falcon%20Timepieces%2C%20I%27m%20looking%20for%20a%20specific%20watch.%20Can%20you%20help%20me%20find%20it%3F" target="_blank" class="inquiry-whatsapp-btn">
+                    <a href="https://wa.me/971585625042?text=Hi%20Mainspring%20Dubai%2C%20I%27m%20looking%20for%20a%20specific%20watch.%20Can%20you%20help%20me%20find%20it%3F" target="_blank" class="inquiry-whatsapp-btn">
                         <i class="fab fa-whatsapp"></i> Message on WhatsApp
                     </a>
                 </div>
@@ -3273,8 +3518,8 @@
             <!-- WhatsApp Community Section -->
             <div class="whatsapp-community">
                 <h2>JOIN OUR COMMUNITY</h2>
-                <p>Be the first to know about new arrivals, exclusive collections, and special events. Join thousands of luxury watch enthusiasts in our exclusive Falcon Collectors Club.</p>
-                <a href="https://wa.me/971585525770?text=Hello%20Falcon%20Timepieces,%20I%20would%20like%20to%20join%20the%20community!" class="whatsapp-community-btn" onclick="trackClick('join_community')">
+                <p>Be the first to know about new arrivals, vintage finds, and special deals. Join watch enthusiasts in our Mainspring Collectors Club.</p>
+                <a href="https://wa.me/971585625042?text=Hello%20Mainspring%20Dubai,%20I%20would%20like%20to%20join%20the%20community!" class="whatsapp-community-btn" onclick="trackClick('join_community')">
                     <i class="fab fa-whatsapp"></i>
                     Join Now
                 </a>
@@ -3285,7 +3530,7 @@
         <section class="page-section" id="page-watches">
             <div class="page-header">
                 <h1>OUR COLLECTION</h1>
-                <p>Discover exceptional timepieces from the world's finest houses</p>
+                <p>Discover watches for every style, budget, and era</p>
             </div>
             <div class="filter-section">
                 <!-- Hidden input fields for filter values -->
@@ -3293,6 +3538,9 @@
                 <input type="hidden" id="priceFilter" value="">
                 <input type="hidden" id="sortFilter" value="newest">
                 <input type="hidden" id="statusFilter" value="">
+                <input type="hidden" id="genderFilter" value="">
+                <input type="hidden" id="movementFilter" value="">
+                <input type="hidden" id="countryFilter" value="">
                 <div class="filter-container">
                     <div class="filter-group">
                         <div class="custom-dropdown" id="brandDropdown">
@@ -3325,6 +3573,35 @@
                                 <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('status', '', this)">All Status</div>
                                 <div class="custom-dropdown-item" data-value="available" onclick="selectFilter('status', 'available', this)">Available</div>
                                 <div class="custom-dropdown-item" data-value="sold" onclick="selectFilter('status', 'sold', this)">Sold</div>
+                            </div>
+                        </div>
+                        <div class="custom-dropdown" id="genderDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('genderDropdown')">All Genders</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('gender', '', this)">All Genders</div>
+                                <div class="custom-dropdown-item" data-value="Men" onclick="selectFilter('gender', 'Men', this)">Men</div>
+                                <div class="custom-dropdown-item" data-value="Women" onclick="selectFilter('gender', 'Women', this)">Women</div>
+                                <div class="custom-dropdown-item" data-value="Unisex" onclick="selectFilter('gender', 'Unisex', this)">Unisex</div>
+                            </div>
+                        </div>
+                        <div class="custom-dropdown" id="movementDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('movementDropdown')">All Movements</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('movement', '', this)">All Movements</div>
+                                <div class="custom-dropdown-item" data-value="Automatic" onclick="selectFilter('movement', 'Automatic', this)">Automatic</div>
+                                <div class="custom-dropdown-item" data-value="Manual" onclick="selectFilter('movement', 'Manual', this)">Manual</div>
+                                <div class="custom-dropdown-item" data-value="Quartz" onclick="selectFilter('movement', 'Quartz', this)">Quartz</div>
+                            </div>
+                        </div>
+                        <div class="custom-dropdown" id="countryDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('countryDropdown')">All Origins</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('country', '', this)">All Origins</div>
+                                <div class="custom-dropdown-item" data-value="Switzerland" onclick="selectFilter('country', 'Switzerland', this)">Switzerland</div>
+                                <div class="custom-dropdown-item" data-value="Japan" onclick="selectFilter('country', 'Japan', this)">Japan</div>
+                                <div class="custom-dropdown-item" data-value="Germany" onclick="selectFilter('country', 'Germany', this)">Germany</div>
+                                <div class="custom-dropdown-item" data-value="USA" onclick="selectFilter('country', 'USA', this)">USA</div>
+                                <div class="custom-dropdown-item" data-value="UK" onclick="selectFilter('country', 'UK', this)">UK</div>
                             </div>
                         </div>
                         <div class="custom-dropdown" id="sortDropdown">
@@ -3362,49 +3639,49 @@
             </div>
             <div class="categories-section">
                 <div class="categories-grid" id="categoriesGrid">
+                    <div class="category-card" onclick="showAccessoryCategory('pocket-watches')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>POCKET WATCHES</h3>
+                            <span>Vintage & Classic</span>
+                        </div>
+                    </div>
+                    <div class="category-card" onclick="showAccessoryCategory('standing-clocks')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>STANDING CLOCKS</h3>
+                            <span>Desk & Mantel Clocks</span>
+                        </div>
+                    </div>
+                    <div class="category-card" onclick="showAccessoryCategory('watch-boxes')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>WATCH BOXES</h3>
+                            <span>Storage & Display</span>
+                        </div>
+                    </div>
+                    <div class="category-card" onclick="showAccessoryCategory('bags')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-suitcase"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>BAGS</h3>
+                            <span>Leather & Travel</span>
+                        </div>
+                    </div>
                     <div class="category-card" onclick="showAccessoryCategory('watch-straps')">
                         <div class="category-placeholder">
                             <i class="fas fa-tags"></i>
                         </div>
                         <div class="category-info">
                             <h3>WATCH STRAPS</h3>
-                            <span>Premium Leather & Metal</span>
-                        </div>
-                    </div>
-                    <div class="category-card" onclick="showAccessoryCategory('bracelets')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-link"></i>
-                        </div>
-                        <div class="category-info">
-                            <h3>BRACELETS</h3>
-                            <span>Luxury Chain & Cuff</span>
-                        </div>
-                    </div>
-                    <div class="category-card" onclick="showAccessoryCategory('rings')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-ring"></i>
-                        </div>
-                        <div class="category-info">
-                            <h3>RINGS</h3>
-                            <span>Signet & Band</span>
-                        </div>
-                    </div>
-                    <div class="category-card" onclick="showAccessoryCategory('glasses')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-glasses"></i>
-                        </div>
-                        <div class="category-info">
-                            <h3>GLASSES</h3>
-                            <span>Sunglasses & Frames</span>
-                        </div>
-                    </div>
-                    <div class="category-card" onclick="showAccessoryCategory('belts')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-belt"></i>
-                        </div>
-                        <div class="category-info">
-                            <h3>BELTS</h3>
-                            <span>Leather & Premium</span>
+                            <span>Leather & Metal</span>
                         </div>
                     </div>
                 </div>
@@ -3491,35 +3768,62 @@
             <div class="gallery-zoom-hint">Pinch or scroll to zoom &middot; Click outside to close</div>
         </div>
 
+        <!-- Blog Page -->
+        <section class="page-section" id="page-blog">
+            <div class="page-header">
+                <h1>THE JOURNAL</h1>
+                <p>Stories, guides, and insights from the world of horology</p>
+            </div>
+            <div class="blog-section">
+                <div class="blog-grid" id="blogGrid">
+                    <div class="loading"><div class="loading-spinner"></div></div>
+                </div>
+                <div class="pagination" id="blogPagination" style="display:none;">
+                    <button id="prevBlogPage" onclick="changeBlogPage(-1)">Previous</button>
+                    <span id="blogPageInfo">Page 1</span>
+                    <button id="nextBlogPage" onclick="changeBlogPage(1)">Next</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Blog Detail Page -->
+        <section class="page-section" id="page-blog-detail">
+            <div class="blog-detail-section">
+                <div class="blog-detail-container" id="blogDetailContent">
+                    <div class="loading"><div class="loading-spinner"></div></div>
+                </div>
+            </div>
+        </section>
+
         <!-- About Page -->
         <section class="page-section" id="page-about">
             <div class="about-section">
                 <div class="about-container">
                     <div class="about-hero">
                         <h1>OUR STORY</h1>
-                        <p>Since 2025, Falcon Timepieces has been the premier destination for luxury timepieces in Dubai and around the world.</p>
+                        <p>Mainspring Dubai is your personal guide to better watches — from vintage treasures to everyday timepieces, we help you find the watch that speaks to you.</p>
                     </div>
                     <div class="about-content">
                         <div class="about-block animate-on-scroll">
                             <div class="about-image">
-                                <i class="fas fa-crown"></i>
+                                <i class="fas fa-cog"></i>
                             </div>
-                            <h2>HERITAGE & CRAFTSMANSHIP</h2>
-                            <p>At Falcon Timepieces, we believe that a watch is more than an instrument of time—it is a statement of legacy, precision, and artistry. Our curated collection represents the finest Swiss craftsmanship, featuring legendary houses that have defined haute horlogerie for centuries.</p>
+                            <h2>THE MAINSPRING PHILOSOPHY</h2>
+                            <p>Just as the mainspring is the heart of every mechanical watch, we believe that every timepiece has a story worth telling. We specialize in bringing together watches from all eras and price ranges — from affordable everyday pieces to luxury collectibles and rare vintage finds.</p>
                         </div>
                         <div class="about-block animate-on-scroll">
                             <div class="about-image">
-                                <i class="fas fa-gem"></i>
+                                <i class="fas fa-clock"></i>
                             </div>
                             <h2>OUR COLLECTION</h2>
-                            <p>From the iconic designs of Rolex and Patek Philippe to the innovative spirit of Audemars Piguet and Omega, our collection showcases the world's most prestigious watchmakers. Each timepiece is selected for its exceptional quality, historical significance, and timeless appeal.</p>
+                            <p>Our inventory spans the full spectrum of horology: vintage mechanical watches with decades of history, reliable quartz timepieces for daily wear, luxury pieces from renowned Swiss and Japanese houses, and unique finds from around the world. Whether you're starting your collection or adding a grail piece, we have something for every wrist and budget.</p>
                         </div>
                         <div class="about-block animate-on-scroll">
                             <div class="about-image">
                                 <i class="fas fa-handshake"></i>
                             </div>
-                            <h2>OUR COMMITMENT</h2>
-                            <p>Our commitment to excellence extends beyond our collection. We pride ourselves on providing an unparalleled shopping experience, with personalized service, expert guidance, and after-sales support that matches the quality of our timepieces. Visit us in Dubai or explore our global online presence.</p>
+                            <h2>YOUR PERSONAL GUIDE</h2>
+                            <p>At Mainspring Dubai, we don't just sell watches — we guide you to the right one. Our knowledgeable team provides honest advice, detailed history on each piece, and personalized recommendations. Based in Dubai, we serve collectors and enthusiasts worldwide with the same dedication and passion for horology.</p>
                         </div>
                     </div>
                 </div>
@@ -3528,7 +3832,7 @@
     </main>
 
     <!-- WhatsApp Floating Button -->
-    <a href="https://wa.me/971585525770" class="whatsapp-float" onclick="trackClick('whatsapp_float')" title="Chat on WhatsApp">
+    <a href="https://wa.me/971585625042" class="whatsapp-float" onclick="trackClick('whatsapp_float')" title="Chat on WhatsApp">
         <i class="fab fa-whatsapp"></i>
     </a>
 
@@ -3551,39 +3855,42 @@
         <div class="footer-container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <h3 class="logo-text">FALCON TIMEPIECES</h3>
-                    <p>Your premier destination for luxury timepieces in Dubai. Discover exceptional watches from the world's finest houses.</p>
+                    <h3 class="logo-text">MAINSPRING</h3>
+                    <p>Your personal guide to better watches. From vintage treasures to everyday timepieces — discover, collect, and wear with confidence.</p>
+                    <div style="margin-top: 20px; display: flex; gap: 15px;">
+                        <a href="https://www.instagram.com/mainspring.dxb" target="_blank" style="color: var(--cream); font-size: 1.3rem; transition: var(--transition);"><i class="fab fa-instagram"></i></a>
+                        <a href="https://wa.me/971585625042" target="_blank" style="color: var(--cream); font-size: 1.3rem; transition: var(--transition);"><i class="fab fa-whatsapp"></i></a>
+                    </div>
                 </div>
                 <div class="footer-column">
-                    <h4>COLLECTION</h4>
+                    <h4>EXPLORE</h4>
                     <ul>
-                        <li><a href="#" onclick="showPage('watches')">All Watches</a></li>
-                        <li><a href="#" onclick="filterByBrand('Rolex')">Rolex</a></li>
-                        <li><a href="#" onclick="filterByBrand('Patek Philippe')">Patek Philippe</a></li>
-                        <li><a href="#" onclick="filterByBrand('Omega')">Omega</a></li>
+                        <li><a href="#" onclick="showPage('watches')">Watches</a></li>
+                        <li><a href="#" onclick="showPage('accessories')">Accessories</a></li>
+                        <li><a href="#" onclick="showPage('blog')">Journal</a></li>
+                        <li><a href="#" onclick="showPage('about')">About Us</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
-                    <h4>ACCESSORIES</h4>
+                    <h4>CATEGORIES</h4>
                     <ul>
-                        <li><a href="#" onclick="showAccessoryCategory('watch-straps')">Watch Straps</a></li>
-                        <li><a href="#" onclick="showAccessoryCategory('bracelets')">Bracelets</a></li>
-                        <li><a href="#" onclick="showAccessoryCategory('rings')">Rings</a></li>
-                        <li><a href="#" onclick="showAccessoryCategory('glasses')">Glasses</a></li>
+                        <li><a href="#" onclick="showAccessoryCategory('pocket-watches')">Pocket Watches</a></li>
+                        <li><a href="#" onclick="showAccessoryCategory('standing-clocks')">Standing Clocks</a></li>
+                        <li><a href="#" onclick="showAccessoryCategory('watch-boxes')">Watch Boxes</a></li>
+                        <li><a href="#" onclick="showAccessoryCategory('bags')">Bags</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
                     <h4>CONTACT</h4>
                     <ul>
                         <li><a href="#">Dubai, UAE</a></li>
-                        <li><a href="tel:+971585525770">+971 58 552 5770</a></li>
-                        <li><a href="mailto:info@falcontimepieces.ae">info@falcontimepieces.ae</a></li>
-                        <li><a href="#" onclick="showPage('about')">About Us</a></li>
+                        <li><a href="tel:+971585625042">+971 58 562 5042</a></li>
+                        <li><a href="mailto:mainspringdxb@gmail.com">mainspringdxb@gmail.com</a></li>
                     </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Falcon Timepieces. All rights reserved.</p>
+                <p>&copy; 2025 Mainspring Dubai. All rights reserved.</p>
                 <p class="swiftloop-credit">Bespoke websites for you — <a href="https://www.swiftloop.pro" target="_blank">swiftloop.pro</a></p>
             </div>
         </div>
@@ -3601,9 +3908,9 @@
 
     <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
         // Supabase Configuration
-        const SUPABASE_URL = 'https://gtspbquttibebvudaszt.supabase.co';
+        const SUPABASE_URL = 'https://heblmjkgsuhwjffjrhrr.supabase.co';
         // Using the anon (public) key — safe to expose in frontend code
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0c3BicXV0dGliZWJ2dWRhc3p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NTE3MTMsImV4cCI6MjA4NjUyNzcxM30.t-WsG8IVW7XcLIkLcOb_mcgqQyEbPAkA-P6Uuc30yS0';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlYmxtamtnc3Vod2pmZmpyaHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NjQxOTcsImV4cCI6MjA4OTE0MDE5N30.XME4XDCcF961dh7l2gMIKkXo5G7tQewme6joIVNTNow';
         
         // Initialize Supabase
         const { createClient } = supabase;
@@ -3621,6 +3928,8 @@
                     showProductDetail(event.state.productId, true);
                 } else if (event.state.page === 'accessories' && event.state.category) {
                     showAccessoryCategory(event.state.category, true);
+                } else if (event.state.page === 'blog-detail' && event.state.blogId) {
+                    showBlogDetail(event.state.blogId, true);
                 } else if (event.state.page) {
                     showPage(event.state.page, true);
                 }
@@ -3631,17 +3940,17 @@
         });
 
         // Wishlist (localStorage)
-        let wishlist = JSON.parse(localStorage.getItem('falcon_wishlist')) || [];
+        let wishlist = JSON.parse(localStorage.getItem('mainspring_wishlist')) || [];
 
         // Currency Conversion State
-        let currentCurrency = localStorage.getItem('falcon_currency') || 'AED';
+        let currentCurrency = localStorage.getItem('mainspring_currency') || 'AED';
         let exchangeRates = {
             'AED': 1,
-            'USD': parseFloat(localStorage.getItem('falcon_exchange_usd')) || 0.272,
-            'GBP': parseFloat(localStorage.getItem('falcon_exchange_gbp')) || 0.215,
-            'EUR': parseFloat(localStorage.getItem('falcon_exchange_eur')) || 0.26
+            'USD': parseFloat(localStorage.getItem('mainspring_exchange_usd')) || 0.272,
+            'GBP': parseFloat(localStorage.getItem('mainspring_exchange_gbp')) || 0.215,
+            'EUR': parseFloat(localStorage.getItem('mainspring_exchange_eur')) || 0.26
         };
-        let lastExchangeRateUpdate = parseInt(localStorage.getItem('falcon_last_exchange_update')) || 0;
+        let lastExchangeRateUpdate = parseInt(localStorage.getItem('mainspring_last_exchange_update')) || 0;
 
         // Fetch exchange rates from API
         async function fetchExchangeRates() {
@@ -3657,10 +3966,10 @@
                     exchangeRates['EUR'] = data.rates.EUR || 0.26;
 
                     // Save to localStorage
-                    localStorage.setItem('falcon_exchange_usd', exchangeRates['USD']);
-                    localStorage.setItem('falcon_exchange_gbp', exchangeRates['GBP']);
-                    localStorage.setItem('falcon_exchange_eur', exchangeRates['EUR']);
-                    localStorage.setItem('falcon_last_exchange_update', Date.now());
+                    localStorage.setItem('mainspring_exchange_usd', exchangeRates['USD']);
+                    localStorage.setItem('mainspring_exchange_gbp', exchangeRates['GBP']);
+                    localStorage.setItem('mainspring_exchange_eur', exchangeRates['EUR']);
+                    localStorage.setItem('mainspring_last_exchange_update', Date.now());
 
                     // Re-render any visible prices with fresh rates
                     rerenderAllPrices();
@@ -3703,7 +4012,7 @@
         // Select a currency
         function selectCurrency(currency) {
             currentCurrency = currency;
-            localStorage.setItem('falcon_currency', currency);
+            localStorage.setItem('mainspring_currency', currency);
             updateCurrencyDisplay();
 
             // Close dropdown
@@ -3767,7 +4076,7 @@
 
         // Save wishlist to localStorage
         function saveWishlist() {
-            localStorage.setItem('falcon_wishlist', JSON.stringify(wishlist));
+            localStorage.setItem('mainspring_wishlist', JSON.stringify(wishlist));
             updateWishlistBadge();
         }
 
@@ -3839,15 +4148,15 @@
         // Inquire via WhatsApp
         function inquireViaWhatsApp(product) {
             const refCode = product.reference_number ? ` - Ref: ${product.reference_number}` : '';
-            const message = `Hello Falcon Timepieces, I am interested in ${product.brand} ${product.name}${refCode}. Please provide more information.`;
-            const whatsappUrl = `https://wa.me/971585525770?text=${encodeURIComponent(message)}`;
+            const message = `Hello Mainspring, I am interested in ${product.brand} ${product.name}${refCode}. Please provide more information.`;
+            const whatsappUrl = `https://wa.me/971585625042?text=${encodeURIComponent(message)}`;
             trackAndRedirect(product.id, product.reference_number || '', whatsappUrl);
         }
 
         // New tracking function
         async function trackAndRedirect(productId, referenceCode, whatsappUrl) {
             // Fire-and-forget click log
-            fetch('https://gtspbquttibebvudaszt.supabase.co/rest/v1/watch_clicks', {
+            fetch('https://heblmjkgsuhwjffjrhrr.supabase.co/rest/v1/watch_clicks', {
                 method: 'POST',
                 headers: {
                     'apikey': SUPABASE_KEY,
@@ -3877,13 +4186,13 @@
             } catch (error) {
                 console.log('Click tracked locally:', element, productContext);
                 // Store locally if table doesn't exist
-                let localClicks = JSON.parse(localStorage.getItem('falcon_clicks')) || [];
+                let localClicks = JSON.parse(localStorage.getItem('mainspring_clicks')) || [];
                 localClicks.push({
                     element: element,
                     product: productContext,
                     timestamp: new Date().toISOString()
                 });
-                localStorage.setItem('falcon_clicks', JSON.stringify(localClicks));
+                localStorage.setItem('mainspring_clicks', JSON.stringify(localClicks));
             }
         }
 
@@ -4007,6 +4316,8 @@
             } else if (pageName === 'accessories') {
                 document.getElementById('accessoryProducts').style.display = 'none';
                 document.getElementById('categoriesGrid').style.display = 'grid';
+            } else if (pageName === 'blog') {
+                loadBlogPosts();
             }
 
             // Animate elements
@@ -4040,6 +4351,9 @@
                 const searchTerm = document.getElementById('searchInput').value;
                 const sortBy = document.getElementById('sortFilter').value;
                 const statusFilter = document.getElementById('statusFilter').value;
+                const genderFilter = document.getElementById('genderFilter').value;
+                const movementFilter = document.getElementById('movementFilter').value;
+                const countryFilter = document.getElementById('countryFilter').value;
                 const thirtyDaysAgo = getThirtyDaysAgoISO();
 
                 let query = supabaseClient
@@ -4060,6 +4374,21 @@
                 // Apply brand filter
                 if (brandFilter) {
                     query = query.eq('brand', brandFilter);
+                }
+
+                // Apply gender filter
+                if (genderFilter) {
+                    query = query.eq('gender', genderFilter);
+                }
+
+                // Apply movement filter
+                if (movementFilter) {
+                    query = query.eq('movement', movementFilter);
+                }
+
+                // Apply country filter
+                if (countryFilter) {
+                    query = query.eq('country', countryFilter);
                 }
 
                 // Apply search (across name, brand, and model)
@@ -4175,41 +4504,41 @@
 
         // Demo data store
         const demoWatches = [
-            { id: 1, brand: 'Rolex', name: 'Submariner Date', price: 14500, year: 2023, category: 'watch', condition: 'Mint' },
-            { id: 2, brand: 'Rolex', name: 'Daytona Cosmograph', price: 28500, year: 2024, category: 'watch', condition: 'New' },
-            { id: 3, brand: 'Omega', name: 'Speedmaster Professional', price: 7500, year: 2023, category: 'watch', condition: 'Excellent' },
-            { id: 4, brand: 'Patek Philippe', name: 'Nautilus 5711', price: 125000, year: 2022, category: 'watch', condition: 'Very Good' },
-            { id: 5, brand: 'Audemars Piguet', name: 'Royal Oak', price: 45000, year: 2024, category: 'watch', condition: 'New' },
-            { id: 6, brand: 'Cartier', name: 'Santos de Cartier', price: 8100, year: 2023, category: 'watch', condition: 'Like New' },
-            { id: 7, brand: 'Tudor', name: 'Black Bay', price: 4250, year: 2024, category: 'watch', condition: 'Good' },
-            { id: 8, brand: 'Vacheron Constantin', name: 'Overseas', price: 28000, year: 2023, category: 'watch', condition: 'Mint' },
-            { id: 9, brand: 'Rolex', name: 'GMT-Master II', price: 11200, year: 2024, category: 'watch', condition: 'New' },
-            { id: 10, brand: 'Omega', name: 'Seamaster Diver', price: 6200, year: 2023, category: 'watch', condition: 'Used' },
-            { id: 11, brand: 'Patek Philippe', name: 'Aquanaut', price: 38000, year: 2024, category: 'watch', condition: 'Excellent' },
-            { id: 12, brand: 'Cartier', name: 'Tank Française', price: 9900, year: 2022, category: 'watch', condition: 'Well-Worn' },
-            { id: 13, brand: 'Rolex', name: 'Datejust 41', price: 10500, year: 2024, category: 'watch', condition: 'New' },
-            { id: 14, brand: 'Omega', name: 'Constellation', price: 6800, year: 2023, category: 'watch', condition: 'Vintage' },
-            { id: 15, brand: 'Tudor', name: 'Pelagos', price: 4875, year: 2024, category: 'watch', condition: 'New' },
-            { id: 16, brand: 'Audemars Piguet', name: 'Royal Oak Offshore', price: 52000, year: 2023, category: 'watch', condition: 'Like New' }
+            { id: 1, brand: 'Seiko', name: 'Presage Cocktail Time', price: 1500, year: 2023, category: 'watch', condition: 'Excellent' },
+            { id: 2, brand: 'Omega', name: 'Seamaster De Ville', price: 3200, year: 1968, category: 'watch', condition: 'Vintage' },
+            { id: 3, brand: 'Casio', name: 'G-Shock DW-5600', price: 350, year: 2024, category: 'watch', condition: 'New' },
+            { id: 4, brand: 'Rolex', name: 'Datejust 36', price: 12500, year: 2020, category: 'watch', condition: 'Very Good' },
+            { id: 5, brand: 'Orient', name: 'Bambino v2', price: 850, year: 2023, category: 'watch', condition: 'New' },
+            { id: 6, brand: 'Tudor', name: 'Black Bay 58', price: 4800, year: 2022, category: 'watch', condition: 'Like New' },
+            { id: 7, brand: 'Tissot', name: 'PRX Powermatic 80', price: 2500, year: 2024, category: 'watch', condition: 'New' },
+            { id: 8, brand: 'Longines', name: 'Heritage Military', price: 2100, year: 1975, category: 'watch', condition: 'Vintage' },
+            { id: 9, brand: 'Hamilton', name: 'Khaki Field Mechanical', price: 1800, year: 2023, category: 'watch', condition: 'Mint' },
+            { id: 10, brand: 'Citizen', name: 'Eco-Drive Promaster', price: 1200, year: 2024, category: 'watch', condition: 'New' },
+            { id: 11, brand: 'Seiko', name: 'SKX007 Diver', price: 1400, year: 2019, category: 'watch', condition: 'Good' },
+            { id: 12, brand: 'Omega', name: 'Speedmaster Professional', price: 7500, year: 2023, category: 'watch', condition: 'Excellent' },
+            { id: 13, brand: 'Cartier', name: 'Tank Must', price: 4200, year: 2022, category: 'watch', condition: 'Like New' },
+            { id: 14, brand: 'Vostok', name: 'Komandirskie', price: 350, year: 1985, category: 'watch', condition: 'Vintage' },
+            { id: 15, brand: 'Swatch', name: 'MoonSwatch Mission to Mars', price: 1100, year: 2024, category: 'watch', condition: 'New' },
+            { id: 16, brand: 'Patek Philippe', name: 'Calatrava', price: 32000, year: 2021, category: 'watch', condition: 'Mint' }
         ];
 
         const demoAccessories = [
-            { id: 101, brand: 'Falcon', name: 'Leather Watch Strap - Brown', price: 250, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 102, brand: 'Falcon', name: 'Crocodile Strap - Black', price: 450, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 103, brand: 'Falcon', name: 'NATO Strap - Navy', price: 85, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 104, brand: 'Falcon', name: 'Rubber Strap - Orange', price: 120, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 111, brand: 'Falcon', name: 'Metal Bracelet - Silver', price: 450, category: 'accessory', subcategory: 'bracelets' },
-            { id: 112, brand: 'Falcon', name: 'Gold Chain Bracelet', price: 1200, category: 'accessory', subcategory: 'bracelets' },
-            { id: 113, brand: 'Falcon', name: 'Leather Cuff - Brown', price: 280, category: 'accessory', subcategory: 'bracelets' },
-            { id: 121, brand: 'Falcon', name: 'Gold Signet Ring', price: 890, category: 'accessory', subcategory: 'rings' },
-            { id: 122, brand: 'Falcon', name: 'Silver Band Ring', price: 320, category: 'accessory', subcategory: 'rings' },
-            { id: 123, brand: 'Falcon', name: 'Platinum Wedding Band', price: 1850, category: 'accessory', subcategory: 'rings' },
-            { id: 131, brand: 'Falcon', name: 'Aviator Sunglasses', price: 380, category: 'accessory', subcategory: 'glasses' },
-            { id: 132, brand: 'Falcon', name: 'Classic Wayfarers', price: 290, category: 'accessory', subcategory: 'glasses' },
-            { id: 133, brand: 'Falcon', name: 'Polarized Sport Glasses', price: 420, category: 'accessory', subcategory: 'glasses' },
-            { id: 141, brand: 'Falcon', name: 'Leather Belt - Black', price: 220, category: 'accessory', subcategory: 'belts' },
-            { id: 142, brand: 'Falcon', name: 'Leather Belt - Brown', price: 220, category: 'accessory', subcategory: 'belts' },
-            { id: 143, brand: 'Falcon', name: 'Reversible Belt - Black/Brown', price: 350, category: 'accessory', subcategory: 'belts' }
+            { id: 101, brand: 'Mainspring', name: 'Leather Watch Strap - Brown', price: 250, category: 'accessory', subcategory: 'watch-straps' },
+            { id: 102, brand: 'Mainspring', name: 'Crocodile Strap - Black', price: 450, category: 'accessory', subcategory: 'watch-straps' },
+            { id: 103, brand: 'Mainspring', name: 'NATO Strap - Navy', price: 85, category: 'accessory', subcategory: 'watch-straps' },
+            { id: 104, brand: 'Mainspring', name: 'Rubber Strap - Orange', price: 120, category: 'accessory', subcategory: 'watch-straps' },
+            { id: 111, brand: 'Mainspring', name: 'Vintage Pocket Watch - Gold', price: 2800, category: 'accessory', subcategory: 'pocket-watches' },
+            { id: 112, brand: 'Mainspring', name: 'Silver Pocket Watch - Chain', price: 1500, category: 'accessory', subcategory: 'pocket-watches' },
+            { id: 113, brand: 'Mainspring', name: 'Open Face Pocket Watch', price: 900, category: 'accessory', subcategory: 'pocket-watches' },
+            { id: 121, brand: 'Mainspring', name: 'Desk Clock - Brass', price: 1200, category: 'accessory', subcategory: 'standing-clocks' },
+            { id: 122, brand: 'Mainspring', name: 'Mantel Clock - Walnut', price: 2500, category: 'accessory', subcategory: 'standing-clocks' },
+            { id: 123, brand: 'Mainspring', name: 'Skeleton Desk Clock', price: 1800, category: 'accessory', subcategory: 'standing-clocks' },
+            { id: 131, brand: 'Mainspring', name: 'Watch Box - 6 Slot', price: 350, category: 'accessory', subcategory: 'watch-boxes' },
+            { id: 132, brand: 'Mainspring', name: 'Watch Box - 12 Slot Premium', price: 650, category: 'accessory', subcategory: 'watch-boxes' },
+            { id: 133, brand: 'Mainspring', name: 'Travel Watch Case', price: 280, category: 'accessory', subcategory: 'watch-boxes' },
+            { id: 141, brand: 'Mainspring', name: 'Leather Messenger Bag', price: 850, category: 'accessory', subcategory: 'bags' },
+            { id: 142, brand: 'Mainspring', name: 'Watch Roll - 3 Slot', price: 180, category: 'accessory', subcategory: 'bags' },
+            { id: 143, brand: 'Mainspring', name: 'Canvas Travel Bag', price: 550, category: 'accessory', subcategory: 'bags' }
         ];
 
         // Render demo products with filtering (fallback)
@@ -4374,6 +4703,12 @@
                 document.getElementById('sortFilter').value = value;
             } else if (type === 'status') {
                 document.getElementById('statusFilter').value = value;
+            } else if (type === 'gender') {
+                document.getElementById('genderFilter').value = value;
+            } else if (type === 'movement') {
+                document.getElementById('movementFilter').value = value;
+            } else if (type === 'country') {
+                document.getElementById('countryFilter').value = value;
             }
 
             applyFilters();
@@ -4675,6 +5010,26 @@
                     <div class="meta-item">
                         <span class="meta-label">Condition</span>
                         <span class="meta-value">${product.condition}</span>
+                    </div>` : ''}
+                    ${product.gender ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Gender</span>
+                        <span class="meta-value">${product.gender}</span>
+                    </div>` : ''}
+                    ${product.movement ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Movement</span>
+                        <span class="meta-value">${product.movement}</span>
+                    </div>` : ''}
+                    ${product.country ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Country of Origin</span>
+                        <span class="meta-value">${product.country}</span>
+                    </div>` : ''}
+                    ${product.size ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Size</span>
+                        <span class="meta-value">${product.size}</span>
                     </div>` : ''}
                     ${watchDetails ? `
                     <div style="border-top: 1px solid var(--cream-dark); padding-top: 20px; margin-top: 20px;">
@@ -5122,6 +5477,144 @@
         // Initialise zoom overlay event handlers
         setupZoomEvents();
 
+        // Blog state
+        let currentBlogPage = 1;
+        let totalBlogPosts = 0;
+
+        // Load blog posts from Supabase
+        async function loadBlogPosts() {
+            const grid = document.getElementById('blogGrid');
+            grid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+
+            try {
+                const from = (currentBlogPage - 1) * 9;
+                const to = from + 8;
+
+                const { data, error, count } = await supabaseClient
+                    .from('blog')
+                    .select('*', { count: 'exact' })
+                    .eq('status', 'published')
+                    .order('published_at', { ascending: false })
+                    .range(from, to);
+
+                if (error) throw error;
+
+                totalBlogPosts = count || 0;
+
+                if (!data || data.length === 0) {
+                    grid.innerHTML = `
+                        <div class="blog-empty" style="grid-column: 1/-1;">
+                            <i class="fas fa-newspaper"></i>
+                            <p>No blog posts yet. Check back soon for stories and guides from Mainspring Dubai.</p>
+                        </div>`;
+                    document.getElementById('blogPagination').style.display = 'none';
+                    return;
+                }
+
+                grid.innerHTML = data.map(post => {
+                    const date = post.published_at ? new Date(post.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+                    return `
+                    <div class="blog-card" onclick="showBlogDetail('${post.slug || post.id}')">
+                        <div class="blog-card-image">
+                            ${post.featured_image ?
+                                `<img src="${post.featured_image}" alt="${post.title}" loading="lazy">` :
+                                `<div class="blog-placeholder"><i class="fas fa-feather-alt"></i></div>`
+                            }
+                        </div>
+                        <div class="blog-card-body">
+                            <div class="blog-card-meta">
+                                ${post.category_name ? `<span class="blog-card-category">${post.category_name}</span>` : ''}
+                                <span class="blog-card-date">${date}</span>
+                                ${post.reading_time ? `<span class="blog-card-date">${post.reading_time} min read</span>` : ''}
+                            </div>
+                            <h3 class="blog-card-title">${post.title}</h3>
+                            <p class="blog-card-excerpt">${post.excerpt || ''}</p>
+                            <span class="blog-card-readmore">Read More &rarr;</span>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Show/hide pagination
+                const totalPages = Math.ceil(totalBlogPosts / 9);
+                if (totalPages > 1) {
+                    document.getElementById('blogPagination').style.display = 'flex';
+                    document.getElementById('blogPageInfo').textContent = `Page ${currentBlogPage} of ${totalPages}`;
+                    document.getElementById('prevBlogPage').disabled = currentBlogPage === 1;
+                    document.getElementById('nextBlogPage').disabled = currentBlogPage >= totalPages;
+                } else {
+                    document.getElementById('blogPagination').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading blog posts:', error);
+                grid.innerHTML = `
+                    <div class="blog-empty" style="grid-column: 1/-1;">
+                        <i class="fas fa-newspaper"></i>
+                        <p>No blog posts yet. Check back soon for stories and guides from Mainspring Dubai.</p>
+                    </div>`;
+            }
+        }
+
+        function changeBlogPage(direction) {
+            currentBlogPage += direction;
+            loadBlogPosts();
+            window.scrollTo(0, 300);
+        }
+
+        // Show blog detail
+        async function showBlogDetail(slugOrId, skipPushState = false) {
+            showPage('blog-detail', true);
+
+            if (!skipPushState) {
+                history.pushState({ page: 'blog-detail', blogId: slugOrId }, '', `?page=blog-detail&post=${encodeURIComponent(slugOrId)}`);
+            }
+
+            const container = document.getElementById('blogDetailContent');
+            container.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+
+            try {
+                const isNumeric = /^\d+$/.test(String(slugOrId));
+                let query = supabaseClient.from('blog').select('*');
+                if (isNumeric) {
+                    query = query.eq('id', slugOrId);
+                } else {
+                    query = query.eq('slug', slugOrId);
+                }
+
+                const { data, error } = await query.single();
+
+                if (error) throw error;
+
+                // Increment views
+                if (data.id) {
+                    supabaseClient.from('blog').update({ views: (data.views || 0) + 1 }).eq('id', data.id).then(() => {});
+                }
+
+                const date = data.published_at ? new Date(data.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+
+                container.innerHTML = `
+                    <a href="#" onclick="event.preventDefault(); showPage('blog');" style="display: inline-block; margin-bottom: 30px; color: var(--gray); text-decoration: none; font-size: 0.9rem; letter-spacing: 0.1em;">
+                        <i class="fas fa-arrow-left"></i> Back to Journal
+                    </a>
+                    ${data.featured_image ? `<img src="${data.featured_image}" alt="${data.title}" class="blog-detail-hero-img">` : ''}
+                    <h1 class="blog-detail-title">${data.title}</h1>
+                    <div class="blog-detail-meta">
+                        ${data.author ? `<span style="color: var(--black); font-weight: 500;">By ${data.author}</span>` : ''}
+                        <span style="color: var(--gray);">${date}</span>
+                        ${data.reading_time ? `<span style="color: var(--gray);">${data.reading_time} min read</span>` : ''}
+                    </div>
+                    <div class="blog-detail-content">${data.content || ''}</div>
+                `;
+            } catch (error) {
+                console.error('Error loading blog detail:', error);
+                container.innerHTML = `
+                    <div class="blog-empty">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Could not load this blog post.</p>
+                        <a href="#" onclick="event.preventDefault(); showPage('blog');" style="color: var(--gold);">Back to Journal</a>
+                    </div>`;
+            }
+        }
+
         // Slideshow functionality
         let currentSlideIndex = 0;
         let slideShowInterval;
@@ -5249,10 +5742,15 @@
             const pageName = urlParams.get('page');
             const productId = urlParams.get('product');
 
+            const blogPostId = urlParams.get('post');
+
             if (pageName === 'detail' && productId) {
                 // Use skipPushState=true since we use replaceState below
                 showProductDetail(decodeURIComponent(productId), true);
                 history.replaceState({ page: 'detail', productId: decodeURIComponent(productId) }, '', window.location.search);
+            } else if (pageName === 'blog-detail' && blogPostId) {
+                showBlogDetail(decodeURIComponent(blogPostId), true);
+                history.replaceState({ page: 'blog-detail', blogId: decodeURIComponent(blogPostId) }, '', window.location.search);
             } else if (pageName) {
                 showPage(pageName, true);
                 history.replaceState({ page: pageName }, '', window.location.search);
@@ -5546,36 +6044,27 @@
                 }, true);
             }
 
-            // Instagram reel configuration - can be updated from backend
+            // Instagram post configuration - can be updated from backend
             const instagramReelUrls = [
-                'https://www.instagram.com/reel/DUQsisoiOmL/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DUOVc_jiBzj/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DTFieXoE4Rx/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DSzfrZSk7qq/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DShSvf3kUU2/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DRrXx-AiPSj/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DRkJ9-8E8a9/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DPJS0PpCEw8/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                'https://www.instagram.com/reel/DKmqMtMpJGr/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==',
-                // Add more URLs as needed
-                // Add Instagram reel post URLs here (e.g., https://www.instagram.com/p/ABC123/)
-                // This array can be populated from a backend API endpoint
+                // Add Instagram post URLs here (e.g., https://www.instagram.com/p/ABC123/)
+                // This array will be populated from @mainspring.dxb posts
+                // Posts are shown instead of reels for Mainspring
             ];
 
-            // Load Instagram reels into carousel
+            // Load Instagram posts into carousel
             async function loadInstagramReels() {
                 const track = document.getElementById('instagramTrack');
 
-                // Try to fetch latest reel URLs from backend (optional)
+                // Try to fetch latest post URLs from backend (optional)
                 try {
-                    const response = await fetch('/api/instagram-reels', {
+                    const response = await fetch('/api/instagram-posts', {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' }
                     });
                     if (response.ok) {
                         const data = await response.json();
-                        if (data.reels && Array.isArray(data.reels)) {
-                            instagramReelUrls.splice(0, instagramReelUrls.length, ...data.reels);
+                        if (data.posts && Array.isArray(data.posts)) {
+                            instagramReelUrls.splice(0, instagramReelUrls.length, ...data.posts);
                         }
                     }
                 } catch (e) {
@@ -5584,7 +6073,7 @@
 
                 // Render Instagram embeds
                 if (instagramReelUrls.length === 0) {
-                    track.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">Follow @falcontimepieces on Instagram to see our latest content</div>';
+                    track.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">Follow @mainspring.dxb on Instagram to see our latest content</div>';
                     return;
                 }
 
@@ -5667,480 +6156,6 @@
         });
     </script>
 
-<script>
-/**
- * Iframe 元素高亮注入脚本
- * 需要在目标网站中引入此脚本来支持跨域 iframe 高亮功能
- *
- * 使用方法：
- * 1. 将此脚本添加到目标网站的 HTML 中
- * 2. 或通过浏览器扩展、用户脚本等方式注入
- */
-
-(function () {
-  "use strict";
-
-  // 检查是否在 iframe 中
-  if (window.self === window.top) {
-    return; // 不在 iframe 中，不执行
-  }
-
-  // 检查是否已经初始化过
-  if (window.__iframeHighlightInitialized) {
-    return;
-  }
-  window.__iframeHighlightInitialized = true;
-  console.log("Iframe 高亮脚本已加载");
-
-  // 创建高亮覆盖层
-  var overlay = document.createElement("div");
-  overlay.id = "iframe-highlight-overlay";
-  overlay.style.cssText = "\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100vw;\n    height: 100vh;\n    pointer-events: none;\n    z-index: 999999;\n    overflow: hidden;\n  ";
-
-  // 创建悬停高亮框（虚线边框）
-  var highlightBox = document.createElement("div");
-  highlightBox.id = "iframe-highlight-box";
-  highlightBox.style.cssText = "\n    position: absolute;\n    border: 2px dashed #007AFF;\n    background: rgba(0, 122, 255, 0.08);\n    pointer-events: none;\n    display: none;\n    transition: all 0.1s ease;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);\n    border-radius: 2px;\n  ";
-
-  // 创建选中节点的常驻高亮框（实线边框）
-  var selectedBox = document.createElement("div");
-  selectedBox.id = "iframe-selected-box";
-  selectedBox.style.cssText = "\n    position: absolute;\n    border: 2px solid #007AFF;\n    pointer-events: none;\n    display: none;\n    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9), 0 0 8px rgba(255, 107, 53, 0.4);\n    border-radius: 2px;\n    z-index: 1000000;\n  ";
-
-  // 创建悬停标签显示
-  var tagLabel = document.createElement("div");
-  tagLabel.id = "iframe-tag-label";
-  tagLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 2px 6px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 2px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000001;\n    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);\n    font-weight: 500;\n  ";
-
-  // 创建选中节点标签
-  var selectedLabel = document.createElement("div");
-  selectedLabel.id = "iframe-selected-label";
-  selectedLabel.style.cssText = "\n    position: absolute;\n    background: #007AFF;\n    color: white;\n    padding: 3px 8px;\n    font-size: 11px;\n    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n    border-radius: 3px;\n    pointer-events: none;\n    display: none;\n    white-space: nowrap;\n    z-index: 1000002;\n    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);\n    font-weight: 600;\n  ";
-  overlay.appendChild(highlightBox);
-  overlay.appendChild(selectedBox);
-  overlay.appendChild(tagLabel);
-  overlay.appendChild(selectedLabel);
-  document.body.appendChild(overlay);
-
-  // 存储当前选中的元素
-  var selectedElement = null;
-  var highlightEnabled = false;
-
-  // 更新选中元素的高亮显示
-  function updateSelectedHighlight(element) {
-    console.log("updateSelectedHighlight called with:", element);
-    if (!element) {
-      selectedBox.style.display = "none";
-      selectedLabel.style.display = "none";
-      selectedElement = null;
-      console.log("Cleared selected highlight");
-      return;
-    }
-    selectedElement = element;
-    var rect = element.getBoundingClientRect();
-    console.log("Selected element rect:", rect);
-
-    // 更新选中高亮框位置
-    selectedBox.style.display = "block";
-    selectedBox.style.left = "".concat(rect.left - 2, "px");
-    selectedBox.style.top = "".concat(rect.top - 2, "px");
-    selectedBox.style.width = "".concat(rect.width + 4, "px");
-    selectedBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新选中标签位置和内容
-    selectedLabel.style.display = "block";
-    selectedLabel.textContent = "\u2713 <".concat(element.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 28;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 5) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    var labelWidth = selectedLabel.offsetWidth || 100; // 预估宽度
-    if (labelLeft + labelWidth > window.innerWidth - 10) {
-      labelLeft = window.innerWidth - labelWidth - 10;
-    }
-    selectedLabel.style.left = "".concat(Math.max(5, labelLeft), "px");
-    selectedLabel.style.top = "".concat(labelTop, "px");
-    console.log("Selected highlight positioned at:", {
-      left: selectedBox.style.left,
-      top: selectedBox.style.top,
-      width: selectedBox.style.width,
-      height: selectedBox.style.height
-    });
-  }
-  function getElementSelector(element) {
-    if (!(element instanceof Element)) throw new Error('Argument must be a DOM element');
-    var segments = [];
-    var current = element;
-    while (current !== document.documentElement) {
-      var selector = '';
-      // 优先检查唯一ID
-      if (current.id && document.querySelectorAll("#".concat(current.id)).length === 1) {
-        segments.unshift("#".concat(current.id));
-        break; // ID唯一，无需继续向上
-      }
-
-      // 生成类名选择器（取第一个有效类名）
-      var classes = Array.from(current.classList).filter(function (c) {
-        return !c.startsWith('js-');
-      });
-      var className = classes.length > 0 ? ".".concat(classes[0]) : '';
-
-      // 生成位置索引（nth-child）
-      var tag = current.tagName.toLowerCase();
-      if (!className) {
-        var siblings = Array.from(current.parentNode.children);
-        var index = siblings.findIndex(function (el) {
-          return el === current;
-        }) + 1;
-        selector = "".concat(tag, ":nth-child(").concat(index, ")");
-      } else {
-        selector = className;
-      }
-      segments.unshift(selector);
-      current = current.parentElement;
-    }
-
-    // 处理根元素
-    if (current === document.documentElement) {
-      segments.unshift('html');
-    }
-    return segments.join(' > ');
-  }
-
-  // 获取元素文本内容
-  function getElementText(element) {
-    var _element$textContent;
-    if (element.tagName === "INPUT") {
-      return element.value || element.placeholder || "";
-    }
-    if (element.tagName === "TEXTAREA") {
-      return element.value || element.placeholder || "";
-    }
-    var text = ((_element$textContent = element.textContent) === null || _element$textContent === void 0 ? void 0 : _element$textContent.trim()) || "";
-    return text.length > 50 ? text.substring(0, 50) + "..." : text;
-  }
-
-  // 获取元素属性信息
-  function getElementAttributes(element) {
-    var attrs = {};
-    for (var i = 0; i < element.attributes.length; i++) {
-      var attr = element.attributes[i];
-      attrs[attr.name] = attr.value;
-    }
-    return attrs;
-  }
-
-  // 鼠标悬停事件处理
-  function handleMouseOver(e) {
-    if (!highlightEnabled) return;
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免高亮 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 如果是已选中的元素，不显示悬停高亮
-    if (target === selectedElement) {
-      highlightBox.style.display = "none";
-      tagLabel.style.display = "none";
-      return;
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-
-    // 更新悬停高亮框位置
-    highlightBox.style.display = "block";
-    highlightBox.style.left = "".concat(rect.left - 2, "px");
-    highlightBox.style.top = "".concat(rect.top - 2, "px");
-    highlightBox.style.width = "".concat(rect.width + 4, "px");
-    highlightBox.style.height = "".concat(rect.height + 4, "px");
-
-    // 更新标签位置和内容
-    tagLabel.style.display = "block";
-    tagLabel.textContent = "<".concat(target.tagName.toLowerCase(), ">");
-
-    // 计算标签位置，确保不超出视窗
-    var labelTop = rect.top - 22;
-    var labelLeft = rect.left;
-
-    // 如果标签会超出顶部，显示在元素下方
-    if (labelTop < 0) {
-      labelTop = rect.bottom + 5;
-    }
-
-    // 如果标签会超出右侧，向左调整
-    if (labelLeft + tagLabel.offsetWidth > window.innerWidth) {
-      labelLeft = window.innerWidth - tagLabel.offsetWidth - 5;
-    }
-    tagLabel.style.left = "".concat(Math.max(0, labelLeft), "px");
-    tagLabel.style.top = "".concat(labelTop, "px");
-
-    // 发送消息到父窗口
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 鼠标离开事件处理
-  function handleMouseOut(e) {
-    if (!highlightEnabled) return;
-    var relatedTarget = e.relatedTarget;
-
-    // 如果鼠标移动到高亮相关元素上，不隐藏高亮
-    if (relatedTarget && (relatedTarget === highlightBox || relatedTarget === tagLabel || relatedTarget === overlay || relatedTarget === selectedBox || relatedTarget === selectedLabel)) {
-      return;
-    }
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-hover",
-        data: null,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 点击事件处理
-  function handleClick(e) {
-    var target = e.target;
-    if (!target || target === overlay || target === highlightBox || target === tagLabel || target === selectedBox || target === selectedLabel) {
-      return;
-    }
-
-    // 避免处理 html 和 body 元素
-    if (target === document.documentElement || target === document.body) {
-      return;
-    }
-
-    // 检查是否是交互元素，这些元素需要保留默认行为
-    var isInteractiveElement = ['input', 'textarea', 'select', 'button', 'a'].includes(target.tagName.toLowerCase());
-
-    // 如果高亮功能启用，对于非交互元素阻止默认行为和事件传播
-    if (highlightEnabled) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    var rect = target.getBoundingClientRect();
-    var selector = getElementSelector(target);
-    var text = getElementText(target);
-    var attributes = getElementAttributes(target);
-    console.log("Element clicked:", {
-      tagName: target.tagName,
-      selector: selector,
-      rect: rect
-    });
-
-    // 立即更新选中高亮
-    updateSelectedHighlight(target);
-
-    // 隐藏悬停高亮，因为现在是选中状态
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    var elementInfo = {
-      tagName: target.tagName.toLowerCase(),
-      rect: {
-        left: rect.left,
-        top: rect.top,
-        right: rect.right,
-        bottom: rect.bottom,
-        width: rect.width,
-        height: rect.height,
-        x: rect.x,
-        y: rect.y
-      },
-      selector: selector,
-      text: text,
-      attributes: attributes,
-      url: window.location.href,
-      path: window.location.pathname,
-      timestamp: Date.now()
-    };
-    try {
-      window.parent.postMessage({
-        type: "iframe-element-click",
-        data: elementInfo,
-        source: "iframe-highlight-injector"
-      }, "*");
-    } catch (error) {
-      console.warn("无法发送消息到父窗口:", error);
-    }
-  }
-
-  // 监听来自父窗口的消息
-  function handleParentMessage(event) {
-    console.log("Received message from parent:", event.data);
-    if (event.data.type === "iframe-highlight-toggle") {
-      var enabled = event.data.enabled;
-      console.log("Highlight toggle:", enabled);
-      if (enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "enable-iframe-highlight") {
-      console.log("Enable iframe highlight");
-      enableHighlight();
-    } else if (event.data.type === "disable-iframe-highlight") {
-      console.log("Disable iframe highlight");
-      disableHighlight();
-    } else if (event.data.type === "toggle-iframe-highlight") {
-      var _enabled = event.data.enabled !== undefined ? event.data.enabled : !highlightEnabled;
-      console.log("Toggle iframe highlight to:", _enabled);
-      if (_enabled) {
-        enableHighlight();
-      } else {
-        disableHighlight();
-      }
-    } else if (event.data.type === "update-selected-element") {
-      var selector = event.data.selector;
-      console.log("Update selected element with selector:", selector);
-      if (selector) {
-        try {
-          var element = document.querySelector(selector);
-          console.log("Found element by selector:", element);
-          updateSelectedHighlight(element);
-        } catch (error) {
-          console.warn("Failed to select element:", error);
-          updateSelectedHighlight(null);
-        }
-      } else {
-        updateSelectedHighlight(null);
-      }
-    } else if (event.data.type === "clear-selected-element") {
-      console.log("Clear selected element");
-      updateSelectedHighlight(null);
-    }
-  }
-
-  // 启用高亮功能
-  function enableHighlight() {
-    console.log("Enabling highlight");
-    document.addEventListener("mouseover", handleMouseOver, true);
-    document.addEventListener("mouseout", handleMouseOut, true);
-    document.addEventListener("click", handleClick, true);
-    highlightEnabled = true;
-    overlay.style.display = "block";
-  }
-
-  // 禁用高亮功能
-  function disableHighlight() {
-    console.log("Disabling highlight");
-    highlightEnabled = false;
-    // 保持事件监听器，但通过 highlightEnabled 变量控制行为
-    // 这样可以保留选中状态的显示
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    // 不隐藏 selectedBox 和 selectedLabel，保留选中状态
-  }
-
-  // 完全禁用高亮功能（移除所有监听器）
-  function fullyDisableHighlight() {
-    console.log("Fully disabling highlight");
-    highlightEnabled = false;
-    document.removeEventListener("mouseover", handleMouseOver, true);
-    document.removeEventListener("mouseout", handleMouseOut, true);
-    document.removeEventListener("click", handleClick, true);
-    overlay.style.display = "none";
-    highlightBox.style.display = "none";
-    tagLabel.style.display = "none";
-    selectedBox.style.display = "none";
-    selectedLabel.style.display = "none";
-  }
-
-  // 添加事件监听
-  enableHighlight();
-  window.addEventListener("message", handleParentMessage);
-
-  // 暴露全局函数供外部调用
-  window.__iframeHighlightControl = {
-    enable: enableHighlight,
-    disable: disableHighlight,
-    fullyDisable: fullyDisableHighlight,
-    isEnabled: function isEnabled() {
-      return highlightEnabled;
-    },
-    getSelectedElement: function getSelectedElement() {
-      return selectedElement;
-    },
-    updateSelected: updateSelectedHighlight,
-    // 通过消息发送开关控制
-    sendToggleMessage: function sendToggleMessage(enabled) {
-      window.parent.postMessage({
-        type: 'iframe-highlight-status',
-        enabled: enabled || highlightEnabled,
-        source: 'iframe-highlight-injector'
-      }, '*');
-    }
-  };
-
-  // 通知父窗口脚本已加载
-  try {
-    window.parent.postMessage({
-      type: "iframe-highlight-ready",
-      data: {
-        url: window.location.href,
-        userAgent: navigator.userAgent,
-        timestamp: Date.now()
-      },
-      source: "iframe-highlight-injector"
-    }, "*");
-  } catch (error) {
-    console.warn("无法发送就绪消息到父窗口:", error);
-  }
-
-  // 清理函数
-  window.__iframeHighlightCleanup = function () {
-    fullyDisableHighlight();
-    window.removeEventListener("message", handleParentMessage);
-    if (overlay.parentElement) {
-      overlay.parentElement.removeChild(overlay);
-    }
-    delete window.__iframeHighlightInitialized;
-    delete window.__iframeHighlightCleanup;
-  };
-})();
-
-</script>
+<!-- End of Mainspring Dubai -->
 </body>
 </html>
