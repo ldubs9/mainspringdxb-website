@@ -686,6 +686,239 @@
             color: var(--cream-dark);
         }
 
+        /* Cart item quantity controls */
+        .cart-item-qty {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .cart-item-qty button {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--cream-dark);
+            background: var(--light-gray);
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+        .cart-item-qty button:hover {
+            background: var(--cream-dark);
+        }
+        .cart-item-qty span {
+            font-size: 0.9rem;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* Checkout Overlay */
+        .checkout-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .checkout-overlay.active {
+            display: flex;
+        }
+        .checkout-modal {
+            background: var(--white);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 80px rgba(0,0,0,0.25);
+        }
+        .checkout-modal-header {
+            padding: 25px 30px;
+            border-bottom: 1px solid var(--cream-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .checkout-modal-header h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.4rem;
+            letter-spacing: 0.05em;
+        }
+        .checkout-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        .checkout-body {
+            padding: 30px;
+        }
+        .checkout-summary {
+            margin-bottom: 30px;
+        }
+        .checkout-summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--cream);
+            font-size: 0.95rem;
+        }
+        .checkout-summary-item .item-name {
+            flex: 1;
+        }
+        .checkout-summary-item .item-qty {
+            color: var(--gray);
+            margin: 0 15px;
+        }
+        .checkout-summary-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .payment-method-label {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            letter-spacing: 0.05em;
+        }
+        .payment-method {
+            border: 2px solid var(--cream-dark);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .payment-method:hover {
+            border-color: var(--primary-green);
+        }
+        .payment-method.selected {
+            border-color: var(--primary-green);
+            background: rgba(20,20,20,0.03);
+        }
+        .payment-method-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--light-gray);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary-green);
+            flex-shrink: 0;
+        }
+        .payment-method-info {
+            flex: 1;
+        }
+        .payment-method-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+        .payment-method-desc {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        .payment-method-surcharge {
+            font-size: 0.8rem;
+            color: #c0392b;
+            font-weight: 600;
+        }
+        .payment-method-price {
+            font-weight: 600;
+            font-size: 1rem;
+            text-align: right;
+            min-width: 80px;
+        }
+        .checkout-confirm-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary-green);
+            color: var(--white);
+            border: none;
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            letter-spacing: 0.15em;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 25px;
+            border-radius: var(--radius);
+        }
+        .checkout-confirm-btn:hover {
+            background: var(--primary-green-dark);
+        }
+        .checkout-confirm-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        /* Checkout confirmation */
+        .checkout-confirmation {
+            text-align: center;
+            padding: 30px;
+        }
+        .checkout-confirmation i {
+            font-size: 3rem;
+            color: var(--primary-green);
+            margin-bottom: 15px;
+        }
+        .checkout-confirmation h4 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        .checkout-confirmation p {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .checkout-bank-details {
+            background: var(--light-gray);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin: 20px 0;
+            text-align: left;
+        }
+        .checkout-bank-details p {
+            margin-bottom: 6px;
+            color: var(--black);
+            font-size: 0.9rem;
+        }
+        .checkout-bank-details strong {
+            color: var(--primary-green);
+        }
+
+        @media (max-width: 480px) {
+            .checkout-modal {
+                max-height: 95vh;
+            }
+            .checkout-body {
+                padding: 20px;
+            }
+            .payment-method {
+                padding: 14px 16px;
+            }
+        }
+
         /* Wishlist */
         .wishlist-items {
             display: grid;
@@ -2808,11 +3041,11 @@
                 width: auto;
                 display: block;
             }
-            #mobileWishlist {
+            #mobileWishlist, #mobileCart {
                 display: flex !important;
                 gap: 12px;
             }
-            .header-right .header-icon-wrapper:not(#mobileWishlist) {
+            .header-right .header-icon-wrapper:not(#mobileWishlist):not(#mobileCart) {
                 display: none !important;
             }
             .header-icon-wrapper {
@@ -3463,9 +3696,17 @@
         </div>
         <div class="header-right">
             <i class="header-icon fas fa-search" id="searchIcon" onclick="toggleSearch()"></i>
+            <div class="header-icon-wrapper" onclick="openCart()" style="cursor: pointer;">
+                <i class="header-icon fas fa-shopping-bag"></i>
+                <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+            </div>
             <div class="header-icon-wrapper" onclick="openWishlist()" style="cursor: pointer;">
                 <i class="header-icon far fa-heart"></i>
                 <span class="cart-badge" id="wishlistBadge" style="display: none;">0</span>
+            </div>
+            <div class="header-icon-wrapper" id="mobileCart" onclick="openCart()" style="cursor: pointer; display: none;">
+                <i class="header-icon fas fa-shopping-bag"></i>
+                <span class="cart-badge" id="cartBadgeMobile" style="display: none;">0</span>
             </div>
             <div class="header-icon-wrapper" id="mobileWishlist" onclick="openWishlist()" style="cursor: pointer; display: none;">
                 <i class="header-icon far fa-heart"></i>
@@ -3969,6 +4210,27 @@
         <i class="fab fa-whatsapp"></i>
     </a>
 
+    <!-- Cart Sidebar -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>My Cart</h3>
+            <button class="cart-close" onclick="closeCart()">&times;</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">
+                <i class="fas fa-shopping-bag"></i>
+                <p>Your cart is empty</p>
+            </div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display: none;">
+            <div class="cart-total">
+                <span>Total</span>
+                <span id="cartTotal">AED 0</span>
+            </div>
+            <button class="cart-checkout-btn" onclick="openCheckout()">PROCEED TO CHECKOUT</button>
+        </div>
+    </div>
+
     <!-- Wishlist Sidebar -->
     <div class="cart-sidebar" id="wishlistSidebar">
         <div class="cart-header">
@@ -3979,6 +4241,19 @@
             <div class="cart-empty">
                 <i class="fas fa-heart"></i>
                 <p>Your wishlist is empty</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Checkout Overlay -->
+    <div class="checkout-overlay" id="checkoutOverlay">
+        <div class="checkout-modal">
+            <div class="checkout-modal-header">
+                <h3>Checkout</h3>
+                <button class="checkout-close" onclick="closeCheckout()">&times;</button>
+            </div>
+            <div class="checkout-body" id="checkoutBody">
+                <!-- Populated by JS -->
             </div>
         </div>
     </div>
@@ -4071,6 +4346,301 @@
                 showPage('home', true);
             }
         });
+
+        // Cart (localStorage)
+        let cart = JSON.parse(localStorage.getItem('mainspring_cart')) || [];
+
+        function saveCart() {
+            localStorage.setItem('mainspring_cart', JSON.stringify(cart));
+            updateCartBadge();
+        }
+
+        function updateCartBadge() {
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cartBadge').textContent = totalItems;
+            document.getElementById('cartBadge').style.display = totalItems > 0 ? 'flex' : 'none';
+            document.getElementById('cartBadgeMobile').textContent = totalItems;
+            document.getElementById('cartBadgeMobile').style.display = totalItems > 0 ? 'flex' : 'none';
+        }
+
+        function addToCart(product) {
+            const existing = cart.find(item => item.id === product.id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    brand: product.brand,
+                    price: product.price,
+                    qty: 1
+                });
+            }
+            saveCart();
+            renderCart();
+            openCart();
+            trackClick('add_to_cart', product.name);
+        }
+
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.id !== productId);
+            saveCart();
+            renderCart();
+        }
+
+        function updateCartQty(productId, delta) {
+            const item = cart.find(i => i.id === productId);
+            if (item) {
+                item.qty += delta;
+                if (item.qty <= 0) {
+                    removeFromCart(productId);
+                    return;
+                }
+                saveCart();
+                renderCart();
+            }
+        }
+
+        function openCart() {
+            document.getElementById('cartSidebar').classList.add('active');
+            renderCart();
+        }
+
+        function closeCart() {
+            document.getElementById('cartSidebar').classList.remove('active');
+        }
+
+        function renderCart() {
+            const cartItemsEl = document.getElementById('cartItems');
+            const cartFooterEl = document.getElementById('cartFooter');
+
+            if (cart.length === 0) {
+                cartItemsEl.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-bag"></i><p>Your cart is empty</p></div>';
+                cartFooterEl.style.display = 'none';
+                return;
+            }
+
+            cartFooterEl.style.display = 'block';
+            const totalAED = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+            document.getElementById('cartTotal').textContent = formatPrice(totalAED);
+            document.getElementById('cartTotal').setAttribute('data-price-aed', totalAED);
+
+            cartItemsEl.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="cart-item-image">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="cart-item-details">
+                        <p class="cart-item-name">${item.brand} ${item.name}</p>
+                        <p class="cart-item-price" data-price-aed="${item.price}">${formatPrice(item.price)}</p>
+                        <div class="cart-item-qty">
+                            <button onclick="updateCartQty(${item.id}, -1)">−</button>
+                            <span>${item.qty}</span>
+                            <button onclick="updateCartQty(${item.id}, 1)">+</button>
+                        </div>
+                    </div>
+                    <button class="cart-item-remove" onclick="removeFromCart(${item.id})">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function getCartTotal() {
+            return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+        }
+
+        // Checkout
+        let selectedPaymentMethod = null;
+
+        function openCheckout() {
+            closeCart();
+            selectedPaymentMethod = null;
+            renderCheckoutBody();
+            document.getElementById('checkoutOverlay').classList.add('active');
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkoutOverlay').classList.remove('active');
+        }
+
+        function renderCheckoutBody() {
+            const total = getCartTotal();
+            const tabbyTotal = Math.round(total * 1.10);
+            const tamaraTotal = Math.round(total * 1.10);
+            const body = document.getElementById('checkoutBody');
+
+            body.innerHTML = `
+                <div class="checkout-summary">
+                    ${cart.map(item => `
+                        <div class="checkout-summary-item">
+                            <span class="item-name">${item.brand} ${item.name}</span>
+                            <span class="item-qty">x${item.qty}</span>
+                            <span data-price-aed="${item.price * item.qty}">${formatPrice(item.price * item.qty)}</span>
+                        </div>
+                    `).join('')}
+                    <div class="checkout-summary-total">
+                        <span>Subtotal</span>
+                        <span data-price-aed="${total}">${formatPrice(total)}</span>
+                    </div>
+                </div>
+
+                <p class="payment-method-label">Select Payment Method</p>
+                <div class="payment-methods">
+                    <div class="payment-method" onclick="selectPayment('card', this)">
+                        <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
+                        <div class="payment-method-info">
+                            <div class="payment-method-name">Card Payment</div>
+                            <div class="payment-method-desc">Visa, Mastercard, Amex</div>
+                        </div>
+                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
+                    </div>
+                    <div class="payment-method" onclick="selectPayment('cash', this)">
+                        <div class="payment-method-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="payment-method-info">
+                            <div class="payment-method-name">Cash on Delivery</div>
+                            <div class="payment-method-desc">Pay upon collection / delivery</div>
+                        </div>
+                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
+                    </div>
+                    <div class="payment-method" onclick="selectPayment('bank', this)">
+                        <div class="payment-method-icon"><i class="fas fa-university"></i></div>
+                        <div class="payment-method-info">
+                            <div class="payment-method-name">Bank Transfer</div>
+                            <div class="payment-method-desc">Direct bank transfer</div>
+                        </div>
+                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
+                    </div>
+                    <div class="payment-method" onclick="selectPayment('tabby', this)">
+                        <div class="payment-method-icon"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="payment-method-info">
+                            <div class="payment-method-name">Tabby</div>
+                            <div class="payment-method-desc">Split in 4 payments</div>
+                            <div class="payment-method-surcharge">+10% surcharge</div>
+                        </div>
+                        <div class="payment-method-price" data-price-aed="${tabbyTotal}">${formatPrice(tabbyTotal)}</div>
+                    </div>
+                    <div class="payment-method" onclick="selectPayment('tamara', this)">
+                        <div class="payment-method-icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="payment-method-info">
+                            <div class="payment-method-name">Tamara</div>
+                            <div class="payment-method-desc">Buy now, pay later</div>
+                            <div class="payment-method-surcharge">+10% surcharge</div>
+                        </div>
+                        <div class="payment-method-price" data-price-aed="${tamaraTotal}">${formatPrice(tamaraTotal)}</div>
+                    </div>
+                </div>
+
+                <button class="checkout-confirm-btn" id="confirmCheckoutBtn" disabled onclick="confirmCheckout()">SELECT A PAYMENT METHOD</button>
+            `;
+        }
+
+        function selectPayment(method, el) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-method').forEach(pm => pm.classList.remove('selected'));
+            el.classList.add('selected');
+            const btn = document.getElementById('confirmCheckoutBtn');
+            btn.disabled = false;
+            btn.textContent = 'CONFIRM ORDER';
+        }
+
+        function confirmCheckout() {
+            if (!selectedPaymentMethod) return;
+            const total = getCartTotal();
+            const body = document.getElementById('checkoutBody');
+            const orderRef = 'MS-' + Date.now().toString(36).toUpperCase();
+
+            const orderItems = cart.map(item => `${item.brand} ${item.name} x${item.qty}`).join(', ');
+
+            if (selectedPaymentMethod === 'bank') {
+                body.innerHTML = `
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-university"></i>
+                        <h4>Bank Transfer</h4>
+                        <p>Please transfer the total amount to the following account:</p>
+                        <div class="checkout-bank-details">
+                            <p><strong>Bank:</strong> Emirates NBD</p>
+                            <p><strong>Account Name:</strong> Mainspring Trading LLC</p>
+                            <p><strong>IBAN:</strong> AE00 0000 0000 0000 0000 000</p>
+                            <p><strong>Reference:</strong> ${orderRef}</p>
+                            <p><strong>Amount:</strong> ${formatPrice(total)}</p>
+                        </div>
+                        <p>Once transferred, please send a screenshot of your payment confirmation via WhatsApp for faster processing.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('bank', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
+                    </div>
+                `;
+            } else if (selectedPaymentMethod === 'cash') {
+                body.innerHTML = `
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <h4>Cash Payment</h4>
+                        <p>Your order <strong>${orderRef}</strong> has been placed. You will pay <strong>${formatPrice(total)}</strong> upon collection or delivery.</p>
+                        <p style="margin-top: 10px;">We will contact you via WhatsApp to arrange the details.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
+                    </div>
+                `;
+            } else if (selectedPaymentMethod === 'card') {
+                body.innerHTML = `
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-credit-card"></i>
+                        <h4>Card Payment</h4>
+                        <p>Your order <strong>${orderRef}</strong> has been placed. Total: <strong>${formatPrice(total)}</strong></p>
+                        <p style="margin-top: 10px;">Please contact us via WhatsApp to arrange secure card payment.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('card', '${orderRef}')"><i class="fab fa-whatsapp"></i> Arrange Payment via WhatsApp</button>
+                    </div>
+                `;
+            } else if (selectedPaymentMethod === 'tabby') {
+                const tabbyTotal = Math.round(total * 1.10);
+                const installment = Math.round(tabbyTotal / 4);
+                body.innerHTML = `
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h4>Tabby — Split in 4</h4>
+                        <p>Your order <strong>${orderRef}</strong> total with Tabby: <strong>${formatPrice(tabbyTotal)}</strong> (includes 10% surcharge)</p>
+                        <p style="margin-top: 10px;">4 payments of <strong>${formatPrice(installment)}</strong></p>
+                        <p style="margin-top: 10px;">Contact us via WhatsApp to set up your Tabby payment.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tabby', '${orderRef}')"><i class="fab fa-whatsapp"></i> Set Up Tabby via WhatsApp</button>
+                    </div>
+                `;
+            } else if (selectedPaymentMethod === 'tamara') {
+                const tamaraTotal = Math.round(total * 1.10);
+                body.innerHTML = `
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-calendar-check"></i>
+                        <h4>Tamara — Buy Now, Pay Later</h4>
+                        <p>Your order <strong>${orderRef}</strong> total with Tamara: <strong>${formatPrice(tamaraTotal)}</strong> (includes 10% surcharge)</p>
+                        <p style="margin-top: 10px;">Contact us via WhatsApp to set up your Tamara payment plan.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tamara', '${orderRef}')"><i class="fab fa-whatsapp"></i> Set Up Tamara via WhatsApp</button>
+                    </div>
+                `;
+            }
+
+            // Clear cart after order
+            cart = [];
+            saveCart();
+            renderCart();
+            trackClick('checkout_' + selectedPaymentMethod, orderRef);
+        }
+
+        function sendOrderWhatsApp(method, orderRef) {
+            const methodNames = {
+                bank: 'Bank Transfer',
+                cash: 'Cash on Delivery',
+                card: 'Card Payment',
+                tabby: 'Tabby (BNPL)',
+                tamara: 'Tamara (BNPL)'
+            };
+            const message = `Hello Mainspring, I have placed an order.\n\nOrder Ref: ${orderRef}\nPayment Method: ${methodNames[method]}\n\nPlease confirm and arrange the next steps. Thank you!`;
+            const whatsappUrl = `https://wa.me/971585625042?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            closeCheckout();
+        }
+
+        // Close checkout on overlay click
+        document.getElementById('checkoutOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeCheckout();
+        });
+
+        // Initialize cart badge on load
+        updateCartBadge();
 
         // Wishlist (localStorage)
         let wishlist = JSON.parse(localStorage.getItem('mainspring_wishlist')) || [];
@@ -4619,14 +5189,17 @@
                         <h3 class="product-name" onclick="showProductDetail('${product.reference_code || product.id}')">${displayName}</h3>
                         ${additionalInfo}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div style="display: flex; gap: 8px; margin-top: 15px;">
                             ${isSold ? `
                             <button disabled style="flex: 1; padding: 10px; background: var(--gray); color: white; border: none; cursor: default; font-size: 0.8rem; opacity: 0.7;">
                                 <i class="fas fa-ban"></i> Sold
                             </button>
                             ` : `
-                            <button onclick="event.stopPropagation(); addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem;">
-                                <i class="far fa-heart"></i> Add to Wishlist
+                            <button onclick="event.stopPropagation(); addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 4px;">
+                                <i class="fas fa-shopping-bag"></i> Add to Cart
+                            </button>
+                            <button onclick="event.stopPropagation(); addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="padding: 10px 12px; background: none; border: 1px solid var(--cream-dark); cursor: pointer; font-size: 0.8rem; color: var(--primary-green); border-radius: 4px;">
+                                <i class="far fa-heart"></i>
                             </button>
                             `}
                         </div>
@@ -5116,7 +5689,8 @@
                 </div>
                 ` : `
                 <div class="detail-actions">
-                    <button class="btn-primary" onclick="inquireViaWhatsApp({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}, reference_number: '${refNumber}'})"><i class="fab fa-whatsapp"></i> WhatsApp Us</button>
+                    <button class="btn-primary" onclick="addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                    <button class="btn-primary" style="background: #25D366;" onclick="inquireViaWhatsApp({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}, reference_number: '${refNumber}'})"><i class="fab fa-whatsapp"></i> WhatsApp Us</button>
                     <button class="btn-secondary" onclick="addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="far fa-heart"></i></button>
                 </div>
                 `}
