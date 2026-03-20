@@ -53,7 +53,9 @@ Deno.serve(async (req: Request) => {
       0
     );
 
-    const surchargeRate = (payment_method === "tabby" || payment_method === "tamara") ? 10 : 0;
+    const surchargeRate = (payment_method === "tabby" || payment_method === "tamara") ? 8.5
+      : (payment_method === "tap_card") ? 3
+      : 0;
     const total = Math.round(subtotal * (1 + surchargeRate / 100));
 
     // Generate order reference

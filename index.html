@@ -34,7 +34,7 @@
             --charcoal: #1e1e1e;
             --warm-white: #fcfaf6;
             --accent: #2a2520;
-            --radius: 12px;
+            --radius: 0px;
             --transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
         }
 
@@ -82,10 +82,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--charcoal);
-            backdrop-filter: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
             transition: var(--transition);
-            border-bottom: none;
+            border-bottom: 1px solid rgba(0,0,0,0.06);
             height: 72px;
         }
 
@@ -118,7 +118,7 @@
             width: 100%;
             padding: 14px 20px;
             border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 60px;
+            border-radius: 0;
             font-size: 1rem;
             font-family: 'Space Grotesk', sans-serif;
             margin-bottom: 16px;
@@ -149,30 +149,38 @@
         }
 
         .header.scrolled {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(0,0,0,0.06);
-            box-shadow: 0 1px 30px rgba(0,0,0,0.04);
+            background: var(--charcoal);
+            backdrop-filter: none;
+            border-bottom: none;
+            box-shadow: 0 1px 30px rgba(0,0,0,0.1);
         }
 
         .header.scrolled .logo-link,
         .header.scrolled .header-icon,
         .header.scrolled .header-nav li a {
-            color: var(--black);
+            color: var(--white);
+        }
+
+        .header.scrolled .header-nav li a {
+            color: rgba(255,255,255,0.85);
+        }
+
+        .header.scrolled .header-nav li a:hover {
+            color: var(--white);
         }
 
         .header.scrolled .burger-menu span {
-            background: var(--black);
+            background: var(--white);
         }
 
         .header.scrolled .currency-toggle {
-            color: var(--black);
-            border-color: rgba(0,0,0,0.15);
-            background: rgba(0,0,0,0.05);
+            color: var(--white);
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
         }
 
         .header.scrolled .logo-img {
-            filter: none;
+            filter: invert(1);
         }
 
         .header-left {
@@ -193,7 +201,7 @@
             display: block;
             width: 100%;
             height: 2px;
-            background: var(--cream);
+            background: var(--black);
             position: absolute;
             left: 0;
             transition: var(--transition);
@@ -227,7 +235,7 @@
 
         .logo-link {
             text-decoration: none;
-            color: var(--white);
+            color: var(--black);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -245,7 +253,7 @@
             height: 44px;
             width: auto;
             display: block;
-            filter: invert(1);
+            filter: none;
             transition: var(--transition);
         }
 
@@ -267,14 +275,14 @@
             font-weight: 500;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.85);
+            color: rgba(0,0,0,0.7);
             text-decoration: none;
             transition: var(--transition);
             position: relative;
         }
 
         .header-nav li a:hover {
-            color: var(--white);
+            color: var(--black);
         }
 
         .header-nav li a::after {
@@ -287,7 +295,7 @@
             height: 2px;
             background: var(--gold);
             transition: var(--transition);
-            border-radius: 1px;
+            border-radius: 0;
         }
 
         .header-nav li a:hover::after {
@@ -310,20 +318,20 @@
             align-items: center;
             gap: 6px;
             padding: 6px 14px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 20px;
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 0;
             cursor: pointer;
             font-size: 0.85rem;
-            color: var(--white);
+            color: var(--black);
             transition: var(--transition);
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 500;
         }
 
         .currency-toggle:hover {
-            background: rgba(255,255,255,0.18);
-            border-color: rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.1);
+            border-color: rgba(0,0,0,0.25);
         }
 
         .currency-flag {
@@ -410,7 +418,7 @@
             font-size: 1.15rem;
             cursor: pointer;
             transition: var(--transition);
-            color: var(--white);
+            color: var(--black);
         }
 
         .header-icon:hover {
@@ -426,7 +434,7 @@
             width: 52px;
             height: 52px;
             background: #25D366;
-            border-radius: 16px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -456,7 +464,7 @@
             width: 52px;
             height: 52px;
             background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-            border-radius: 16px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -529,7 +537,7 @@
             font-size: 0.9rem;
             font-weight: 500;
             letter-spacing: 0.06em;
-            border-radius: 60px;
+            border-radius: 0;
             transition: var(--transition);
             position: relative;
         }
@@ -703,7 +711,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 4px;
+            border-radius: 0;
             transition: var(--transition);
         }
         .cart-item-qty button:hover {
@@ -818,7 +826,7 @@
             width: 44px;
             height: 44px;
             background: var(--light-gray);
-            border-radius: 8px;
+            border-radius: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -945,7 +953,7 @@
             width: 100%;
             padding: 12px 14px;
             border: 1px solid var(--cream-dark);
-            border-radius: 8px;
+            border-radius: 0;
             font-family: 'Space Grotesk', sans-serif;
             font-size: 0.95rem;
             transition: var(--transition);
@@ -977,7 +985,7 @@
             flex: 1;
             height: 4px;
             background: var(--cream-dark);
-            border-radius: 2px;
+            border-radius: 0;
             transition: var(--transition);
         }
         .checkout-step.active {
@@ -1027,7 +1035,7 @@
         .order-status-badge {
             display: inline-block;
             padding: 6px 14px;
-            border-radius: 20px;
+            border-radius: 0;
             font-size: 0.8rem;
             font-weight: 600;
             text-transform: uppercase;
@@ -1416,7 +1424,7 @@
             font-weight: 500;
             transition: var(--transition);
             animation: slideUp 1s ease 0.4s both;
-            border-radius: 60px;
+            border-radius: 0;
         }
 
         .hero-cta:hover {
@@ -1446,7 +1454,7 @@
             color: white;
             text-decoration: none;
             border: none;
-            border-radius: 60px;
+            border-radius: 0;
             font-size: 0.85rem;
             font-weight: 500;
             letter-spacing: 0.06em;
@@ -1540,7 +1548,7 @@
         .dot {
             width: 28px;
             height: 3px;
-            border-radius: 2px;
+            border-radius: 0;
             border: none;
             background: rgba(255,255,255,0.25);
             cursor: pointer;
@@ -1900,7 +1908,7 @@
             font-size: 0.78rem;
             font-weight: 500;
             transition: var(--transition);
-            border-radius: 60px;
+            border-radius: 0;
         }
 
         .shop-block:last-child .shop-cta {
@@ -1965,7 +1973,7 @@
             color: white;
             text-decoration: none;
             border: none;
-            border-radius: 60px;
+            border-radius: 0;
             font-size: 0.85rem;
             font-weight: 500;
             letter-spacing: 0.06em;
@@ -2083,7 +2091,7 @@
             justify-content: space-between;
             align-items: center;
             min-width: 160px;
-            border-radius: 60px;
+            border-radius: 0;
             font-weight: 500;
         }
 
@@ -2166,7 +2174,7 @@
             font-family: 'Space Grotesk', sans-serif;
             font-size: 0.85rem;
             transition: var(--transition);
-            border-radius: 60px;
+            border-radius: 0;
             background: var(--white);
         }
 
@@ -2321,7 +2329,7 @@
             color: var(--primary-green);
             cursor: pointer;
             transition: var(--transition);
-            border-radius: 60px;
+            border-radius: 0;
         }
 
         .pagination button:hover:not(:disabled) {
@@ -2592,7 +2600,7 @@
             transition: var(--transition);
             overflow: hidden;
             flex-shrink: 0;
-            border-radius: 8px;
+            border-radius: 0;
         }
 
         .gallery-thumb.active {
@@ -2718,7 +2726,7 @@
             background: rgba(0, 0, 0, 0.55);
             color: rgba(255, 255, 255, 0.85);
             padding: 6px 14px;
-            border-radius: 20px;
+            border-radius: 0;
             font-size: 0.72rem;
             white-space: nowrap;
             pointer-events: none;
@@ -4715,8 +4723,9 @@
         // Step 2: Payment method selection
         function renderCheckoutStep2() {
             const total = getCartTotal();
-            const tabbyTotal = Math.round(total * 1.10);
-            const tamaraTotal = Math.round(total * 1.10);
+            const cardTotal = Math.round(total * 1.03);
+            const tabbyTotal = Math.round(total * 1.085);
+            const tamaraTotal = Math.round(total * 1.085);
             const body = document.getElementById('checkoutBody');
 
             body.innerHTML = `
@@ -4729,8 +4738,9 @@
                         <div class="payment-method-info">
                             <div class="payment-method-name">Card Payment</div>
                             <div class="payment-method-desc">Visa, Mastercard, Amex — secure via Tap</div>
+                            <div class="payment-method-surcharge">+3% surcharge</div>
                         </div>
-                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
+                        <div class="payment-method-price" data-price-aed="${cardTotal}">${formatPrice(cardTotal)}</div>
                     </div>
                     <div class="payment-method" onclick="selectPayment('bank_transfer', this)">
                         <div class="payment-method-icon"><i class="fas fa-university"></i></div>
@@ -4753,7 +4763,7 @@
                         <div class="payment-method-info">
                             <div class="payment-method-name">Tabby</div>
                             <div class="payment-method-desc">Split in 4 payments</div>
-                            <div class="payment-method-surcharge">+10% surcharge</div>
+                            <div class="payment-method-surcharge">+8.5% surcharge</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${tabbyTotal}">${formatPrice(tabbyTotal)}</div>
                     </div>
@@ -4762,7 +4772,7 @@
                         <div class="payment-method-info">
                             <div class="payment-method-name">Tamara</div>
                             <div class="payment-method-desc">Buy now, pay later</div>
-                            <div class="payment-method-surcharge">+10% surcharge</div>
+                            <div class="payment-method-surcharge">+8.5% surcharge</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${tamaraTotal}">${formatPrice(tamaraTotal)}</div>
                     </div>
@@ -4932,7 +4942,7 @@
                 }
             } catch (err) {
                 const total = getCartTotal();
-                const tabbyTotal = Math.round(total * 1.10);
+                const tabbyTotal = Math.round(total * 1.085);
                 const installment = Math.round(tabbyTotal / 4);
                 body.innerHTML = `
                     ${renderStepIndicator(3)}
@@ -4978,14 +4988,14 @@
                 }
             } catch (err) {
                 const total = getCartTotal();
-                const tamaraTotal = Math.round(total * 1.10);
+                const tamaraTotal = Math.round(total * 1.085);
                 body.innerHTML = `
                     ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
                         <i class="fas fa-calendar-check"></i>
                         <h4>Tamara — Buy Now, Pay Later</h4>
                         <p>Your order <strong>${orderRef}</strong> has been created.</p>
-                        <p style="margin-top: 10px;">Estimated total: <strong>${formatPrice(tamaraTotal)}</strong> (includes 10% surcharge)</p>
+                        <p style="margin-top: 10px;">Estimated total: <strong>${formatPrice(tamaraTotal)}</strong> (includes 8.5% surcharge)</p>
                         <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Tamara integration is being finalized. Contact us via WhatsApp to complete your Tamara payment.</p>
                         <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tamara', '${orderRef}')"><i class="fab fa-whatsapp"></i> Set Up Tamara via WhatsApp</button>
                     </div>
@@ -5763,10 +5773,10 @@
                                 <i class="fas fa-ban"></i> Sold
                             </button>
                             ` : `
-                            <button onclick="event.stopPropagation(); addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 4px;">
+                            <button onclick="event.stopPropagation(); addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
                                 <i class="fas fa-shopping-bag"></i> Add to Cart
                             </button>
-                            <button onclick="event.stopPropagation(); addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="padding: 10px 12px; background: none; border: 1px solid var(--cream-dark); cursor: pointer; font-size: 0.8rem; color: var(--primary-green); border-radius: 4px;">
+                            <button onclick="event.stopPropagation(); addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="padding: 10px 12px; background: none; border: 1px solid var(--cream-dark); cursor: pointer; font-size: 0.8rem; color: var(--primary-green); border-radius: 0;">
                                 <i class="far fa-heart"></i>
                             </button>
                             `}
