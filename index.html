@@ -169,6 +169,16 @@
             color: var(--white);
         }
 
+        .header.scrolled .nav-more-dropdown a {
+            color: rgba(0,0,0,0.6);
+        }
+        .header.scrolled .nav-more-dropdown a:hover {
+            color: var(--primary-green);
+        }
+        .header.scrolled .header-nav .nav-more > a .chevron-icon {
+            color: rgba(255,255,255,0.5);
+        }
+
         .header.scrolled .burger-menu span {
             background: var(--white);
         }
@@ -300,6 +310,68 @@
 
         .header-nav li a:hover::after {
             width: 70%;
+        }
+
+        /* Desktop "More" dropdown */
+        .header-nav .nav-more {
+            position: relative;
+        }
+        .header-nav .nav-more > a {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        .header-nav .nav-more > a .chevron-icon {
+            font-size: 0.5rem;
+            opacity: 0.5;
+            transition: var(--transition);
+        }
+        .header-nav .nav-more:hover > a .chevron-icon {
+            opacity: 1;
+            transform: rotate(180deg);
+        }
+        .header-nav .nav-more > a::after {
+            display: none;
+        }
+        .nav-more-dropdown {
+            position: absolute;
+            top: calc(100% + 16px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            background: var(--white);
+            border: 1px solid var(--cream-dark);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+            min-width: 210px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 1001;
+            padding: 10px 0;
+        }
+        .header-nav .nav-more:hover .nav-more-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+        .nav-more-dropdown a {
+            display: block;
+            padding: 10px 24px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            color: rgba(0,0,0,0.6);
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: var(--transition);
+        }
+        .nav-more-dropdown a::after {
+            display: none !important;
+        }
+        .nav-more-dropdown a:hover {
+            color: var(--primary-green);
+            background: var(--cream);
         }
 
         .header-right {
@@ -1201,12 +1273,14 @@
             transform: translateY(0);
         }
 
-        .nav-overlay.active .nav-links li:nth-child(1) { transition-delay: 0.15s; }
-        .nav-overlay.active .nav-links li:nth-child(2) { transition-delay: 0.25s; }
-        .nav-overlay.active .nav-links li:nth-child(3) { transition-delay: 0.35s; }
-        .nav-overlay.active .nav-links li:nth-child(4) { transition-delay: 0.45s; }
-        .nav-overlay.active .nav-links li:nth-child(5) { transition-delay: 0.55s; }
-        .nav-overlay.active .nav-links li:nth-child(6) { transition-delay: 0.65s; }
+        .nav-overlay.active .nav-links li:nth-child(1) { transition-delay: 0.12s; }
+        .nav-overlay.active .nav-links li:nth-child(2) { transition-delay: 0.20s; }
+        .nav-overlay.active .nav-links li:nth-child(3) { transition-delay: 0.28s; }
+        .nav-overlay.active .nav-links li:nth-child(4) { transition-delay: 0.36s; }
+        .nav-overlay.active .nav-links li:nth-child(5) { transition-delay: 0.44s; }
+        .nav-overlay.active .nav-links li:nth-child(6) { transition-delay: 0.52s; }
+        .nav-overlay.active .nav-links li:nth-child(7) { transition-delay: 0.60s; }
+        .nav-overlay.active .nav-links li:nth-child(8) { transition-delay: 0.68s; }
 
         .nav-links a {
             font-family: 'Fraunces', serif;
@@ -3022,8 +3096,10 @@
             border-top: 1px solid rgba(255,255,255,0.08);
             padding-top: 24px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            gap: 8px;
+            text-align: center;
         }
 
         .footer-bottom p {
@@ -3034,7 +3110,7 @@
 
         .swiftloop-credit {
             margin-top: 0;
-            font-size: 0.8rem;
+            font-size: 0.82rem;
             color: rgba(255,255,255,0.3);
         }
 
@@ -4225,6 +4301,208 @@
         .sell-cta-btn.secondary { background: transparent; color: var(--primary-green); border: 1px solid var(--primary-green); }
         .sell-cta-btn.secondary:hover { background: var(--primary-green); color: var(--white); }
 
+        /* ── Page hero images & placeholders ─────────────────── */
+        .page-hero-image {
+            width: 100%;
+            height: 340px;
+            background: var(--cream);
+            overflow: hidden;
+            margin-bottom: 60px;
+            position: relative;
+        }
+        .page-hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .page-hero-image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to top, var(--warm-white), transparent);
+        }
+        .page-hero-banner {
+            background: var(--primary-green);
+            padding: 70px 40px 60px;
+            margin-bottom: 0;
+            text-align: center;
+        }
+        .page-hero-banner h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 3.2rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            color: var(--cream);
+            margin-bottom: 16px;
+        }
+        .page-hero-banner p {
+            font-size: 1rem;
+            color: rgba(240,236,228,0.7);
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .page-hero-banner .hero-divider {
+            width: 40px;
+            height: 2px;
+            background: var(--gold);
+            margin: 20px auto 0;
+        }
+
+        /* Contact page map/image */
+        .contact-image-box {
+            width: 100%;
+            height: 240px;
+            background: var(--cream);
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+        .contact-image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* About hero image */
+        .about-hero-image {
+            width: 100%;
+            height: 400px;
+            background: var(--cream);
+            overflow: hidden;
+            margin-bottom: 70px;
+        }
+        .about-hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Inline image for story section */
+        .about-story-image {
+            width: 100%;
+            height: 320px;
+            background: var(--cream);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .about-story-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Section label (small uppercase tag) */
+        .section-label {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        /* Divider line */
+        .gold-divider {
+            width: 40px;
+            height: 2px;
+            background: var(--gold);
+            margin: 24px 0;
+        }
+
+        /* Policy page number badges */
+        .policy-step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--primary-green);
+            color: var(--white);
+            font-family: 'Fraunces', serif;
+            font-size: 0.9rem;
+            font-weight: 400;
+            margin-right: 12px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        /* FAQ decorative border-top */
+        .faq-list { border-top: 1px solid var(--cream-dark); }
+
+        /* Warranty icon header row */
+        .warranty-icon-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .warranty-icon-header i {
+            font-size: 2rem;
+            color: var(--gold);
+        }
+        .warranty-icon-header span {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            font-weight: 400;
+            color: var(--primary-green);
+        }
+
+        /* Sourcing step heading with inline number */
+        .policy-block h2 .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: var(--primary-green);
+            color: var(--white);
+            font-family: 'Fraunces', serif;
+            font-size: 0.85rem;
+            font-weight: 400;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        /* Sell page stat row */
+        .sell-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            margin: 32px 0 48px;
+            border: 1px solid var(--cream-dark);
+        }
+        .sell-stat-item {
+            padding: 28px 24px;
+            text-align: center;
+            border-right: 1px solid var(--cream-dark);
+        }
+        .sell-stat-item:last-child { border-right: none; }
+        .sell-stat-item .stat-icon {
+            color: var(--gold);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        .sell-stat-item h4 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: var(--primary-green);
+            margin-bottom: 6px;
+        }
+        .sell-stat-item p {
+            font-size: 0.78rem;
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
         /* ── Responsive overrides for new pages ──────────────── */
         @media (max-width: 768px) {
             .about-story {
@@ -4240,12 +4518,23 @@
                 border-top: 1px solid var(--cream-dark);
             }
             .about-quote { font-size: 1.6rem; }
+            .about-hero-image { height: 260px; margin-bottom: 50px; }
+            .about-story-image { height: 220px; }
             .contact-grid { grid-template-columns: 1fr; gap: 40px; }
             .contact-hero h1 { font-size: 2.5rem; }
+            .contact-image-box { height: 180px; }
             .sell-options-grid { grid-template-columns: 1fr; }
+            .sell-stats-row { grid-template-columns: 1fr; }
+            .sell-stat-item { border-right: none; border-bottom: 1px solid var(--cream-dark); }
+            .sell-stat-item:last-child { border-bottom: none; }
             .policy-hero h1 { font-size: 2.2rem; }
             .faq-hero h1 { font-size: 2.5rem; }
+            .page-hero-banner h1 { font-size: 2.4rem; }
+            .page-hero-banner { padding: 60px 24px 50px; }
+            .page-hero-image { height: 220px; margin-bottom: 40px; }
             .policy-section, .faq-section, .contact-section { padding: 80px 24px; }
+            .nav-more-dropdown { display: none; }
+            .header-nav .nav-more { display: none; }
         }
     </style>
 </head>
@@ -4262,6 +4551,16 @@
                 <li><a href="#" onclick="event.preventDefault(); showPage('accessories');">ACCESSORIES</a></li>
                 <li><a href="#" onclick="event.preventDefault(); showPage('blog');">BLOG</a></li>
                 <li><a href="#" onclick="event.preventDefault(); showPage('about');">ABOUT</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('contact');">CONTACT</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('faq');">FAQ</a></li>
+                <li class="nav-more">
+                    <a href="#" onclick="event.preventDefault();">MORE <i class="fas fa-chevron-down chevron-icon"></i></a>
+                    <div class="nav-more-dropdown">
+                        <a href="#" onclick="event.preventDefault(); showPage('warranty');">Warranty &amp; Refund</a>
+                        <a href="#" onclick="event.preventDefault(); showPage('sourcing');">Watch Sourcing</a>
+                        <a href="#" onclick="event.preventDefault(); showPage('sell');">Sell Your Watch</a>
+                    </div>
+                </li>
             </ul>
         </div>
         <div class="header-right">
@@ -4352,7 +4651,18 @@
             </li>
             <li><a href="#" onclick="event.preventDefault(); showPage('blog'); closeNav();">BLOG</a></li>
             <li><a href="#" onclick="event.preventDefault(); showPage('about'); closeNav();">ABOUT</a></li>
-            <li><a href="https://wa.me/971585625042" onclick="event.preventDefault(); trackClick('contact_us_menu'); window.open('https://wa.me/971585625042', '_blank'); closeNav();">CONTACT US</a></li>
+            <li><a href="#" onclick="event.preventDefault(); showPage('contact'); closeNav();">CONTACT</a></li>
+            <li><a href="#" onclick="event.preventDefault(); showPage('faq'); closeNav();">FAQ</a></li>
+            <li>
+                <div class="nav-item-wrapper">
+                    <a href="#" onclick="event.preventDefault();">MORE</a>
+                    <ul class="nav-dropdown" id="moreDropdown">
+                        <li><a href="#" onclick="event.preventDefault(); showPage('warranty'); closeNav();">Warranty &amp; Refund</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('sourcing'); closeNav();">Watch Sourcing</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('sell'); closeNav();">Sell Your Watch</a></li>
+                    </ul>
+                </div>
+            </li>
         </ul>
     </nav>
 
@@ -4738,8 +5048,16 @@
             <div class="about-section">
                 <div class="about-container">
 
+                    <!-- Hero Image: Replace about-hero.jpg with a photo of Erkan at his shop or with watches -->
+                    <div class="about-hero-image">
+                        <img src="about-hero.jpg" alt="Erkan at Mainspring Dubai" onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray);opacity:0.5;&quot;><i class=&quot;fas fa-image&quot; style=&quot;font-size:2.5rem;margin-bottom:12px;&quot;></i><span style=&quot;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;&quot;>about-hero.jpg</span></div>'">
+                    </div>
+
+                    <!-- Section Label -->
+                    <span class="section-label">Our Story</span>
+
                     <!-- Quote -->
-                    <blockquote class="about-quote">
+                    <blockquote class="about-quote animate-on-scroll">
                         "At Mainspring, I don't just sell watches — I match people with stories they want to wear."
                         <cite>— Erkan, Founder &amp; Personal Watch Collector</cite>
                     </blockquote>
@@ -4749,42 +5067,50 @@
                         <div class="about-story-text">
                             <p>Watches are my passion, my hobby. To keep that passion alive — to extend my collection, buy new pieces, and fund their maintenance — I began using my own collection as a source. Over time, somehow, it turned into a business as well.</p>
                             <p>When it comes to buying a watch, I am just like you: asking, asking, asking. Checking every detail, every part, cross-referencing, verifying, negotiating — and beyond all of that, searching for the story, the character behind each piece before deciding to buy.</p>
-                            <p>I have a small but highly trusted network of suppliers and experienced collectors I source from. Beyond my own inspection expertise, I always obtain a warranty from my suppliers. That is how I can offer an authenticity warranty on every watch, plus a three-month movement warranty on each piece.</p>
+                            <p>I have a small but highly trusted network of suppliers and experienced collectors I source from. Beyond my own inspection expertise, I always obtain a warranty from my suppliers. That is how I can offer an authenticity warranty on every watch, plus a <strong>three-month movement warranty</strong> on each piece.</p>
                             <p>On your behalf, I ensure the watch I — and therefore you — buy is the real thing. That is why I call myself <strong>your personal watch collector.</strong></p>
                         </div>
                         <div>
+                            <!-- Image: Replace about-erkan.jpg with a portrait or workbench photo -->
+                            <div class="about-story-image">
+                                <img src="about-erkan.jpg" alt="Erkan inspecting watches" onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray);opacity:0.5;&quot;><i class=&quot;fas fa-image&quot; style=&quot;font-size:2rem;margin-bottom:10px;&quot;></i><span style=&quot;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;&quot;>about-erkan.jpg</span></div>'">
+                            </div>
                             <div class="about-facts-card">
                                 <div class="about-facts-label">About Erkan</div>
                                 <ul class="about-facts-list">
-                                    <li>Turkish collector, born 1975 in Izmir</li>
-                                    <li>Mechanical Engineer — MSc &amp; MBA</li>
-                                    <li>Watch collector since 2016</li>
-                                    <li>Reseller since 2021</li>
-                                    <li>Certified vintage watch inspector</li>
-                                    <li>Ephemera collector since 2002</li>
-                                    <li>Regular vendor, Dubai Flea Market</li>
-                                    <li>Resident of Dubai since 2022</li>
+                                    <li><strong>Turkish collector,</strong> born 1975 in Izmir</li>
+                                    <li><strong>Mechanical Engineer</strong> — MSc &amp; MBA</li>
+                                    <li><strong>Watch collector</strong> since 2016</li>
+                                    <li><strong>Professional reseller</strong> since 2021</li>
+                                    <li><strong>Vintage watch inspector</strong></li>
+                                    <li><strong>Ephemera collector</strong> since 2002</li>
+                                    <li><strong>Regular vendor,</strong> Dubai Flea Market</li>
+                                    <li><strong>Resident of Dubai</strong> since 2022</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
+                    <!-- Section Label -->
+                    <span class="section-label">What We Stand For</span>
+                    <div class="gold-divider"></div>
+
                     <!-- Three Pillars -->
-                    <div class="about-credentials-grid">
+                    <div class="about-credentials-grid" style="margin-top: 32px;">
                         <div class="about-credential-item animate-on-scroll">
                             <div class="about-credential-icon"><i class="fas fa-shield-alt"></i></div>
                             <h3>Authenticity Guaranteed</h3>
-                            <p>Every watch is personally inspected and backed by our full authenticity warranty. We will never sell counterfeits — period.</p>
+                            <p>Every watch is personally inspected using professional tools and backed by our full authenticity warranty. <strong>We will never sell counterfeits — period.</strong></p>
                         </div>
                         <div class="about-credential-item animate-on-scroll">
                             <div class="about-credential-icon"><i class="fas fa-cog"></i></div>
                             <h3>3-Month Movement Warranty</h3>
-                            <p>All watches come with a 3-month movement warranty covering repairs, timekeeping adjustments, and battery replacements.</p>
+                            <p>All watches come with a <strong>3-month movement warranty</strong> — covering repairs, timekeeping adjustments, and battery replacements at no extra cost.</p>
                         </div>
                         <div class="about-credential-item animate-on-scroll">
                             <div class="about-credential-icon"><i class="fas fa-handshake"></i></div>
                             <h3>Personal Service</h3>
-                            <p>As your personal watch collector, I apply the same scrutiny when buying for you as I do for myself. No pressure, honest advice.</p>
+                            <p>As your personal watch collector, I apply the <strong>same care and scrutiny</strong> when buying for you as I do for myself. No pressure, honest advice — always.</p>
                         </div>
                     </div>
 
@@ -4794,45 +5120,53 @@
 
         <!-- Contact Page -->
         <section class="page-section" id="page-contact">
+            <!-- Hero Banner -->
+            <div class="page-hero-banner">
+                <h1>Get in Touch</h1>
+                <p>Whether you have a question about a watch, want to visit the shop, or just want to talk horology — I'm easy to reach.</p>
+                <div class="hero-divider"></div>
+            </div>
             <div class="contact-section">
                 <div class="contact-container">
-                    <div class="contact-hero">
-                        <h1>Get in Touch</h1>
-                        <p>Whether you have a question about a watch, want to visit the shop, or just want to talk horology — I'm easy to reach.</p>
-                    </div>
                     <div class="contact-grid">
                         <div class="contact-info-block">
                             <div class="contact-info-item">
-                                <h3>Shop</h3>
-                                <p>The B1 Mall, Gate 11<br>Al Barsha, Dubai, UAE<br><small style="opacity:0.75; font-size:0.85rem;">Behind Mall of Emirates · Free Parking · Open daily 12:00–22:00</small></p>
+                                <h3><i class="fas fa-store" style="margin-right:6px; opacity:0.7;"></i> Shop Location</h3>
+                                <p><strong>The B1 Mall, Gate 11</strong><br>Al Barsha, Dubai, UAE</p>
+                                <p style="font-size:0.85rem; margin-top:8px; opacity:0.8;"><i class="fas fa-parking" style="margin-right:4px; color:var(--gold);"></i> Behind Mall of Emirates · Free Parking</p>
+                                <p style="font-size:0.85rem; margin-top:4px; opacity:0.8;"><i class="far fa-clock" style="margin-right:4px; color:var(--gold);"></i> Open daily <strong>12:00 – 22:00</strong></p>
                             </div>
                             <div class="contact-info-item">
-                                <h3>Office</h3>
-                                <p>Office No. 16, F-116B, Business Bay<br>Dubai, UAE</p>
-                                <p style="font-size:0.82rem; margin-top:6px;">Erkan Gulmez Trading L.L.C<br>VAT TRN: 105091834900003</p>
+                                <h3><i class="fas fa-building" style="margin-right:6px; opacity:0.7;"></i> Office</h3>
+                                <p><strong>Office No. 16, F-116B</strong><br>Business Bay, Dubai, UAE</p>
+                                <p style="font-size:0.82rem; margin-top:8px; opacity:0.75;">Erkan Gulmez Trading L.L.C<br>VAT TRN: 105091834900003</p>
                             </div>
                             <div class="contact-info-item">
-                                <h3>Direct Contact</h3>
-                                <a href="tel:+971585625042">+971 58 562 5042</a>
-                                <a href="https://wa.me/971585625042" target="_blank">WhatsApp: +971 58 562 5042</a>
-                                <a href="mailto:mainspringdubai@gmail.com">mainspringdubai@gmail.com</a>
+                                <h3><i class="fas fa-phone-alt" style="margin-right:6px; opacity:0.7;"></i> Direct Contact</h3>
+                                <a href="tel:+971585625042"><strong>+971 58 562 5042</strong></a>
+                                <a href="https://wa.me/971585625042" target="_blank"><i class="fab fa-whatsapp" style="margin-right:4px; color:var(--gold);"></i> WhatsApp: +971 58 562 5042</a>
+                                <a href="mailto:mainspringdubai@gmail.com"><i class="fas fa-envelope" style="margin-right:4px; color:var(--gold);"></i> mainspringdubai@gmail.com</a>
                             </div>
                             <div class="contact-info-item">
-                                <h3>Social Media</h3>
+                                <h3><i class="fas fa-hashtag" style="margin-right:6px; opacity:0.7;"></i> Social Media</h3>
                                 <div class="contact-social-row">
                                     <a href="https://www.instagram.com/mainspring.dxb" target="_blank" class="contact-social-icon" title="Instagram"><i class="fab fa-instagram"></i></a>
                                     <a href="https://wa.me/971585625042" target="_blank" class="contact-social-icon" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                                     <a href="https://www.facebook.com/mainspring.dxb" target="_blank" class="contact-social-icon" title="Facebook"><i class="fab fa-facebook-f"></i></a>
                                     <a href="https://www.tiktok.com/@mainspring.dxb" target="_blank" class="contact-social-icon" title="TikTok"><i class="fab fa-tiktok"></i></a>
                                 </div>
-                                <p style="margin-top: 12px; font-size:0.85rem;">@mainspring.dxb on all platforms</p>
+                                <p style="margin-top: 12px; font-size:0.85rem;"><strong>@mainspring.dxb</strong> on all platforms</p>
                             </div>
                         </div>
                         <div>
+                            <!-- Image: Replace contact-shop.jpg with a photo of the shop/stall -->
+                            <div class="contact-image-box">
+                                <img src="contact-shop.jpg" alt="Mainspring shop at The B1 Mall" onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray);opacity:0.5;&quot;><i class=&quot;fas fa-image&quot; style=&quot;font-size:2rem;margin-bottom:10px;&quot;></i><span style=&quot;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;&quot;>contact-shop.jpg</span></div>'">
+                            </div>
                             <div class="contact-note">
-                                <p>My stall at The B1 Mall is like a meeting point for vintage watch enthusiasts in Dubai. Stop by and let's talk watches.</p>
-                                <p style="margin-top: 14px;">I also appear regularly at <strong style="font-style:normal;">Flea Market Dubai</strong> and <strong style="font-style:normal;">Ripe Market</strong> — follow @mainspring.dxb on Instagram for market dates.</p>
-                                <p style="margin-top: 28px; font-style: normal; color: var(--primary-green); font-weight: 600; font-size: 1rem;">— Erkan</p>
+                                <p>My stall at The B1 Mall is like a <strong style="font-style:normal; color: var(--primary-green);">meeting point for vintage watch enthusiasts</strong> in Dubai. Stop by and let's talk watches.</p>
+                                <p style="margin-top: 14px;">I also appear regularly at <strong style="font-style:normal;">Flea Market Dubai</strong> and <strong style="font-style:normal;">Ripe Market</strong> — follow <strong style="font-style:normal;">@mainspring.dxb</strong> on Instagram for market dates and locations.</p>
+                                <p style="margin-top: 28px; font-style: normal; color: var(--primary-green); font-weight: 600; font-size: 1.05rem;">I promise I will do my best,<br>— Erkan</p>
                             </div>
                         </div>
                     </div>
@@ -4842,12 +5176,16 @@
 
         <!-- FAQ Page -->
         <section class="page-section" id="page-faq">
+            <!-- Hero Banner -->
+            <div class="page-hero-banner">
+                <h1>Frequently Asked Questions</h1>
+                <p>Everything you need to know about buying, selling, and servicing watches with Mainspring.</p>
+                <div class="hero-divider"></div>
+            </div>
             <div class="faq-section">
                 <div class="faq-container">
-                    <div class="faq-hero">
-                        <h1>Frequently Asked Questions</h1>
-                        <p>Everything you need to know about buying, selling, and servicing watches with Mainspring.</p>
-                    </div>
+                    <span class="section-label">Common Questions</span>
+                    <div class="gold-divider" style="margin-bottom: 32px;"></div>
                     <div class="faq-list">
 
                         <div class="faq-item">
@@ -4898,7 +5236,7 @@
                                 <span class="faq-icon">+</span>
                             </button>
                             <div class="faq-answer"><div class="faq-answer-inner">
-                                <p>Yes. Most watches include a <strong>3-month movement warranty</strong> (unless otherwise stated), covering mechanical function and battery performance. See our full <a href="#" onclick="showPage('warranty')">Warranty &amp; Refund Policy</a> for details.</p>
+                                <p>Yes. Most watches include a <strong>3-month movement warranty</strong> (unless otherwise stated), covering mechanical function and battery performance. See our full <a href="#" onclick="event.preventDefault(); showPage('warranty');">Warranty &amp; Refund Policy</a> for details.</p>
                             </div></div>
                         </div>
 
@@ -4936,7 +5274,7 @@
                                 <span class="faq-icon">+</span>
                             </button>
                             <div class="faq-answer"><div class="faq-answer-inner">
-                                <p>Yes, for a fee. The fee depends on the watch brand, model, value, and complexity of inspection. <a href="#" onclick="showPage('contact')">Contact us</a> to confirm the applicable fee before bringing your watch in.</p>
+                                <p>Yes, for a fee. The fee depends on the watch brand, model, value, and complexity of inspection. <a href="#" onclick="event.preventDefault(); showPage('contact');">Contact us</a> to confirm the applicable fee before bringing your watch in.</p>
                             </div></div>
                         </div>
 
@@ -4947,7 +5285,7 @@
                             </button>
                             <div class="faq-answer"><div class="faq-answer-inner">
                                 <p>Yes, we buy selected luxury, vintage, and pre-owned watches. However, we'll always be transparent: <strong>selling directly to another collector or end user will almost always get you a higher price.</strong></p>
-                                <p>As a licensed professional reseller with operating costs, our offers are typically below current market value. See our <a href="#" onclick="showPage('sell')">Sell Your Watch</a> page for full details on the process.</p>
+                                <p>As a licensed professional reseller with operating costs, our offers are typically below current market value. See our <a href="#" onclick="event.preventDefault(); showPage('sell');">Sell Your Watch</a> page for full details on the process.</p>
                             </div></div>
                         </div>
 
@@ -4957,7 +5295,7 @@
                                 <span class="faq-icon">+</span>
                             </button>
                             <div class="faq-answer"><div class="faq-answer-inner">
-                                <p>Yes. We offer a personalized watch sourcing service. If you're looking for a specific brand, model, reference, size, or budget, we can search our international network of suppliers. See our <a href="#" onclick="showPage('sourcing')">Watch Sourcing</a> page for full terms and the deposit process.</p>
+                                <p>Yes. We offer a personalized watch sourcing service. If you're looking for a specific brand, model, reference, size, or budget, we can search our international network of suppliers. See our <a href="#" onclick="event.preventDefault(); showPage('sourcing');">Watch Sourcing</a> page for full terms and the deposit process.</p>
                             </div></div>
                         </div>
 
@@ -4986,24 +5324,31 @@
 
         <!-- Warranty & Refund Policy Page -->
         <section class="page-section" id="page-warranty">
+            <!-- Hero Banner -->
+            <div class="page-hero-banner">
+                <h1>Warranty &amp; Refund Policy</h1>
+                <p>Our specific policy for second-hand and vintage watches — please read carefully before purchasing.</p>
+                <div class="hero-divider"></div>
+            </div>
             <div class="policy-section">
                 <div class="policy-container">
-                    <div class="policy-hero">
-                        <h1>Warranty &amp; Refund Policy</h1>
-                        <p>Our specific policy for second-hand and vintage watches — please read carefully before purchasing.</p>
+
+                    <div class="warranty-icon-header">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Our Commitment to You</span>
                     </div>
                     <div class="policy-highlight">
                         At Mainspring we collect watches not just for how they look or tick, but for what they represent. We specialize in authentic watches with character and history. Each piece is carefully sourced and personally inspected. <strong>We do not — and will never — sell counterfeits.</strong>
                     </div>
 
                     <div class="policy-block">
-                        <h2>Condition &amp; Expectations</h2>
+                        <h2><i class="fas fa-gem" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Condition &amp; Expectations</h2>
                         <p>All watches sold by us are second-hand, and mostly vintage. They are not new. As such, expect minor signs of wear, patina, or imperfections consistent with their age. We describe each watch accurately and provide detailed photographs for every listing.</p>
                         <p>By purchasing from us, you accept the watch's vintage condition, its cosmetic appearance, and any wear marks detailed in the product description. The history and uniqueness of these watches are part of their charm — perfection is not the point.</p>
                     </div>
 
                     <div class="policy-block">
-                        <h2>Our 3-Month Limited Warranty</h2>
+                        <h2><i class="fas fa-cog" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Our 3-Month Limited Warranty</h2>
                         <p>Unlike most second-hand watch sellers, we provide a specific limited warranty covering core functional components:</p>
                         <ul>
                             <li><strong>Coverage (3 months from purchase):</strong> Strictly limited to the internal movement and proper battery function for quartz watches.</li>
@@ -5015,7 +5360,7 @@
                     </div>
 
                     <div class="policy-block">
-                        <h2>What Is Not Covered</h2>
+                        <h2><i class="fas fa-times-circle" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> What Is Not Covered</h2>
                         <ol>
                             <li><strong>External components:</strong> Case, crystal, dial, hands, strap, bracelet, lugs, bezel, crown, and winding/setting mechanisms are not covered — these are subject to wear and user interaction.</li>
                             <li><strong>Water resistance:</strong> All watches are sold as not water-resistant. Vintage seals degrade over time. Any moisture or submersion damage is entirely at the owner's risk and voids all warranty claims.</li>
@@ -5024,7 +5369,7 @@
                     </div>
 
                     <div class="policy-block">
-                        <h2>Refund &amp; Exchange Policy</h2>
+                        <h2><i class="fas fa-exchange-alt" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Refund &amp; Exchange Policy</h2>
                         <ul>
                             <li><strong>No change-of-mind refunds:</strong> We do not refund if you simply change your mind, provided the watch is working as described. However, you may exchange it for any other watch in the collection within three months, provided it is in the same condition as when sold.</li>
                             <li><strong>Refund for unfixable movement issues:</strong> A refund is only issued if we fail to repair a warranted movement defect after our initial attempt.</li>
@@ -5033,7 +5378,7 @@
                     </div>
 
                     <div class="policy-block">
-                        <h2>Compliance Disclaimer</h2>
+                        <h2><i class="fas fa-balance-scale" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Compliance Disclaimer</h2>
                         <p>These warranty terms are our own business policy for second-hand items, consistent with standard industry practices for vintage sales. By completing your purchase, you acknowledge and agree to all terms above.</p>
                     </div>
                 </div>
@@ -5042,32 +5387,46 @@
 
         <!-- Watch Sourcing Page -->
         <section class="page-section" id="page-sourcing">
+            <!-- Hero Banner -->
+            <div class="page-hero-banner">
+                <h1>Watch Sourcing</h1>
+                <p>A personalized service to find the exact watch you're looking for — anywhere in the world.</p>
+                <div class="hero-divider"></div>
+            </div>
             <div class="policy-section">
                 <div class="policy-container">
-                    <div class="policy-hero">
-                        <h1>Watch Sourcing</h1>
-                        <p>A personalized service to find the exact watch you're looking for — anywhere in the world.</p>
-                        <p style="margin-top: 8px; font-size:0.82rem; color: var(--gray);">Effective January 2026 &nbsp;·&nbsp; Erkan Gulmez LLC / Mainspring.DXB &nbsp;·&nbsp; Dubai, UAE</p>
+
+                    <p style="font-size:0.82rem; color: var(--gray); margin-bottom: 40px; opacity: 0.7;">Effective January 2026 &nbsp;·&nbsp; Erkan Gulmez LLC / Mainspring.DXB &nbsp;·&nbsp; Dubai, UAE</p>
+
+                    <!-- Hero Image: Replace sourcing-hero.jpg with a watch hunting / collection photo -->
+                    <div class="page-hero-image" style="margin-bottom: 50px;">
+                        <img src="sourcing-hero.jpg" alt="Watch sourcing at Mainspring" onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray);opacity:0.5;&quot;><i class=&quot;fas fa-image&quot; style=&quot;font-size:2.5rem;margin-bottom:12px;&quot;></i><span style=&quot;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;&quot;>sourcing-hero.jpg</span></div>'">
+                        <div class="page-hero-image-overlay"></div>
+                    </div>
+
+                    <span class="section-label">How It Works</span>
+                    <div class="gold-divider" style="margin-bottom: 40px;"></div>
+
+                    <div class="policy-block">
+                        <h2><span class="step-num">1</span> Scope of Service</h2>
+                        <p>We can source <strong>any watch brand, model, or reference</strong> — subject to market availability — covering vintage, neo-vintage, and modern pre-owned watches, through our professional dealer network, private collectors, and international partners.</p>
                     </div>
 
                     <div class="policy-block">
-                        <h2>1. Scope of Service</h2>
-                        <p>We can source any watch brand, model, or reference — subject to market availability — covering vintage, neo-vintage, and modern pre-owned watches, through our professional dealer network, private collectors, and international partners.</p>
-                    </div>
-
-                    <div class="policy-block">
-                        <h2>2. How to Start a Request</h2>
+                        <h2><span class="step-num">2</span> How to Start a Request</h2>
                         <p>To begin, provide at least one of the following:</p>
                         <ul>
-                            <li>Exact reference number</li>
-                            <li>Clear photos of the desired watch</li>
-                            <li>Detailed description — brand, model, size, dial, bracelet/strap, metal, year range, etc.</li>
+                            <li><strong>Exact reference number</strong></li>
+                            <li><strong>Clear photos</strong> of the desired watch</li>
+                            <li><strong>Detailed description</strong> — brand, model, size, dial, bracelet/strap, metal, year range, etc.</li>
                         </ul>
-                        <p>The more specific your request, the faster the sourcing, the better the pricing, and the more accurate the match. Specificity signals serious intent and allows us to work more efficiently on your behalf.</p>
+                        <div class="policy-highlight">
+                            <strong>The more specific your request,</strong> the faster the sourcing, the better the pricing, and the more accurate the match. Specificity signals serious intent and allows us to work more efficiently on your behalf.
+                        </div>
                     </div>
 
                     <div class="policy-block">
-                        <h2>3. Deposit — 25% (Non-Refundable, Redeemable)</h2>
+                        <h2><span class="step-num">3</span> Deposit — 25%</h2>
                         <p>Once your target watch is confirmed with a realistic market price range, a <strong>deposit of 25% of the average market value</strong> is required to activate sourcing.</p>
                         <div class="policy-highlight">
                             The deposit is <strong>non-refundable</strong> but <strong>fully redeemable</strong> — toward the sourced watch or any other watch purchased from Mainspring in the future. If you cancel, the deposit remains as store credit. No cash refunds will be issued.
@@ -5075,29 +5434,29 @@
                     </div>
 
                     <div class="policy-block">
-                        <h2>4. Timeline</h2>
-                        <p>Within <strong>10 calendar days</strong> of receiving the deposit, we present 1–3 suitable options. If none are approved, a further 1–3 options follow within the next 10 days.</p>
+                        <h2><span class="step-num">4</span> Timeline</h2>
+                        <p>Within <strong>10 calendar days</strong> of receiving the deposit, we present <strong>1–3 suitable options</strong>. If none are approved, a further 1–3 options follow within the next 10 days.</p>
                         <p>If both rounds are declined, additional sourcing rounds require a further 25% deposit under the same non-refundable, redeemable terms.</p>
                     </div>
 
                     <div class="policy-block">
-                        <h2>5. Viewing</h2>
-                        <p>Once you select a preferred option, we arrange a viewing. Viewings are conducted one watch at a time to ensure focused inspection and professional handling of each piece.</p>
+                        <h2><span class="step-num">5</span> Viewing</h2>
+                        <p>Once you select a preferred option, we arrange a <strong>personal viewing</strong>. Viewings are conducted one watch at a time to ensure focused inspection and professional handling of each piece.</p>
                     </div>
 
                     <div class="policy-block">
-                        <h2>6. Authentication &amp; Certificate</h2>
+                        <h2><span class="step-num">6</span> Authentication &amp; Certificate</h2>
                         <p>Upon your approval, we perform full authenticity checks: case inspection, dial/hands/crown/components, movement inspection, and serial/reference verification. We then issue an official <strong>stamped and signed Certificate of Authenticity</strong> and accept full legal liability for the watch's authenticity.</p>
                     </div>
 
                     <div class="policy-block">
-                        <h2>7. Warranty, Invoice &amp; VAT</h2>
+                        <h2><span class="step-num">7</span> Warranty, Invoice &amp; VAT</h2>
                         <p>All sourced watches include a <strong>3-month movement warranty</strong> under our standard warranty terms. Upon purchase you receive an official Mainspring invoice inclusive of UAE VAT.</p>
                     </div>
 
                     <div class="sell-cta-row">
                         <a href="https://wa.me/971585625042" target="_blank" class="sell-cta-btn primary"><i class="fab fa-whatsapp"></i> Start a Request</a>
-                        <a href="#" onclick="showPage('contact')" class="sell-cta-btn secondary">Other Contact Options</a>
+                        <a href="#" onclick="event.preventDefault(); showPage('contact');" class="sell-cta-btn secondary">Other Contact Options</a>
                     </div>
                 </div>
             </div>
@@ -5105,54 +5464,83 @@
 
         <!-- Sell Your Watch Page -->
         <section class="page-section" id="page-sell">
+            <!-- Hero Banner -->
+            <div class="page-hero-banner">
+                <h1>Sell or Consign Your Watch</h1>
+                <p>Transparent, professional, and honest — whether you want a quick cash offer or a better price through consignment.</p>
+                <div class="hero-divider"></div>
+            </div>
             <div class="policy-section">
                 <div class="policy-container">
-                    <div class="policy-hero">
-                        <h1>Sell or Consign Your Watch</h1>
-                        <p>Transparent, professional, and honest — whether you want a quick cash offer or a better price through consignment.</p>
-                    </div>
 
                     <div class="sell-hero-callout">
-                        <h3>An Honest First Word</h3>
-                        <p>If you're not in a hurry, the best financial outcome is almost always to sell directly to another collector or end user — not to a dealer. Any professional reseller must buy below market price to cover costs and risk. We'll tell you this upfront, every time.</p>
+                        <h3><i class="fas fa-comment-alt" style="margin-right:8px; font-size:1rem; opacity:0.7;"></i> An Honest First Word</h3>
+                        <p>If you're not in a hurry, the best financial outcome is almost always to sell directly to another collector or end user — not to a dealer. Any professional reseller must buy below market price to cover costs and risk. <strong style="color:var(--cream);">We'll tell you this upfront, every time.</strong></p>
                     </div>
 
+                    <!-- Quick overview stats -->
+                    <div class="sell-stats-row">
+                        <div class="sell-stat-item">
+                            <div class="stat-icon"><i class="fas fa-search"></i></div>
+                            <h4>Full Inspection</h4>
+                            <p>Professional authentication &amp; condition report included</p>
+                        </div>
+                        <div class="sell-stat-item">
+                            <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                            <h4>Two Sale Options</h4>
+                            <p>Direct cash offer or higher-return consignment</p>
+                        </div>
+                        <div class="sell-stat-item">
+                            <div class="stat-icon"><i class="fas fa-file-invoice"></i></div>
+                            <h4>Legal &amp; VAT</h4>
+                            <p>Official receipts, full UAE compliance</p>
+                        </div>
+                    </div>
+
+                    <span class="section-label">The Process</span>
+                    <div class="gold-divider" style="margin-bottom: 40px;"></div>
+
                     <div class="policy-block">
-                        <h2>Why Our Offers Are Below Market</h2>
+                        <h2><i class="fas fa-chart-line" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Why Our Offers Are Below Market</h2>
                         <p>Mainspring is a licensed company with real operating costs: rent, licences, staff, marketing, servicing, warranty obligations, and capital lock-up. We typically buy in lots — not one-by-one — so our average sourcing cost must stay low to keep our prices competitive and our services sustainable.</p>
                         <p>Any cash offer will be <strong>significantly below final market value</strong>. This is normal and unavoidable in the professional watch trade. If this doesn't suit you and you're not in a rush, we'll honestly advise you to sell privately instead.</p>
                     </div>
 
                     <div class="policy-block">
-                        <h2>Inspection Is Mandatory</h2>
+                        <h2><i class="fas fa-microscope" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Inspection Is Mandatory</h2>
                         <p>Before any offer, we perform a physical and movement inspection using professional tools and expertise. All watches submitted are subject to an <strong>inspection fee</strong> (depending on brand, model, and complexity), paid upfront and non-refundable.</p>
                         <p>The fee covers authentication, condition assessment, and market evaluation — and includes a written authenticity/condition report with a Mainspring certificate. <strong>The inspection fee may be deducted from the final price if a deal is completed.</strong></p>
                     </div>
 
+                    <span class="section-label">Your Options</span>
+                    <div class="gold-divider" style="margin-bottom: 28px;"></div>
+
                     <div class="sell-options-grid">
                         <div class="sell-option-card">
+                            <div style="color:var(--gold); font-size:1.3rem; margin-bottom:14px;"><i class="fas fa-bolt"></i></div>
                             <h3>Option A — Direct Sale</h3>
-                            <p>We make a wholesale cash offer — below market price. You're under no obligation to accept. If you do, payment is made within 10 working days via the agreed method, against a legal receipt.</p>
+                            <p>We make a wholesale cash offer — below market price. You're under <strong>no obligation to accept</strong>. If you do, payment is made within <strong>10 working days</strong> via the agreed method, against a legal receipt.</p>
                         </div>
                         <div class="sell-option-card">
+                            <div style="color:var(--gold); font-size:1.3rem; margin-bottom:14px;"><i class="fas fa-hourglass-half"></i></div>
                             <h3>Option B — Consignment</h3>
-                            <p>Leave the watch with us for an agreed period (30+ days). We market and sell it on your behalf and pay you the net agreed price once sold — typically higher than a direct sale, in exchange for time and patience. A written agreement defines price, commission, and duration.</p>
+                            <p>Leave the watch with us for an agreed period (30+ days). We market and sell it on your behalf and pay you the net agreed price once sold — typically a <strong>higher return</strong>, in exchange for time and patience. A written agreement defines price, commission, and duration.</p>
                         </div>
                     </div>
 
                     <div class="policy-block">
-                        <h2>Legal Requirements</h2>
-                        <p>To sell or consign a watch you must be the legal owner, provide valid ID, and confirm the watch is not stolen, under dispute, or under any finance or insurance claim. We reserve the right to refuse any transaction, and will hold and report any counterfeit items to UAE authorities.</p>
+                        <h2><i class="fas fa-gavel" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Legal Requirements</h2>
+                        <p>To sell or consign a watch you must be the <strong>legal owner</strong>, provide valid ID, and confirm the watch is not stolen, under dispute, or under any finance or insurance claim. We reserve the right to refuse any transaction, and will hold and report any counterfeit items to UAE authorities.</p>
                     </div>
 
                     <div class="policy-block">
-                        <h2>Our Promise</h2>
-                        <p>Honest advice — even if that means telling you not to sell to us. Professional inspection standards. Clear, market-based offers. No pressure. Respect for your time and your timepiece.</p>
+                        <h2><i class="fas fa-handshake" style="font-size:0.9rem; color:var(--gold); margin-right:8px;"></i> Our Promise</h2>
+                        <p><strong>Honest advice</strong> — even if that means telling you not to sell to us. Professional inspection standards. Clear, market-based offers. <strong>No pressure.</strong> Respect for your time and your timepiece.</p>
                     </div>
 
                     <div class="sell-cta-row">
                         <a href="https://wa.me/971585625042" target="_blank" class="sell-cta-btn primary"><i class="fab fa-whatsapp"></i> WhatsApp Us</a>
-                        <a href="#" onclick="showPage('contact')" class="sell-cta-btn secondary">All Contact Options</a>
+                        <a href="#" onclick="event.preventDefault(); showPage('contact');" class="sell-cta-btn secondary">All Contact Options</a>
                     </div>
                 </div>
             </div>
@@ -5248,21 +5636,21 @@
                 <div class="footer-column">
                     <h4>EXPLORE</h4>
                     <ul>
-                        <li><a href="#" onclick="showPage('watches')">Watches</a></li>
-                        <li><a href="#" onclick="showPage('accessories')">Accessories</a></li>
-                        <li><a href="#" onclick="showPage('blog')">Journal</a></li>
-                        <li><a href="#" onclick="showPage('about')">About</a></li>
-                        <li><a href="#" onclick="showOrderTracking()">Track Order</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('watches');">Watches</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('accessories');">Accessories</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('blog');">Journal</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('about');">About</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showOrderTracking();">Track Order</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
                     <h4>SERVICES</h4>
                     <ul>
-                        <li><a href="#" onclick="showPage('sell')">Sell Your Watch</a></li>
-                        <li><a href="#" onclick="showPage('sourcing')">Watch Sourcing</a></li>
-                        <li><a href="#" onclick="showPage('faq')">FAQ</a></li>
-                        <li><a href="#" onclick="showPage('contact')">Contact</a></li>
-                        <li><a href="#" onclick="showPage('warranty')">Warranty Policy</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('sell');">Sell Your Watch</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('sourcing');">Watch Sourcing</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('faq');">FAQ</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('contact');">Contact</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('warranty');">Warranty Policy</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
