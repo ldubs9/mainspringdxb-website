@@ -919,6 +919,152 @@
             }
         }
 
+        /* Checkout customer form */
+        .checkout-form {
+            margin-bottom: 25px;
+        }
+        .checkout-form-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            letter-spacing: 0.05em;
+        }
+        .checkout-field {
+            margin-bottom: 14px;
+        }
+        .checkout-field label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .checkout-field input,
+        .checkout-field textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--cream-dark);
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: var(--light-gray);
+            box-sizing: border-box;
+        }
+        .checkout-field input:focus,
+        .checkout-field textarea:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            background: var(--white);
+        }
+        .checkout-field textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .checkout-field .field-error {
+            color: #c0392b;
+            font-size: 0.78rem;
+            margin-top: 4px;
+            display: none;
+        }
+        .checkout-steps {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+        .checkout-step {
+            flex: 1;
+            height: 4px;
+            background: var(--cream-dark);
+            border-radius: 2px;
+            transition: var(--transition);
+        }
+        .checkout-step.active {
+            background: var(--primary-green);
+        }
+        .checkout-loading {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .checkout-loading i {
+            font-size: 2rem;
+            color: var(--primary-green);
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .checkout-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            color: #991b1b;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        /* Order tracking section */
+        .order-tracking-section {
+            max-width: 600px;
+            margin: 100px auto 60px;
+            padding: 0 20px;
+        }
+        .order-tracking-section h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+        }
+        .order-status-card {
+            background: var(--white);
+            border: 1px solid var(--cream-dark);
+            border-radius: var(--radius);
+            padding: 30px;
+            margin-top: 20px;
+        }
+        .order-status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .order-status-badge.pending { background: #fef3c7; color: #92400e; }
+        .order-status-badge.confirmed { background: #d1fae5; color: #065f46; }
+        .order-status-badge.processing { background: #dbeafe; color: #1e40af; }
+        .order-status-badge.paid { background: #d1fae5; color: #065f46; }
+        .order-status-badge.shipped { background: #e0e7ff; color: #3730a3; }
+        .order-status-badge.delivered { background: #d1fae5; color: #065f46; }
+        .order-status-badge.failed { background: #fee2e2; color: #991b1b; }
+        .order-status-badge.cancelled { background: #f3f4f6; color: #374151; }
+        .order-timeline {
+            margin-top: 20px;
+            padding-left: 20px;
+            border-left: 2px solid var(--cream-dark);
+        }
+        .order-timeline-item {
+            padding: 10px 0 10px 15px;
+            position: relative;
+        }
+        .order-timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 14px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--cream-dark);
+            border: 2px solid var(--white);
+        }
+        .order-timeline-item:last-child::before {
+            background: var(--primary-green);
+        }
+
         /* Wishlist */
         .wishlist-items {
             display: grid;
@@ -4203,6 +4349,25 @@
                 </div>
             </div>
         </section>
+
+        <!-- Order Tracking Page -->
+        <section class="page-section" id="page-order-tracking">
+            <div class="order-tracking-section">
+                <h2>Track Your Order</h2>
+                <div class="checkout-form">
+                    <div class="checkout-field">
+                        <label>Order Reference *</label>
+                        <input type="text" id="trackOrderRef" value="" placeholder="e.g. MS-XXXXXXXX" />
+                    </div>
+                    <div class="checkout-field">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="trackPhone" placeholder="+971 5X XXX XXXX" />
+                    </div>
+                    <button class="checkout-confirm-btn" onclick="lookupOrder()">TRACK ORDER</button>
+                </div>
+                <div id="orderTrackingResult"></div>
+            </div>
+        </section>
     </main>
 
     <!-- WhatsApp Floating Button -->
@@ -4277,6 +4442,7 @@
                         <li><a href="#" onclick="showPage('accessories')">Accessories</a></li>
                         <li><a href="#" onclick="showPage('blog')">Journal</a></li>
                         <li><a href="#" onclick="showPage('about')">About Us</a></li>
+                        <li><a href="#" onclick="showOrderTracking()">Track Order</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
@@ -4448,13 +4614,18 @@
             return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
         }
 
-        // Checkout
+        // Checkout — Secure multi-step flow
+        // Edge Functions URL (update when you deploy)
+        const EDGE_FN_URL = SUPABASE_URL + '/functions/v1';
+
         let selectedPaymentMethod = null;
+        let checkoutStep = 1; // 1=details, 2=payment, 3=confirm
 
         function openCheckout() {
             closeCart();
             selectedPaymentMethod = null;
-            renderCheckoutBody();
+            checkoutStep = 1;
+            renderCheckoutStep1();
             document.getElementById('checkoutOverlay').classList.add('active');
         }
 
@@ -4462,13 +4633,42 @@
             document.getElementById('checkoutOverlay').classList.remove('active');
         }
 
-        function renderCheckoutBody() {
-            const total = getCartTotal();
-            const tabbyTotal = Math.round(total * 1.10);
-            const tamaraTotal = Math.round(total * 1.10);
-            const body = document.getElementById('checkoutBody');
+        function renderStepIndicator(step) {
+            return `<div class="checkout-steps">
+                <div class="checkout-step ${step >= 1 ? 'active' : ''}"></div>
+                <div class="checkout-step ${step >= 2 ? 'active' : ''}"></div>
+                <div class="checkout-step ${step >= 3 ? 'active' : ''}"></div>
+            </div>`;
+        }
 
+        // Step 1: Customer details
+        function renderCheckoutStep1() {
+            const body = document.getElementById('checkoutBody');
+            const saved = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
             body.innerHTML = `
+                ${renderStepIndicator(1)}
+                <div class="checkout-form">
+                    <p class="checkout-form-title">Your Details</p>
+                    <div class="checkout-field">
+                        <label>Full Name *</label>
+                        <input type="text" id="checkoutName" value="${saved.name || ''}" placeholder="e.g. Ahmed Al Maktoum" required />
+                        <p class="field-error" id="nameError">Please enter your name</p>
+                    </div>
+                    <div class="checkout-field">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="checkoutPhone" value="${saved.phone || ''}" placeholder="+971 5X XXX XXXX" required />
+                        <p class="field-error" id="phoneError">Please enter a valid phone number</p>
+                    </div>
+                    <div class="checkout-field">
+                        <label>Email</label>
+                        <input type="email" id="checkoutEmail" value="${saved.email || ''}" placeholder="your@email.com" />
+                    </div>
+                    <div class="checkout-field">
+                        <label>Delivery Address</label>
+                        <textarea id="checkoutAddress" placeholder="Street, Building, Area, City">${saved.address || ''}</textarea>
+                    </div>
+                </div>
+
                 <div class="checkout-summary">
                     ${cart.map(item => `
                         <div class="checkout-summary-item">
@@ -4479,17 +4679,64 @@
                     `).join('')}
                     <div class="checkout-summary-total">
                         <span>Subtotal</span>
-                        <span data-price-aed="${total}">${formatPrice(total)}</span>
+                        <span data-price-aed="${getCartTotal()}">${formatPrice(getCartTotal())}</span>
                     </div>
                 </div>
 
+                <button class="checkout-confirm-btn" onclick="goToStep2()">CONTINUE TO PAYMENT</button>
+            `;
+        }
+
+        function goToStep2() {
+            const name = document.getElementById('checkoutName').value.trim();
+            const phone = document.getElementById('checkoutPhone').value.trim();
+            const email = document.getElementById('checkoutEmail').value.trim();
+            const address = document.getElementById('checkoutAddress').value.trim();
+
+            // Validate
+            let valid = true;
+            if (!name) {
+                document.getElementById('nameError').style.display = 'block';
+                valid = false;
+            }
+            if (!phone || phone.replace(/[^\d]/g, '').length < 8) {
+                document.getElementById('phoneError').style.display = 'block';
+                valid = false;
+            }
+            if (!valid) return;
+
+            // Save for convenience (no sensitive data)
+            localStorage.setItem('mainspring_customer', JSON.stringify({ name, phone, email, address }));
+
+            checkoutStep = 2;
+            renderCheckoutStep2();
+        }
+
+        // Step 2: Payment method selection
+        function renderCheckoutStep2() {
+            const total = getCartTotal();
+            const tabbyTotal = Math.round(total * 1.10);
+            const tamaraTotal = Math.round(total * 1.10);
+            const body = document.getElementById('checkoutBody');
+
+            body.innerHTML = `
+                ${renderStepIndicator(2)}
+
                 <p class="payment-method-label">Select Payment Method</p>
                 <div class="payment-methods">
-                    <div class="payment-method" onclick="selectPayment('card', this)">
+                    <div class="payment-method" onclick="selectPayment('tap_card', this)">
                         <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Card Payment</div>
-                            <div class="payment-method-desc">Visa, Mastercard, Amex</div>
+                            <div class="payment-method-desc">Visa, Mastercard, Amex — secure via Tap</div>
+                        </div>
+                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
+                    </div>
+                    <div class="payment-method" onclick="selectPayment('bank_transfer', this)">
+                        <div class="payment-method-icon"><i class="fas fa-university"></i></div>
+                        <div class="payment-method-info">
+                            <div class="payment-method-name">Bank Transfer</div>
+                            <div class="payment-method-desc">Direct bank transfer</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
                     </div>
@@ -4498,14 +4745,6 @@
                         <div class="payment-method-info">
                             <div class="payment-method-name">Cash on Delivery</div>
                             <div class="payment-method-desc">Pay upon collection / delivery</div>
-                        </div>
-                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
-                    </div>
-                    <div class="payment-method" onclick="selectPayment('bank', this)">
-                        <div class="payment-method-icon"><i class="fas fa-university"></i></div>
-                        <div class="payment-method-info">
-                            <div class="payment-method-name">Bank Transfer</div>
-                            <div class="payment-method-desc">Direct bank transfer</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
                     </div>
@@ -4539,105 +4778,434 @@
             el.classList.add('selected');
             const btn = document.getElementById('confirmCheckoutBtn');
             btn.disabled = false;
-            btn.textContent = 'CONFIRM ORDER';
+            btn.textContent = 'PLACE ORDER';
         }
 
-        function confirmCheckout() {
+        // Step 3: Create order + process payment
+        async function confirmCheckout() {
             if (!selectedPaymentMethod) return;
+
+            const btn = document.getElementById('confirmCheckoutBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
+
+            const customer = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
             const total = getCartTotal();
+
+            try {
+                // Create order via secure Edge Function
+                const orderResponse = await fetch(EDGE_FN_URL + '/create-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    },
+                    body: JSON.stringify({
+                        customer_name: customer.name,
+                        customer_email: customer.email,
+                        customer_phone: customer.phone,
+                        customer_address: customer.address,
+                        items: cart,
+                        payment_method: selectedPaymentMethod,
+                    }),
+                });
+
+                const orderData = await orderResponse.json();
+
+                if (!orderResponse.ok || !orderData.success) {
+                    throw new Error(orderData.error || 'Failed to create order');
+                }
+
+                const orderRef = orderData.order_ref;
+                const orderTotal = orderData.total_aed;
+
+                // Clear cart
+                cart = [];
+                saveCart();
+                renderCart();
+                trackClick('checkout_' + selectedPaymentMethod, orderRef);
+
+                // Route to the appropriate payment flow
+                checkoutStep = 3;
+
+                if (selectedPaymentMethod === 'tap_card') {
+                    await handleTapPayment(orderRef, customer);
+                } else if (selectedPaymentMethod === 'tabby') {
+                    await handleTabbyPayment(orderRef);
+                } else if (selectedPaymentMethod === 'tamara') {
+                    await handleTamaraPayment(orderRef);
+                } else if (selectedPaymentMethod === 'bank_transfer') {
+                    showBankTransferConfirmation(orderRef, orderTotal);
+                } else if (selectedPaymentMethod === 'cash') {
+                    showCashConfirmation(orderRef, orderTotal);
+                }
+
+            } catch (err) {
+                console.error('Checkout error:', err);
+                const body = document.getElementById('checkoutBody');
+                body.innerHTML = `
+                    ${renderStepIndicator(2)}
+                    <div class="checkout-error">
+                        <strong>Something went wrong:</strong> ${err.message || 'Please try again.'}
+                    </div>
+                    <button class="checkout-confirm-btn" onclick="renderCheckoutStep2()">TRY AGAIN</button>
+                `;
+            }
+        }
+
+        // Tap card payment — redirect to Tap hosted checkout
+        async function handleTapPayment(orderRef, customer) {
             const body = document.getElementById('checkoutBody');
-            const orderRef = 'MS-' + Date.now().toString(36).toUpperCase();
+            body.innerHTML = `
+                ${renderStepIndicator(3)}
+                <div class="checkout-loading">
+                    <i class="fas fa-spinner"></i>
+                    <p style="margin-top: 15px; color: var(--gray);">Setting up secure payment...</p>
+                </div>
+            `;
 
-            const orderItems = cart.map(item => `${item.brand} ${item.name} x${item.qty}`).join(', ');
+            try {
+                const res = await fetch(EDGE_FN_URL + '/tap-checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    },
+                    body: JSON.stringify({
+                        order_ref: orderRef,
+                        customer_name: customer.name,
+                        customer_email: customer.email,
+                        customer_phone: customer.phone,
+                    }),
+                });
 
-            if (selectedPaymentMethod === 'bank') {
+                const data = await res.json();
+
+                if (data.payment_url) {
+                    // Redirect to Tap's secure hosted payment page
+                    window.location.href = data.payment_url;
+                } else {
+                    throw new Error(data.error || 'Payment setup failed');
+                }
+            } catch (err) {
+                // Fallback: show WhatsApp option if Tap isn't configured yet
                 body.innerHTML = `
-                    <div class="checkout-confirmation">
-                        <i class="fas fa-university"></i>
-                        <h4>Bank Transfer</h4>
-                        <p>Please transfer the total amount to the following account:</p>
-                        <div class="checkout-bank-details">
-                            <p><strong>Bank:</strong> Emirates NBD</p>
-                            <p><strong>Account Name:</strong> Mainspring Trading LLC</p>
-                            <p><strong>IBAN:</strong> AE00 0000 0000 0000 0000 000</p>
-                            <p><strong>Reference:</strong> ${orderRef}</p>
-                            <p><strong>Amount:</strong> ${formatPrice(total)}</p>
-                        </div>
-                        <p>Once transferred, please send a screenshot of your payment confirmation via WhatsApp for faster processing.</p>
-                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('bank', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
-                    </div>
-                `;
-            } else if (selectedPaymentMethod === 'cash') {
-                body.innerHTML = `
-                    <div class="checkout-confirmation">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <h4>Cash Payment</h4>
-                        <p>Your order <strong>${orderRef}</strong> has been placed. You will pay <strong>${formatPrice(total)}</strong> upon collection or delivery.</p>
-                        <p style="margin-top: 10px;">We will contact you via WhatsApp to arrange the details.</p>
-                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
-                    </div>
-                `;
-            } else if (selectedPaymentMethod === 'card') {
-                body.innerHTML = `
+                    ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
                         <i class="fas fa-credit-card"></i>
                         <h4>Card Payment</h4>
-                        <p>Your order <strong>${orderRef}</strong> has been placed. Total: <strong>${formatPrice(total)}</strong></p>
-                        <p style="margin-top: 10px;">Please contact us via WhatsApp to arrange secure card payment.</p>
-                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('card', '${orderRef}')"><i class="fab fa-whatsapp"></i> Arrange Payment via WhatsApp</button>
+                        <p>Your order <strong>${orderRef}</strong> has been created.</p>
+                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Card payment gateway is being set up. Please contact us via WhatsApp to arrange secure card payment.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tap_card', '${orderRef}')"><i class="fab fa-whatsapp"></i> Arrange Payment via WhatsApp</button>
                     </div>
                 `;
-            } else if (selectedPaymentMethod === 'tabby') {
+            }
+        }
+
+        // Tabby BNPL — redirect to Tabby checkout
+        async function handleTabbyPayment(orderRef) {
+            const body = document.getElementById('checkoutBody');
+            body.innerHTML = `
+                ${renderStepIndicator(3)}
+                <div class="checkout-loading">
+                    <i class="fas fa-spinner"></i>
+                    <p style="margin-top: 15px; color: var(--gray);">Setting up Tabby installments...</p>
+                </div>
+            `;
+
+            try {
+                const res = await fetch(EDGE_FN_URL + '/tabby-checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    },
+                    body: JSON.stringify({ order_ref: orderRef }),
+                });
+
+                const data = await res.json();
+
+                if (data.payment_url) {
+                    window.location.href = data.payment_url;
+                } else {
+                    throw new Error(data.error || 'Tabby setup failed');
+                }
+            } catch (err) {
+                const total = getCartTotal();
                 const tabbyTotal = Math.round(total * 1.10);
                 const installment = Math.round(tabbyTotal / 4);
                 body.innerHTML = `
+                    ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
                         <i class="fas fa-calendar-alt"></i>
                         <h4>Tabby — Split in 4</h4>
-                        <p>Your order <strong>${orderRef}</strong> total with Tabby: <strong>${formatPrice(tabbyTotal)}</strong> (includes 10% surcharge)</p>
-                        <p style="margin-top: 10px;">4 payments of <strong>${formatPrice(installment)}</strong></p>
-                        <p style="margin-top: 10px;">Contact us via WhatsApp to set up your Tabby payment.</p>
+                        <p>Your order <strong>${orderRef}</strong> has been created.</p>
+                        <p style="margin-top: 10px;">Estimated total: <strong>${formatPrice(tabbyTotal)}</strong> (4 x ${formatPrice(installment)})</p>
+                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Tabby integration is being finalized. Contact us via WhatsApp to complete your Tabby payment.</p>
                         <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tabby', '${orderRef}')"><i class="fab fa-whatsapp"></i> Set Up Tabby via WhatsApp</button>
                     </div>
                 `;
-            } else if (selectedPaymentMethod === 'tamara') {
+            }
+        }
+
+        // Tamara BNPL — redirect to Tamara checkout
+        async function handleTamaraPayment(orderRef) {
+            const body = document.getElementById('checkoutBody');
+            body.innerHTML = `
+                ${renderStepIndicator(3)}
+                <div class="checkout-loading">
+                    <i class="fas fa-spinner"></i>
+                    <p style="margin-top: 15px; color: var(--gray);">Setting up Tamara payment plan...</p>
+                </div>
+            `;
+
+            try {
+                const res = await fetch(EDGE_FN_URL + '/tamara-checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    },
+                    body: JSON.stringify({ order_ref: orderRef }),
+                });
+
+                const data = await res.json();
+
+                if (data.payment_url) {
+                    window.location.href = data.payment_url;
+                } else {
+                    throw new Error(data.error || 'Tamara setup failed');
+                }
+            } catch (err) {
+                const total = getCartTotal();
                 const tamaraTotal = Math.round(total * 1.10);
                 body.innerHTML = `
+                    ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
                         <i class="fas fa-calendar-check"></i>
                         <h4>Tamara — Buy Now, Pay Later</h4>
-                        <p>Your order <strong>${orderRef}</strong> total with Tamara: <strong>${formatPrice(tamaraTotal)}</strong> (includes 10% surcharge)</p>
-                        <p style="margin-top: 10px;">Contact us via WhatsApp to set up your Tamara payment plan.</p>
+                        <p>Your order <strong>${orderRef}</strong> has been created.</p>
+                        <p style="margin-top: 10px;">Estimated total: <strong>${formatPrice(tamaraTotal)}</strong> (includes 10% surcharge)</p>
+                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Tamara integration is being finalized. Contact us via WhatsApp to complete your Tamara payment.</p>
                         <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tamara', '${orderRef}')"><i class="fab fa-whatsapp"></i> Set Up Tamara via WhatsApp</button>
                     </div>
                 `;
             }
+        }
 
-            // Clear cart after order
-            cart = [];
-            saveCart();
-            renderCart();
-            trackClick('checkout_' + selectedPaymentMethod, orderRef);
+        // Bank transfer confirmation
+        function showBankTransferConfirmation(orderRef, total) {
+            const body = document.getElementById('checkoutBody');
+            body.innerHTML = `
+                ${renderStepIndicator(3)}
+                <div class="checkout-confirmation">
+                    <i class="fas fa-check-circle" style="color: #27ae60;"></i>
+                    <h4>Order Placed — Bank Transfer</h4>
+                    <p>Your order <strong>${orderRef}</strong> has been recorded.</p>
+                    <p style="margin-top: 5px;">Please transfer the total to the following account:</p>
+                    <div class="checkout-bank-details">
+                        <p><strong>Bank:</strong> Emirates NBD</p>
+                        <p><strong>Account Name:</strong> Mainspring Trading LLC</p>
+                        <p><strong>IBAN:</strong> AE00 0000 0000 0000 0000 000</p>
+                        <p><strong>Reference:</strong> ${orderRef}</p>
+                        <p><strong>Amount:</strong> ${formatPrice(total)}</p>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--gray);">Send a screenshot of your transfer confirmation via WhatsApp for faster processing.</p>
+                    <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('bank_transfer', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
+                    <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Done</button>
+                </div>
+            `;
+        }
+
+        // Cash on delivery confirmation
+        function showCashConfirmation(orderRef, total) {
+            const body = document.getElementById('checkoutBody');
+            body.innerHTML = `
+                ${renderStepIndicator(3)}
+                <div class="checkout-confirmation">
+                    <i class="fas fa-check-circle" style="color: #27ae60;"></i>
+                    <h4>Order Placed — Cash on Delivery</h4>
+                    <p>Your order <strong>${orderRef}</strong> has been placed.</p>
+                    <p style="margin-top: 5px;">Total: <strong>${formatPrice(total)}</strong> — payable upon collection or delivery.</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">We will contact you via WhatsApp to arrange the details.</p>
+                    <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
+                    <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Done</button>
+                </div>
+            `;
         }
 
         function sendOrderWhatsApp(method, orderRef) {
             const methodNames = {
-                bank: 'Bank Transfer',
+                bank_transfer: 'Bank Transfer',
                 cash: 'Cash on Delivery',
-                card: 'Card Payment',
+                tap_card: 'Card Payment (Tap)',
                 tabby: 'Tabby (BNPL)',
                 tamara: 'Tamara (BNPL)'
             };
-            const message = `Hello Mainspring, I have placed an order.\n\nOrder Ref: ${orderRef}\nPayment Method: ${methodNames[method]}\n\nPlease confirm and arrange the next steps. Thank you!`;
+            const customer = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
+            const message = `Hello Mainspring, I have placed an order.\n\nOrder Ref: ${orderRef}\nName: ${customer.name || ''}\nPayment: ${methodNames[method] || method}\n\nPlease confirm and arrange the next steps. Thank you!`;
             const whatsappUrl = `https://wa.me/971585625042?text=${encodeURIComponent(message)}`;
             window.open(whatsappUrl, '_blank');
-            closeCheckout();
+        }
+
+        // Handle payment gateway return (Tap/Tabby/Tamara redirects back here)
+        function handlePaymentReturn() {
+            const params = new URLSearchParams(window.location.search);
+            const orderRef = params.get('order');
+            const status = params.get('status');
+
+            if (!orderRef || !status) return;
+
+            // Clean the URL
+            window.history.replaceState({}, '', window.location.pathname);
+
+            const body = document.getElementById('checkoutBody');
+            document.getElementById('checkoutOverlay').classList.add('active');
+
+            if (status.includes('success') || status === 'tap_complete') {
+                body.innerHTML = `
+                    ${renderStepIndicator(3)}
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-check-circle" style="color: #27ae60; font-size: 3.5rem;"></i>
+                        <h4>Payment Successful!</h4>
+                        <p>Your order <strong>${orderRef}</strong> has been confirmed.</p>
+                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">We will contact you via WhatsApp with updates on your order.</p>
+                        <button class="checkout-confirm-btn" onclick="closeCheckout(); showPage('home');">CONTINUE SHOPPING</button>
+                        <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout(); showOrderTracking('${orderRef}');">TRACK ORDER</button>
+                    </div>
+                `;
+            } else if (status.includes('cancel')) {
+                body.innerHTML = `
+                    ${renderStepIndicator(3)}
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-times-circle" style="color: var(--gray); font-size: 3.5rem;"></i>
+                        <h4>Payment Cancelled</h4>
+                        <p>Your order <strong>${orderRef}</strong> payment was cancelled.</p>
+                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">You can contact us to retry or choose a different payment method.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cancelled', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
+                        <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Close</button>
+                    </div>
+                `;
+            } else if (status.includes('failure') || status.includes('fail')) {
+                body.innerHTML = `
+                    ${renderStepIndicator(3)}
+                    <div class="checkout-confirmation">
+                        <i class="fas fa-exclamation-circle" style="color: #c0392b; font-size: 3.5rem;"></i>
+                        <h4>Payment Failed</h4>
+                        <p>Your payment for order <strong>${orderRef}</strong> could not be processed.</p>
+                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Please try again or contact us for assistance.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('failed', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
+                        <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Close</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Order tracking page
+        function showOrderTracking(prefillRef) {
+            showPage('order-tracking');
+
+            // Pre-fill from saved customer
+            const saved = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
+            if (prefillRef) document.getElementById('trackOrderRef').value = prefillRef;
+            if (saved.phone) document.getElementById('trackPhone').value = saved.phone;
+
+            // Clear previous results
+            document.getElementById('orderTrackingResult').innerHTML = '';
+        }
+
+        async function lookupOrder() {
+            const orderRef = document.getElementById('trackOrderRef').value.trim();
+            const phone = document.getElementById('trackPhone').value.trim();
+            const resultEl = document.getElementById('orderTrackingResult');
+
+            if (!orderRef || !phone) {
+                resultEl.innerHTML = '<div class="checkout-error">Please enter both your order reference and phone number.</div>';
+                return;
+            }
+
+            resultEl.innerHTML = '<div class="checkout-loading"><i class="fas fa-spinner"></i><p style="margin-top: 10px;">Looking up your order...</p></div>';
+
+            try {
+                const res = await fetch(EDGE_FN_URL + '/order-status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_KEY,
+                    },
+                    body: JSON.stringify({ order_ref: orderRef, phone }),
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    resultEl.innerHTML = `<div class="checkout-error">${data.error || 'Order not found.'}</div>`;
+                    return;
+                }
+
+                const methodNames = {
+                    bank_transfer: 'Bank Transfer',
+                    cash: 'Cash on Delivery',
+                    tap_card: 'Card (Tap)',
+                    tabby: 'Tabby',
+                    tamara: 'Tamara'
+                };
+
+                resultEl.innerHTML = `
+                    <div class="order-status-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <p style="font-size: 0.8rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.1em;">Order</p>
+                                <p style="font-family: 'Fraunces', serif; font-size: 1.2rem;">${data.order_ref}</p>
+                            </div>
+                            <span class="order-status-badge ${data.order_status}">${data.order_status}</span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div>
+                                <p style="font-size: 0.78rem; color: var(--gray); text-transform: uppercase;">Payment</p>
+                                <p style="font-weight: 600;">${methodNames[data.payment_method] || data.payment_method}</p>
+                                <span class="order-status-badge ${data.payment_status}" style="margin-top: 5px;">${data.payment_status}</span>
+                            </div>
+                            <div>
+                                <p style="font-size: 0.78rem; color: var(--gray); text-transform: uppercase;">Total</p>
+                                <p style="font-weight: 600;" data-price-aed="${data.total_aed}">${formatPrice(data.total_aed)}</p>
+                                ${data.surcharge_pct > 0 ? `<p style="font-size: 0.78rem; color: var(--gray);">Includes ${data.surcharge_pct}% surcharge</p>` : ''}
+                            </div>
+                        </div>
+
+                        <div style="border-top: 1px solid var(--cream); padding-top: 15px;">
+                            <p style="font-size: 0.78rem; color: var(--gray); text-transform: uppercase; margin-bottom: 10px;">Items</p>
+                            ${data.items.map(item => `
+                                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem;">
+                                    <span>${item.brand} ${item.name} <span style="color: var(--gray);">x${item.qty}</span></span>
+                                    <span data-price-aed="${item.price * item.qty}">${formatPrice(item.price * item.qty)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        ${data.tracking_number ? `
+                        <div style="border-top: 1px solid var(--cream); padding-top: 15px; margin-top: 15px;">
+                            <p style="font-size: 0.78rem; color: var(--gray); text-transform: uppercase;">Tracking Number</p>
+                            <p style="font-weight: 600;">${data.tracking_number}</p>
+                        </div>
+                        ` : ''}
+
+                        <p style="font-size: 0.78rem; color: var(--gray); margin-top: 15px;">Placed on ${new Date(data.created_at).toLocaleDateString('en-AE', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                `;
+            } catch (err) {
+                resultEl.innerHTML = '<div class="checkout-error">Unable to look up order. Please try again later.</div>';
+            }
         }
 
         // Close checkout on overlay click
         document.getElementById('checkoutOverlay').addEventListener('click', function(e) {
             if (e.target === this) closeCheckout();
         });
+
+        // Check for payment return on page load
+        handlePaymentReturn();
 
         // Initialize cart badge on load
         updateCartBadge();
