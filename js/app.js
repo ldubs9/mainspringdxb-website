@@ -2623,8 +2623,20 @@
 
         // Parallax disabled — all elements are static
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
+        // Initialize — wrapped in function called by loader.js or DOMContentLoaded
+        function initApp() {
+            if (window.appInitialized) return;
+            window.appInitialized = true;
+            
+            // Check if page elements exist before running
+            if (!document.getElementById('page-home')) {
+               console.warn("Mainspring App: Home page component not found in DOM yet. Retrying shortly.");
+               window.appInitialized = false;
+               return;
+            }
+
+            console.log("Mainspring App: Initializing components and state.");
+            
             // Update wishlist badge
             updateWishlistBadge();
 
@@ -3050,4 +3062,11 @@
 
             // Set up Instagram carousel
             setupDragCarousel('#instagramTrack', '.instagram-carousel');
-        });
+        }
+
+        // Run on DOMContentLoaded or custom event from loader
+        document.addEventListener('DOMContentLoaded', initApp);
+        window.addEventListener('componentsLoaded', initApp);
+        
+        // Final fallback: if window already loaded (happens with fast caches)
+        if (document.readyState === 'complete') initApp();

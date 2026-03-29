@@ -60,7 +60,13 @@
     pageHTMLs.forEach(html => main.insertAdjacentHTML('beforeend', html));
 
     // Bootstrap the app now that the full DOM is ready
+    // We append the script and then explicitly call an init function
+    // to ensure it runs even if DOMContentLoaded already fired during loading.
     const script = document.createElement('script');
     script.src = 'js/app.js';
+    script.onload = () => {
+        // Dispatch a custom event that app.js can listen for
+        window.dispatchEvent(new CustomEvent('componentsLoaded'));
+    };
     document.body.appendChild(script);
 })();
