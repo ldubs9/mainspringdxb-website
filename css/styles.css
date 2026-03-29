@@ -2849,7 +2849,7 @@
 
         /* Accessories Categories */
         .categories-section {
-            padding: 15px 40px 40px;
+            padding: 25px 40px 40px;
             background: var(--white);
         }
 
@@ -4805,7 +4805,7 @@
 
         /* ── Policy / Sourcing / Sell (shared base) ──────────── */
         .policy-section {
-            padding: 0px 40px;
+            padding: 30px 40px;
             background: var(--warm-white);
         }
 
@@ -4815,7 +4815,7 @@
         }
 
         .policy-hero {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
 
         .policy-hero h1 {
@@ -5157,7 +5157,7 @@
             height: 400px;
             background: var(--cream);
             overflow: hidden;
-            margin-bottom: 0px;
+            margin-bottom: 20px;
         }
 
         .about-hero-image img {
