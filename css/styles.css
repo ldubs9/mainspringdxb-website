@@ -2091,11 +2091,11 @@
         }
 
         .shop-block:first-child .shop-block-bg {
-            background-image: url('shop-block-dark.png');
+            background-image: url('../shop-block-dark.png');
         }
 
         .shop-block:last-child .shop-block-bg {
-            background-image: url('shop-block-light.png');
+            background-image: url('../shop-block-light.png');
         }
 
         .shop-block:hover .shop-block-bg {
