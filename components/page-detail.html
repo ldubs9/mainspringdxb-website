@@ -1,0 +1,50 @@
+        <section class="page-section" id="page-detail">
+            <div class="detail-section">
+                <div class="detail-container">
+                    <div class="detail-grid">
+                        <div class="detail-gallery">
+                            <div class="gallery-main" id="galleryMain">
+                                <div class="gallery-placeholder">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="gallery-thumbs-wrapper">
+                                <button class="thumb-scroll-btn thumb-scroll-left" id="thumbScrollLeft"
+                                    onclick="scrollThumbs(-1)"><i class="fas fa-chevron-left"></i></button>
+                                <div class="gallery-thumbs" id="galleryThumbs"></div>
+                                <button class="thumb-scroll-btn thumb-scroll-right" id="thumbScrollRight"
+                                    onclick="scrollThumbs(1)"><i class="fas fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="detail-info" id="detailInfo">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="recommendations" id="recommendations">
+                        <h3>You May Also Like</h3>
+                        <div class="recommendations-grid" id="recommendationsGrid">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Image Zoom Overlay -->
+        <div id="galleryZoomOverlay" class="gallery-zoom-overlay">
+            <button class="gallery-zoom-nav prev" onclick="zoomPrevImage(event)"><i
+                    class="fas fa-chevron-left"></i></button>
+            <div class="gallery-zoom-container" id="galleryZoomContainer">
+                <img class="gallery-zoom-img" id="galleryZoomImg" alt="Zoomed product image">
+            </div>
+            <button class="gallery-zoom-nav next" onclick="zoomNextImage(event)"><i
+                    class="fas fa-chevron-right"></i></button>
+            <button class="gallery-zoom-close" onclick="closeImageZoom()">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="gallery-zoom-hint">Pinch or scroll to zoom &middot; Click outside to close</div>
+        </div>

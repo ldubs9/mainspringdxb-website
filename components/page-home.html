@@ -1,0 +1,124 @@
+        <section class="page-section active" id="page-home">
+            <!-- Hero -->
+            <div class="hero">
+                <!-- Slideshow Background -->
+                <div class="hero-slideshow">
+                    <div class="slideshow-slides">
+                        <div class="slideshow-slide active" style="background-image: url('slideshow-1.jpg');"></div>
+                        <div class="slideshow-slide" style="background-image: url('slideshow-2.jpg');"></div>
+                        <div class="slideshow-slide" style="background-image: url('slideshow-3.jpg');"></div>
+                        <div class="slideshow-slide" style="background-image: url('slideshow-4.jpg');"></div>
+                        <div class="slideshow-slide" style="background-image: url('slideshow-5.jpg');"></div>
+                    </div>
+                </div>
+
+                <div class="hero-content">
+                    <h1 class="hero-title">Your Partners in Horology</h1>
+                    <p class="hero-tagline" style="font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; color: rgba(255,255,255,0.7); letter-spacing: 0.08em; margin-bottom: 24px; font-style: normal; font-weight: 300; animation: slideUp 1s ease 0.15s both;">Your personal guide to better watches, at every level.</p>
+                    <div class="hero-subtitle-container">
+                        <span class="subtitle-item">Authentication</span>
+                        <span class="subtitle-separator">&middot;</span>
+                        <span class="subtitle-item">Curation</span>
+                        <span class="subtitle-separator">&middot;</span>
+                        <span class="subtitle-item">Community</span>
+                    </div>
+                    <a href="#" class="hero-cta" onclick="event.preventDefault(); showPage('watches');">Explore the Collection</a>
+                    <!-- Navigation Dots -->
+                    <div class="slideshow-dots">
+                        <button class="dot active" onclick="goToSlide(0)"></button>
+                        <button class="dot" onclick="goToSlide(1)"></button>
+                        <button class="dot" onclick="goToSlide(2)"></button>
+                        <button class="dot" onclick="goToSlide(3)"></button>
+                        <button class="dot" onclick="goToSlide(4)"></button>
+                    </div>
+                </div>
+                <div class="scroll-indicator">
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+            </div>
+
+            <!-- Shop Section -->
+            <div class="shop-section">
+                <div class="shop-block" onclick="showPage('watches'); trackClick('shop_watches')">
+                    <div class="shop-block-bg"></div>
+                    <div class="shop-block-content">
+                        <h2>COLLECTORS</h2>
+                        <p>Curated timepieces for every budget.</p>
+                        <span class="shop-cta">Shop Now</span>
+                    </div>
+                </div>
+                <div class="shop-block" onclick="showPage('accessories'); trackClick('shop_accessories')">
+                    <div class="shop-block-bg"></div>
+                    <div class="shop-block-content">
+                        <h2>ENTHUSIASTS</h2>
+                        <p>Premium straps, rolls, and tools.</p>
+                        <span class="shop-cta">Shop Accessories</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Section (The Mainspring Standard) -->
+            <section class="trust-section">
+                <div class="trust-container">
+                    <span class="section-label" style="text-align: center; display: block;">The Mainspring Standard</span>
+                    <h2 class="section-title" style="text-align: center; margin-bottom: 60px;">Why Collectors Trust Us</h2>
+                    
+                    <div class="trust-grid">
+                        <div class="trust-card">
+                            <div class="trust-icon"><i class="fas fa-certificate"></i></div>
+                            <h3>Guaranteed Authenticity</h3>
+                            <p>Every timepiece, from a $100 vintage classic to a gold Patek, undergoes rigorous multi-point inspection. We only sell what we would wear ourselves.</p>
+                        </div>
+                        <div class="trust-card">
+                            <div class="trust-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                            <h3>Fair Market Value</h3>
+                            <p>Great horology should be accessible. Our pricing is transparent and reflects true market value, ensuring a sound investment for all collectors.</p>
+                        </div>
+                        <div class="trust-card">
+                            <div class="trust-icon"><i class="fas fa-search-location"></i></div>
+                            <h3>Personalized Sourcing</h3>
+                            <p>Looking for a birth-year watch or a specific mid-range reference? Our global network finds the exact piece you're searching for, at your budget.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Instagram Section -->
+            <div class="instagram-section">
+                <div class="instagram-header">
+                    <h2>@MAINSPRING.DXB</h2>
+                    <a href="https://www.instagram.com/mainspring.dxb" target="_blank">Follow Us on Instagram</a>
+                </div>
+                <div class="instagram-carousel">
+                    <div class="instagram-track" id="instagramTrack">
+                        <!-- Instagram reels will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specific Watch Inquiry Section -->
+            <div class="watch-inquiry-section">
+                <div class="watch-inquiry-content">
+                    <h2 class="inquiry-title">FIND YOUR DREAM WATCH</h2>
+                    <p class="inquiry-subtitle">Can't find what you're looking for? Whether it's a vintage piece, a
+                        specific model, or something unique — let us help you track it down.</p>
+                    <p class="inquiry-text">Is there a specific watch you're looking for?</p>
+                    <a href="https://wa.me/971585625042?text=Hi%20Mainspring%20Dubai%2C%20I%27m%20looking%20for%20a%20specific%20watch.%20Can%20you%20help%20me%20find%20it%3F"
+                        target="_blank" class="inquiry-whatsapp-btn">
+                        <i class="fab fa-whatsapp"></i> Message on WhatsApp
+                    </a>
+                </div>
+            </div>
+
+            <!-- WhatsApp Community Section -->
+            <div class="whatsapp-community">
+                <h2>JOIN OUR COMMUNITY</h2>
+                <p>Be the first to know about new arrivals, vintage finds, and special deals. Join watch enthusiasts in
+                    our Mainspring Collectors Club.</p>
+                <a href="https://wa.me/971585625042?text=Hello%20Mainspring%20Dubai,%20I%20would%20like%20to%20join%20the%20community!"
+                    class="whatsapp-community-btn" onclick="trackClick('join_community')">
+                    <i class="fab fa-whatsapp"></i>
+                    Join Now
+                </a>
+            </div>
+        </section>

@@ -1,0 +1,72 @@
+    <!-- Navigation Overlay Backdrop -->
+    <div class="nav-overlay-backdrop" id="navBackdrop" onclick="closeNav()"></div>
+
+    <!-- Navigation Overlay -->
+    <nav class="nav-overlay" id="navOverlay">
+        <ul class="nav-links">
+            <li><a href="#" onclick="event.preventDefault(); showPage('home'); closeNav();">HOME</a></li>
+            <li>
+                <div class="nav-item-wrapper">
+                    <a href="#" onclick="event.preventDefault(); handleNavClick(event, this, 'watches');">WATCHES</a>
+                    <ul class="nav-dropdown" id="watchesDropdown">
+                        <li><a href="#" onclick="event.preventDefault(); filterByBrand('Rolex'); closeNav();">Rolex</a>
+                        </li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); filterByBrand('Patek Philippe'); closeNav();">Patek
+                                Philippe</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); filterByBrand('Omega'); closeNav();">Omega</a>
+                        </li>
+                        <li><a href="#" onclick="event.preventDefault(); filterByBrand('Tudor'); closeNav();">Tudor</a>
+                        </li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); filterByBrand('Audemars Piguet'); closeNav();">Audemars
+                                Piguet</a></li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); filterByBrand('Cartier'); closeNav();">Cartier</a></li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); filterByBrand('Vacheron Constantin'); closeNav();">Vacheron
+                                Constantin</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li>
+                <div class="nav-item-wrapper">
+                    <a href="#" onclick="event.preventDefault(); handleNavClick(event, this, 'accessories');">ACCESSORIES</a>
+                    <ul class="nav-dropdown" id="accessoriesDropdown">
+                        <li><a href="#"
+                                onclick="event.preventDefault(); showAccessoryCategory('pocket-watches'); closeNav();">Pocket
+                                Watches</a></li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); showAccessoryCategory('standing-clocks'); closeNav();">Standing
+                                Clocks</a></li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); showAccessoryCategory('watch-boxes'); closeNav();">Watch
+                                Boxes</a></li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); showAccessoryCategory('bags'); closeNav();">Bags</a>
+                        </li>
+                        <li><a href="#"
+                                onclick="event.preventDefault(); showAccessoryCategory('watch-straps'); closeNav();">Watch
+                                Straps</a></li>
+                    </ul>
+                </div>
+            </li>
+            <li><a href="#" onclick="event.preventDefault(); showPage('blog'); closeNav();">BLOG</a></li>
+            <li><a href="#" onclick="event.preventDefault(); showPage('about'); closeNav();">ABOUT</a></li>
+            <li><a href="#" onclick="event.preventDefault(); showPage('contact'); closeNav();">CONTACT</a></li>
+            <li><a href="#" onclick="event.preventDefault(); showPage('faq'); closeNav();">FAQ</a></li>
+            <li>
+                <div class="nav-item-wrapper">
+                    <a href="#" onclick="event.preventDefault();">MORE</a>
+                    <ul class="nav-dropdown" id="moreDropdown">
+                        <li><a href="#" onclick="event.preventDefault(); showPage('warranty'); closeNav();">Warranty
+                                &amp; Refund</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('sourcing'); closeNav();">Watch
+                                Sourcing</a></li>
+                        <li><a href="#" onclick="event.preventDefault(); showPage('sell'); closeNav();">Sell Your
+                                Watch</a></li>
+                    </ul>
+                </div>
+            </li>
+        </ul>
+    </nav>
