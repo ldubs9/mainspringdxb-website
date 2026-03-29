@@ -1580,7 +1580,7 @@
         /* Hero Section */
         .hero {
             position: relative;
-            height: 100vh;
+            height: 80vh;
             display: flex;
             align-items: flex-end;
             justify-content: flex-start;
@@ -1619,7 +1619,7 @@
             font-weight: 400;
             letter-spacing: -0.02em;
             color: var(--white);
-            margin-bottom: 8px;
+            margin-bottom: 24px;
             animation: slideUp 1s ease;
             line-height: 1;
         }
@@ -1637,7 +1637,7 @@
         .subtitle-item {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.7);
             letter-spacing: 0.15em;
             text-transform: uppercase;
             font-weight: 400;
@@ -1787,33 +1787,31 @@
 
         /* Navigation Dots */
         .slideshow-dots {
-            position: absolute;
-            bottom: 100px;
-            left: 60px;
             display: flex;
             flex-direction: row;
-            gap: 8px;
+            gap: 10px;
             z-index: 3;
+            margin-top: 40px;
         }
 
         .dot {
-            width: 28px;
+            width: 30px;
             height: 3px;
             border-radius: 0;
             border: none;
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.3);
             cursor: pointer;
             transition: all 0.3s ease;
             padding: 0;
         }
 
         .dot:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.6);
         }
 
         .dot.active {
             background: var(--gold);
-            width: 48px;
+            width: 50px;
         }
 
         /* Scroll Indicator */
@@ -2119,11 +2117,11 @@
         }
 
         .shop-block:first-child .shop-block-bg {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%232c2c2c" width="800" height="600"/><circle cx="400" cy="300" r="150" fill="none" stroke="%23b8956a" stroke-width="1" opacity="0.1"/><circle cx="400" cy="300" r="200" fill="none" stroke="%23b8956a" stroke-width="1" opacity="0.08"/><circle cx="400" cy="300" r="250" fill="none" stroke="%23b8956a" stroke-width="1" opacity="0.06"/></svg>');
+            background-image: url('shop-block-dark.png');
         }
 
         .shop-block:last-child .shop-block-bg {
-            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600"><rect fill="%23f5f1eb" width="800" height="600"/><circle cx="400" cy="300" r="150" fill="none" stroke="%232c2c2c" stroke-width="1" opacity="0.1"/><circle cx="400" cy="300" r="200" fill="none" stroke="%232c2c2c" stroke-width="1" opacity="0.08"/><circle cx="400" cy="300" r="250" fill="none" stroke="%232c2c2c" stroke-width="1" opacity="0.06"/></svg>');
+            background-image: url('shop-block-light.png');
         }
 
         .shop-block:hover .shop-block-bg {
@@ -2142,12 +2140,22 @@
             font-weight: 400;
             letter-spacing: -0.01em;
             color: var(--white);
-            margin-bottom: 16px;
+            margin-bottom: 24px;
             transition: var(--transition);
+        }
+
+        .shop-block p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95rem;
+            margin-bottom: 30px;
         }
 
         .shop-block:last-child h2 {
             color: var(--black);
+        }
+
+        .shop-block:last-child p {
+            color: rgba(0, 0, 0, 0.6);
         }
 
         .shop-block:hover h2 {
@@ -2157,30 +2165,27 @@
         .shop-cta {
             display: inline-block;
             padding: 12px 32px;
-            border: none;
-            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid var(--gold);
+            background: transparent;
             color: var(--white);
             text-decoration: none;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.1em;
             text-transform: uppercase;
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 500;
             transition: var(--transition);
             border-radius: 0;
+            position: relative;
         }
 
         .shop-block:last-child .shop-cta {
-            background: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.4);
             color: var(--black);
         }
 
-        .shop-block:hover .shop-cta {
+        .shop-cta:hover {
             background: var(--gold);
-            color: var(--white);
-        }
-
-        .shop-block:last-child:hover .shop-cta {
-            background: var(--black);
+            border-color: var(--gold);
             color: var(--white);
         }
 
@@ -2288,69 +2293,236 @@
             z-index: 100;
         }
 
+        .policy-section {
+            padding: 40px 0 20px;
+        }
+
+        .policy-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+
         .filter-container {
             max-width: 1100px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            gap: 16px;
+            flex-wrap: nowrap;
         }
 
-        .filter-group {
+        .filter-group-main {
             display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
+            gap: 12px;
+            flex: 1;
+            align-items: center;
         }
 
-        .filter-select {
-            padding: 12px 25px;
-            border: 1px solid var(--cream-dark);
+        .filter-group-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .more-filters-btn {
             background: var(--white);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.9rem;
-            color: var(--primary-green);
-            cursor: pointer;
-            transition: var(--transition);
-            min-width: 180px;
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231a3a2a' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            padding-right: 40px;
-            border-radius: 0;
-        }
-
-        .filter-select:hover,
-        .filter-select:focus {
-            border-color: var(--primary-green);
-            outline: none;
-        }
-
-        /* Custom Dropdown Styles */
-        .custom-dropdown {
-            position: relative;
-            min-width: 160px;
-        }
-
-        .custom-dropdown-trigger {
-            padding: 10px 20px;
             border: 1px solid rgba(0, 0, 0, 0.1);
-            background: var(--white);
+            padding: 10px 18px;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.82rem;
-            color: var(--primary-green);
+            font-size: 0.78rem;
+            font-weight: 500;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--primary-green);
+        }
+
+        .more-filters-btn:hover {
+            border-color: var(--primary-green);
+            background: var(--cream);
+        }
+
+        .mobile-filter-trigger {
+            display: none;
+            width: 100%;
+            padding: 14px;
+            background: var(--white);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            color: var(--primary-green);
+            letter-spacing: 0.1em;
+        }
+
+        /* Filter Drawer Overlay */
+        .filter-drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 380px;
+            height: 100vh;
+            background: var(--white);
+            z-index: 2500;
+            box-shadow: -10px 0 50px rgba(0,0,0,0.15);
+            transition: right 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-drawer.active {
+            right: 0;
+        }
+
+        .filter-drawer-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            min-width: 160px;
-            border-radius: 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding-bottom: 20px;
+        }
+
+        .filter-drawer-header h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .close-drawer {
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: var(--transition);
+        }
+
+        .close-drawer:hover {
+            opacity: 1;
+            color: var(--gold);
+        }
+
+        .drawer-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            padding-right: 10px;
+        }
+
+        .drawer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .drawer-section-title {
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .filter-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+            z-index: 2400;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .filter-drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            gap: 10px;
+        }
+
+        .apply-filters-btn {
+            flex: 1;
+            background: var(--charcoal);
+            color: var(--white);
+            padding: 16px;
+            border: none;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .apply-filters-btn:hover {
+            background: var(--gold);
+        }
+
+        .clear-filters-btn {
+            padding: 16px;
+            background: transparent;
+            border: 1px solid rgba(0,0,0,0.1);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .clear-filters-btn:hover {
+            background: var(--light-gray);
+        }
+
+        @media (max-width: 992px) {
+            .filter-group-main, .filter-group-actions {
+                display: none;
+            }
+            .mobile-filter-trigger {
+                display: flex;
+            }
+            .filter-drawer {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        .custom-dropdown {
+            position: relative;
+        }
+
+        .custom-dropdown-trigger {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: var(--white);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 140px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
             font-weight: 500;
+            border-radius: 0;
+            white-space: nowrap;
         }
 
         .custom-dropdown-trigger:hover {
@@ -2371,6 +2543,19 @@
 
         .custom-dropdown.open .custom-dropdown-trigger::after {
             transform: rotate(180deg);
+        }
+
+        .filter-drawer .custom-dropdown-trigger {
+            background: var(--warm-white);
+            border: none;
+            padding: 14px 20px;
+            font-size: 0.85rem;
+            color: var(--charcoal);
+        }
+
+        .filter-drawer .custom-dropdown-menu {
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
 
         .custom-dropdown.open .custom-dropdown-trigger {
@@ -2396,9 +2581,73 @@
         }
 
         .custom-dropdown.open .custom-dropdown-menu {
-            max-height: 300px;
+            max-height: 220px;
             opacity: 1;
             overflow-y: auto;
+        }
+
+        /* Custom scrollbar for dropdown menus */
+        .custom-dropdown.open .custom-dropdown-menu::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-dropdown.open .custom-dropdown-menu::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        .custom-dropdown.open .custom-dropdown-menu::-webkit-scrollbar-thumb {
+            background: #d4af37; 
+        }
+
+        /* Slider Custom Styles */
+        .custom-dropdown-slider-wrap {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            background: var(--light-gray);
+            cursor: default;
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+        }
+        .slider-labels span:last-child {
+            color: var(--gold);
+            font-weight: 500;
+        }
+        .luxury-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 2px;
+            background: var(--gray);
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            margin: 10px 0;
+        }
+        .luxury-slider:hover {
+            opacity: 1;
+        }
+        .luxury-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--gold);
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        .luxury-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--gold);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
         }
 
         .custom-dropdown-item {
@@ -2471,6 +2720,9 @@
             cursor: pointer;
             overflow: hidden;
             border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
         }
 
         .product-card:hover {
@@ -2543,6 +2795,9 @@
         .product-info {
             padding: 20px 22px;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         .product-brand {
@@ -2772,6 +3027,64 @@
         .gallery-nav:hover {
             background: var(--primary-green);
             color: var(--white);
+        }
+
+        /* Trust Section Styles */
+        .trust-section {
+            padding: 120px 40px;
+            background: var(--white);
+        }
+
+        .trust-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 48px;
+        }
+
+        .trust-card {
+            text-align: center;
+        }
+
+        .trust-icon {
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 24px;
+            background: var(--cream);
+            width: 70px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .trust-card h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.35rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: var(--black);
+        }
+
+        .trust-card p {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: var(--gray);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        @media (max-width: 992px) {
+            .trust-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
         }
 
         .gallery-dots {
@@ -3156,6 +3469,22 @@
             max-width: 700px;
         }
 
+        .policy-hero h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            margin-bottom: 12px;
+            color: var(--black);
+        }
+
+        .policy-hero p {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin-bottom: 20px;
+        }
+
         .about-hero h1 {
             font-family: 'Fraunces', serif;
             font-size: 3.5rem;
@@ -3362,6 +3691,16 @@
             display: none;
         }
 
+        .mobile-only-block {
+            display: none !important;
+        }
+
+        @media (max-width: 992px) {
+            .mobile-only-block {
+                display: block !important;
+            }
+        }
+
         @media (max-width: 992px) {
             .header-nav {
                 display: none !important;
@@ -3372,7 +3711,7 @@
             }
 
             .hero {
-                height: 85vh;
+                height: 75vh;
             }
 
             .hero-title {
@@ -3474,7 +3813,7 @@
                 }
 
                 .hero {
-                    height: 80vh;
+                    height: 70vh;
                 }
 
                 .hero-content {
@@ -3757,7 +4096,7 @@
 
                     .hero {
                         position: relative;
-                        height: 70vh;
+                        height: 65vh;
                     }
 
                     .hero-content {
@@ -3808,10 +4147,14 @@
                         overflow: hidden;
                     }
 
-                    .nav-item-wrapper:hover .nav-dropdown {
+                    .nav-item-wrapper.mobile-expanded .nav-dropdown {
                         max-height: 500px;
                         transform: none;
                         transition: max-height 0.3s ease-out;
+                    }
+
+                    .nav-links>li>a, .nav-item-wrapper>a {
+                        font-size: 1.8rem !important;
                     }
 
                     .nav-dropdown::before {
@@ -3819,8 +4162,8 @@
                     }
 
                     .nav-dropdown a {
-                        padding: 10px 20px !important;
-                        font-size: 0.85rem !important;
+                        padding: 12px 20px !important;
+                        font-size: 1rem !important;
                         font-family: 'Lato', sans-serif !important;
                         letter-spacing: 0.08em !important;
                         border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -5170,7 +5513,7 @@
             <li><a href="#" onclick="event.preventDefault(); showPage('home'); closeNav();">HOME</a></li>
             <li>
                 <div class="nav-item-wrapper">
-                    <a href="#" onclick="event.preventDefault(); showPage('watches'); closeNav();">WATCHES</a>
+                    <a href="#" onclick="event.preventDefault(); handleNavClick(event, this, 'watches');">WATCHES</a>
                     <ul class="nav-dropdown" id="watchesDropdown">
                         <li><a href="#" onclick="event.preventDefault(); filterByBrand('Rolex'); closeNav();">Rolex</a>
                         </li>
@@ -5194,7 +5537,7 @@
             </li>
             <li>
                 <div class="nav-item-wrapper">
-                    <a href="#" onclick="event.preventDefault(); showPage('accessories'); closeNav();">ACCESSORIES</a>
+                    <a href="#" onclick="event.preventDefault(); handleNavClick(event, this, 'accessories');">ACCESSORIES</a>
                     <ul class="nav-dropdown" id="accessoriesDropdown">
                         <li><a href="#"
                                 onclick="event.preventDefault(); showAccessoryCategory('pocket-watches'); closeNav();">Pocket
@@ -5249,6 +5592,19 @@
                         <div class="slideshow-slide" style="background-image: url('slideshow-4.jpg');"></div>
                         <div class="slideshow-slide" style="background-image: url('slideshow-5.jpg');"></div>
                     </div>
+                </div>
+
+                <div class="hero-content">
+                    <h1 class="hero-title">Your Partners in Horology</h1>
+                    <p class="hero-tagline" style="font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; color: rgba(255,255,255,0.7); letter-spacing: 0.08em; margin-bottom: 24px; font-style: normal; font-weight: 300; animation: slideUp 1s ease 0.15s both;">Your personal guide to better watches, at every level.</p>
+                    <div class="hero-subtitle-container">
+                        <span class="subtitle-item">Authentication</span>
+                        <span class="subtitle-separator">&middot;</span>
+                        <span class="subtitle-item">Curation</span>
+                        <span class="subtitle-separator">&middot;</span>
+                        <span class="subtitle-item">Community</span>
+                    </div>
+                    <a href="#" class="hero-cta" onclick="event.preventDefault(); showPage('watches');">Explore the Collection</a>
                     <!-- Navigation Dots -->
                     <div class="slideshow-dots">
                         <button class="dot active" onclick="goToSlide(0)"></button>
@@ -5257,24 +5613,6 @@
                         <button class="dot" onclick="goToSlide(3)"></button>
                         <button class="dot" onclick="goToSlide(4)"></button>
                     </div>
-                </div>
-
-                <div class="hero-content">
-                    <h1 class="hero-title">MAINSPRING</h1>
-                    <p class="hero-tagline"
-                        style="font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; color: rgba(255,255,255,0.45); letter-spacing: 0.08em; margin-bottom: 20px; font-style: normal; font-weight: 300; animation: slideUp 1s ease 0.15s both;">
-                        Your personal guide to better watches</p>
-                    <div class="hero-subtitle-container">
-                        <span class="subtitle-item">Buy</span>
-                        <span class="subtitle-separator">•</span>
-                        <span class="subtitle-item">Sell</span>
-                        <span class="subtitle-separator">•</span>
-                        <span class="subtitle-item">Trade</span>
-                        <span class="subtitle-separator">•</span>
-                        <span class="subtitle-item">Vintage</span>
-                    </div>
-                    <a href="#" class="hero-cta" onclick="event.preventDefault(); showPage('watches');">Explore
-                        Collection</a>
                 </div>
                 <div class="scroll-indicator">
                     <i class="fas fa-chevron-down"></i>
@@ -5286,18 +5624,46 @@
                 <div class="shop-block" onclick="showPage('watches'); trackClick('shop_watches')">
                     <div class="shop-block-bg"></div>
                     <div class="shop-block-content">
-                        <h2>WATCHES</h2>
+                        <h2>COLLECTORS</h2>
+                        <p>Curated timepieces for every budget.</p>
                         <span class="shop-cta">Shop Now</span>
                     </div>
                 </div>
                 <div class="shop-block" onclick="showPage('accessories'); trackClick('shop_accessories')">
                     <div class="shop-block-bg"></div>
                     <div class="shop-block-content">
-                        <h2>ACCESSORIES</h2>
-                        <span class="shop-cta">Shop Now</span>
+                        <h2>ENTHUSIASTS</h2>
+                        <p>Premium straps, rolls, and tools.</p>
+                        <span class="shop-cta">Shop Accessories</span>
                     </div>
                 </div>
             </div>
+
+            <!-- Trust Section (The Mainspring Standard) -->
+            <section class="trust-section">
+                <div class="trust-container">
+                    <span class="section-label" style="text-align: center; display: block;">The Mainspring Standard</span>
+                    <h2 class="section-title" style="text-align: center; margin-bottom: 60px;">Why Collectors Trust Us</h2>
+                    
+                    <div class="trust-grid">
+                        <div class="trust-card">
+                            <div class="trust-icon"><i class="fas fa-certificate"></i></div>
+                            <h3>Guaranteed Authenticity</h3>
+                            <p>Every timepiece, from a $100 vintage classic to a gold Patek, undergoes rigorous multi-point inspection. We only sell what we would wear ourselves.</p>
+                        </div>
+                        <div class="trust-card">
+                            <div class="trust-icon"><i class="fas fa-hand-holding-usd"></i></div>
+                            <h3>Fair Market Value</h3>
+                            <p>Great horology should be accessible. Our pricing is transparent and reflects true market value, ensuring a sound investment for all collectors.</p>
+                        </div>
+                        <div class="trust-card">
+                            <div class="trust-icon"><i class="fas fa-search-location"></i></div>
+                            <h3>Personalized Sourcing</h3>
+                            <p>Looking for a birth-year watch or a specific mid-range reference? Our global network finds the exact piece you're searching for, at your budget.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Instagram Section -->
             <div class="instagram-section">
@@ -5308,16 +5674,6 @@
                 <div class="instagram-carousel">
                     <div class="instagram-track" id="instagramTrack">
                         <!-- Instagram reels will be loaded here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reviews Section -->
-            <div class="reviews-section">
-                <h2 class="section-title">What Our Clients Say</h2>
-                <div class="reviews-container">
-                    <div class="reviews-track" id="reviewsTrack">
-                        <!-- Reviews loaded dynamically from Supabase -->
                     </div>
                 </div>
             </div>
@@ -5373,126 +5729,146 @@
                 <input type="hidden" id="genderFilter" value="">
                 <input type="hidden" id="movementFilter" value="">
                 <input type="hidden" id="countryFilter" value="">
+                
                 <div class="filter-container">
-                    <div class="filter-group">
+                    <!-- Mobile Filter Trigger -->
+                    <div class="mobile-filter-trigger" onclick="toggleFilterDrawer()">
+                        <i class="fas fa-sliders-h"></i> FILTERS & SEARCH
+                    </div>
+
+                    <!-- Desktop Main Filters -->
+                    <div class="filter-group-main">
                         <div class="custom-dropdown" id="brandDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('brandDropdown')">All Brands
-                            </div>
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'brandDropdown')">All Brands</div>
                             <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value=""
-                                    onclick="selectFilter('brand', '', this)">All Brands</div>
-                                <div class="custom-dropdown-item" data-value="Rolex"
-                                    onclick="selectFilter('brand', 'Rolex', this)">Rolex</div>
-                                <div class="custom-dropdown-item" data-value="Patek Philippe"
-                                    onclick="selectFilter('brand', 'Patek Philippe', this)">Patek Philippe</div>
-                                <div class="custom-dropdown-item" data-value="Omega"
-                                    onclick="selectFilter('brand', 'Omega', this)">Omega</div>
-                                <div class="custom-dropdown-item" data-value="Tudor"
-                                    onclick="selectFilter('brand', 'Tudor', this)">Tudor</div>
-                                <div class="custom-dropdown-item" data-value="Audemars Piguet"
-                                    onclick="selectFilter('brand', 'Audemars Piguet', this)">Audemars Piguet</div>
-                                <div class="custom-dropdown-item" data-value="Cartier"
-                                    onclick="selectFilter('brand', 'Cartier', this)">Cartier</div>
-                                <div class="custom-dropdown-item" data-value="Vacheron Constantin"
-                                    onclick="selectFilter('brand', 'Vacheron Constantin', this)">Vacheron Constantin
-                                </div>
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('brand', '', this)">All Brands</div>
+                                <div class="custom-dropdown-item" data-value="Rolex" onclick="selectFilter('brand', 'Rolex', this)">Rolex</div>
+                                <div class="custom-dropdown-item" data-value="Patek Philippe" onclick="selectFilter('brand', 'Patek Philippe', this)">Patek Philippe</div>
+                                <div class="custom-dropdown-item" data-value="Omega" onclick="selectFilter('brand', 'Omega', this)">Omega</div>
+                                <div class="custom-dropdown-item" data-value="Tudor" onclick="selectFilter('brand', 'Tudor', this)">Tudor</div>
+                                <div class="custom-dropdown-item" data-value="Cartier" onclick="selectFilter('brand', 'Cartier', this)">Cartier</div>
+                                <div class="custom-dropdown-item" data-value="Audemars Piguet" onclick="selectFilter('brand', 'Audemars Piguet', this)">Audemars Piguet</div>
+                                <div class="custom-dropdown-item" data-value="IWC" onclick="selectFilter('brand', 'IWC', this)">IWC</div>
+                                <div class="custom-dropdown-item" data-value="Breitling" onclick="selectFilter('brand', 'Breitling', this)">Breitling</div>
+                                <div class="custom-dropdown-item" data-value="Panerai" onclick="selectFilter('brand', 'Panerai', this)">Panerai</div>
+                                <div class="custom-dropdown-item" data-value="Vacheron Constantin" onclick="selectFilter('brand', 'Vacheron Constantin', this)">Vacheron Constantin</div>
+                                <div class="custom-dropdown-item" data-value="Longines" onclick="selectFilter('brand', 'Longines', this)">Longines</div>
+                                <div class="custom-dropdown-item" data-value="TAG Heuer" onclick="selectFilter('brand', 'TAG Heuer', this)">TAG Heuer</div>
+                                <div class="custom-dropdown-item" data-value="Jaeger-LeCoultre" onclick="selectFilter('brand', 'Jaeger-LeCoultre', this)">Jaeger-LeCoultre</div>
+                                <div class="custom-dropdown-item" data-value="Breguet" onclick="selectFilter('brand', 'Breguet', this)">Breguet</div>
+                                <div class="custom-dropdown-item" data-value="Grand Seiko" onclick="selectFilter('brand', 'Grand Seiko', this)">Grand Seiko</div>
                             </div>
                         </div>
+
                         <div class="custom-dropdown" id="priceDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('priceDropdown')">Any Price
-                            </div>
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'priceDropdown')">Any Price</div>
                             <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value=""
-                                    onclick="selectFilter('price', '', this)">Any Price</div>
-                                <div class="custom-dropdown-item" data-value="0-10000"
-                                    onclick="selectFilter('price', '0-10000', this)">Under $10,000</div>
-                                <div class="custom-dropdown-item" data-value="10000-25000"
-                                    onclick="selectFilter('price', '10000-25000', this)">$10,000 - $25,000</div>
-                                <div class="custom-dropdown-item" data-value="25000-50000"
-                                    onclick="selectFilter('price', '25000-50000', this)">$25,000 - $50,000</div>
-                                <div class="custom-dropdown-item" data-value="50000-100000"
-                                    onclick="selectFilter('price', '50000-100000', this)">$50,000 - $100,000</div>
-                                <div class="custom-dropdown-item" data-value="100000+"
-                                    onclick="selectFilter('price', '100000+', this)">$100,000+</div>
+                                <div class="custom-dropdown-slider-wrap" onclick="if(event)event.stopPropagation()">
+                                    <div class="slider-labels">
+                                        <span>Max Price</span>
+                                        <span id="sliderValueDisplay">Any</span>
+                                    </div>
+                                    <input type="range" class="luxury-slider" min="1000" max="150000" step="1000" value="150000" oninput="updateSliderDisplay(this.value)" onchange="applySliderValue(this.value)">
+                                </div>
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('price', '', this); updateSliderDisplay(150000); document.querySelector('.luxury-slider').value=150000;">Any Price</div>
+                                <div class="custom-dropdown-item" data-value="0-1000" onclick="selectFilter('price', '0-1000', this)">Under 1,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="0-5000" onclick="selectFilter('price', '0-5000', this)">Under 5,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="5000-15000" onclick="selectFilter('price', '5000-15000', this)">5,000 - 15,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="15000-30000" onclick="selectFilter('price', '15000-30000', this)">15,000 - 30,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="30000-50000" onclick="selectFilter('price', '30000-50000', this)">30,000 - 50,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="50000+" onclick="selectFilter('price', '50000+', this)">50,000+ AED</div>
                             </div>
                         </div>
-                        <div class="custom-dropdown" id="statusDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('statusDropdown')">All Status
-                            </div>
-                            <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value=""
-                                    onclick="selectFilter('status', '', this)">All Status</div>
-                                <div class="custom-dropdown-item" data-value="available"
-                                    onclick="selectFilter('status', 'available', this)">Available</div>
-                                <div class="custom-dropdown-item" data-value="sold"
-                                    onclick="selectFilter('status', 'sold', this)">Sold</div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" id="genderDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('genderDropdown')">All Genders
-                            </div>
-                            <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value=""
-                                    onclick="selectFilter('gender', '', this)">All Genders</div>
-                                <div class="custom-dropdown-item" data-value="Men"
-                                    onclick="selectFilter('gender', 'Men', this)">Men</div>
-                                <div class="custom-dropdown-item" data-value="Women"
-                                    onclick="selectFilter('gender', 'Women', this)">Women</div>
-                                <div class="custom-dropdown-item" data-value="Unisex"
-                                    onclick="selectFilter('gender', 'Unisex', this)">Unisex</div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" id="movementDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('movementDropdown')">All
-                                Movements</div>
-                            <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value=""
-                                    onclick="selectFilter('movement', '', this)">All Movements</div>
-                                <div class="custom-dropdown-item" data-value="Automatic"
-                                    onclick="selectFilter('movement', 'Automatic', this)">Automatic</div>
-                                <div class="custom-dropdown-item" data-value="Manual"
-                                    onclick="selectFilter('movement', 'Manual', this)">Manual</div>
-                                <div class="custom-dropdown-item" data-value="Quartz"
-                                    onclick="selectFilter('movement', 'Quartz', this)">Quartz</div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" id="countryDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('countryDropdown')">All Origins
-                            </div>
-                            <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value=""
-                                    onclick="selectFilter('country', '', this)">All Origins</div>
-                                <div class="custom-dropdown-item" data-value="Switzerland"
-                                    onclick="selectFilter('country', 'Switzerland', this)">Switzerland</div>
-                                <div class="custom-dropdown-item" data-value="Japan"
-                                    onclick="selectFilter('country', 'Japan', this)">Japan</div>
-                                <div class="custom-dropdown-item" data-value="Germany"
-                                    onclick="selectFilter('country', 'Germany', this)">Germany</div>
-                                <div class="custom-dropdown-item" data-value="USA"
-                                    onclick="selectFilter('country', 'USA', this)">USA</div>
-                                <div class="custom-dropdown-item" data-value="UK"
-                                    onclick="selectFilter('country', 'UK', this)">UK</div>
-                            </div>
-                        </div>
-                        <div class="custom-dropdown" id="sortDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('sortDropdown')">Newest First
-                            </div>
-                            <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value="newest"
-                                    onclick="selectFilter('sort', 'newest', this)">Newest First</div>
-                                <div class="custom-dropdown-item" data-value="price-low"
-                                    onclick="selectFilter('sort', 'price-low', this)">Price: Low to High</div>
-                                <div class="custom-dropdown-item" data-value="price-high"
-                                    onclick="selectFilter('sort', 'price-high', this)">Price: High to Low</div>
-                            </div>
+
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search watches..." oninput="applyFilters()">
+                            <i class="fas fa-search"></i>
                         </div>
                     </div>
-                    <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="Search watches..." oninput="applyFilters()">
-                        <i class="fas fa-search"></i>
+
+                    <div class="filter-group-actions">
+                        <button class="more-filters-btn" onclick="toggleFilterDrawer()">
+                            <i class="fas fa-sliders-h"></i> More Filters
+                        </button>
                     </div>
                 </div>
             </div>
+
+            <!-- Filter Drawer (Shared Mobile/Desktop Extra) -->
+            <div class="filter-drawer-overlay" id="filterDrawerOverlay" onclick="closeFilterDrawer()"></div>
+            <div class="filter-drawer" id="filterDrawer">
+                <div class="filter-drawer-header">
+                    <h2>Filters</h2>
+                    <i class="fas fa-times close-drawer" onclick="closeFilterDrawer()"></i>
+                </div>
+                <div class="drawer-content">
+                    <!-- Mobile Search (Visible only in drawer on mobile) -->
+                    <div class="drawer-section mobile-only-block" style="display: none;">
+                        <span class="drawer-section-title">Search</span>
+                        <div class="search-box" style="max-width: 100%;">
+                            <input type="text" id="searchInputMobile" placeholder="Search watches..." oninput="syncSearchAndFilter(this.value)">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Sort By</span>
+                        <div class="custom-dropdown" id="drawerSortDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerSortDropdown')">Newest Arrivals</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="newest" onclick="selectFilter('sort', 'newest', this)">Newest Arrivals</div>
+                                <div class="custom-dropdown-item" data-value="price-low" onclick="selectFilter('sort', 'price-low', this)">Price: Low to High</div>
+                                <div class="custom-dropdown-item" data-value="price-high" onclick="selectFilter('sort', 'price-high', this)">Price: High to Low</div>
+                                <div class="custom-dropdown-item" data-value="popular" onclick="selectFilter('sort', 'popular', this)">Most Popular</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Condition</span>
+                        <div class="custom-dropdown" id="drawerStatusDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerStatusDropdown')">Any Condition</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('status', '', this)">Any Condition</div>
+                                <div class="custom-dropdown-item" data-value="available" onclick="selectFilter('status', 'available', this)">Available Now</div>
+                                <div class="custom-dropdown-item" data-value="sold" onclick="selectFilter('status', 'sold', this)">Sold</div>
+                                <div class="custom-dropdown-item" data-value="reserved" onclick="selectFilter('status', 'reserved', this)">Reserved</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Gender</span>
+                        <div class="custom-dropdown" id="drawerGenderDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerGenderDropdown')">Any Gender</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('gender', '', this)">Any Gender</div>
+                                <div class="custom-dropdown-item" data-value="Men" onclick="selectFilter('gender', 'Men', this)">Men</div>
+                                <div class="custom-dropdown-item" data-value="Women" onclick="selectFilter('gender', 'Women', this)">Women</div>
+                                <div class="custom-dropdown-item" data-value="Unisex" onclick="selectFilter('gender', 'Unisex', this)">Unisex</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Movement</span>
+                        <div class="custom-dropdown" id="drawerMovementDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerMovementDropdown')">Any Movement</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('movement', '', this)">Any Movement</div>
+                                <div class="custom-dropdown-item" data-value="Automatic" onclick="selectFilter('movement', 'Automatic', this)">Automatic</div>
+                                <div class="custom-dropdown-item" data-value="Manual" onclick="selectFilter('movement', 'Manual', this)">Manual</div>
+                                <div class="custom-dropdown-item" data-value="Quartz" onclick="selectFilter('movement', 'Quartz', this)">Quartz</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="drawer-footer" style="display: flex; gap: 12px; flex-direction: column;">
+                    <button class="apply-filters-btn" onclick="closeFilterDrawer()">APPLY FILTERS</button>
+                    <button onclick="resetFilters(); closeFilterDrawer();" style="background: none; border: 1px solid rgba(0,0,0,0.1); padding: 14px; font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--gray); text-transform: uppercase;">Clear All Filters</button>
+                </div>
+            </div>
+
             <div class="products-section">
                 <div class="products-grid" id="watchesGrid">
                     <div class="loading">
@@ -5582,7 +5958,7 @@
                         <input type="hidden" id="accessorySortFilter" value="newest">
                         <input type="hidden" id="accessoryStatusFilter" value="">
                         <div class="custom-dropdown" id="accessoryStatusDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('accessoryStatusDropdown')">All
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'accessoryStatusDropdown')">All
                                 Status</div>
                             <div class="custom-dropdown-menu">
                                 <div class="custom-dropdown-item selected" data-value=""
@@ -5594,7 +5970,7 @@
                             </div>
                         </div>
                         <div class="custom-dropdown" id="accessorySortDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown('accessorySortDropdown')">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'accessorySortDropdown')">
                                 Newest First</div>
                             <div class="custom-dropdown-menu">
                                 <div class="custom-dropdown-item selected" data-value="newest"
@@ -7695,8 +8071,51 @@
             if (!isOpen) item.classList.add('open');
         }
 
+        // Filter Drawer Toggle
+        function toggleFilterDrawer() {
+            document.getElementById('filterDrawer').classList.toggle('active');
+            document.getElementById('filterDrawerOverlay').classList.toggle('active');
+            document.body.style.overflow = document.getElementById('filterDrawer').classList.contains('active') ? 'hidden' : '';
+        }
+
+        function closeFilterDrawer() {
+            document.getElementById('filterDrawer').classList.remove('active');
+            document.getElementById('filterDrawerOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function syncAndFilter(val) {
+            document.getElementById('searchInput').value = val;
+            applyFilters();
+        }
+
         // Page navigation
+        function handleNavClick(event, element, pageId) {
+            if (window.innerWidth <= 992) {
+                const wrapper = element.closest('.nav-item-wrapper');
+                if (!wrapper.classList.contains('mobile-expanded')) {
+                    document.querySelectorAll('.nav-item-wrapper.mobile-expanded').forEach(w => w.classList.remove('mobile-expanded'));
+                    wrapper.classList.add('mobile-expanded');
+                } else {
+                    wrapper.classList.remove('mobile-expanded');
+                    showPage(pageId);
+                    closeNav();
+                }
+            } else {
+                showPage(pageId);
+                closeNav();
+            }
+        }
+
+        // Navigation logic
         function showPage(pageName, skipPushState = false) {
+            // Reset filters if navigating to Watches or Accessories newly
+            if (pageName === 'watches') {
+                resetFilters();
+            } else if (pageName === 'accessories') {
+                resetAccessoryFilters();
+            }
+
             document.querySelectorAll('.page-section').forEach(section => {
                 section.classList.remove('active');
             });
@@ -7791,11 +8210,14 @@
 
                 // Apply price filter
                 if (priceFilter) {
-                    const [min, max] = priceFilter.split('-').map(p => p.replace('+', ''));
-                    if (min && max) {
-                        query = query.gte('price', parseInt(min)).lte('price', parseInt(max));
-                    } else if (priceFilter === '100000+') {
-                        query = query.gte('price', 100000);
+                    if (priceFilter.includes('+')) {
+                        const minPrice = parseInt(priceFilter.replace('+', ''));
+                        query = query.gte('price', minPrice);
+                    } else if (priceFilter.includes('-')) {
+                        const [min, max] = priceFilter.split('-').map(p => parseInt(p));
+                        if (!isNaN(min) && !isNaN(max)) {
+                            query = query.gte('price', min).lte('price', max);
+                        }
                     }
                 }
 
@@ -7879,7 +8301,7 @@
                         <h3 class="product-name" onclick="showProductDetail('${product.reference_code || product.id}')">${displayName}</h3>
                         ${additionalInfo}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
-                        <div style="display: flex; gap: 8px; margin-top: 15px;">
+                        <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
                             ${isSold ? `
                             <button disabled style="flex: 1; padding: 10px; background: var(--gray); color: white; border: none; cursor: default; font-size: 0.8rem; opacity: 0.7;">
                                 <i class="fas fa-ban"></i> Sold
@@ -7963,9 +8385,10 @@
 
                 // Apply price filter
                 if (priceFilter) {
-                    if (priceFilter === '100000+') {
-                        products = products.filter(p => p.price >= 100000);
-                    } else {
+                    if (priceFilter.includes('+')) {
+                        const min = parseInt(priceFilter.replace('+', ''));
+                        products = products.filter(p => p.price >= min);
+                    } else if (priceFilter.includes('-')) {
                         const [min, max] = priceFilter.split('-').map(Number);
                         products = products.filter(p => p.price >= min && p.price <= max);
                     }
@@ -8020,7 +8443,7 @@
             }
 
             grid.innerHTML = products.map(product => `
-                <div class="product-card" onclick="showProductDetail('${product.reference_code || product.id}')">
+                <div class="product-card" onclick="showProductDetail('${product.id}')">
                     <div class="product-image">
                         <div class="product-placeholder">
                             <i class="fas fa-${category === 'watch' ? 'clock' : 'tag'}"></i>
@@ -8031,6 +8454,11 @@
                         <h3 class="product-name">${product.name}</h3>
                         ${product.year ? `<p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">${product.year}</p>` : ''}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
+                        <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
+                            <button onclick="event.stopPropagation(); addToCart({id: ${product.id}, name: '${product.name.replace(/'/g, "\\'")}', brand: '${product.brand.replace(/'/g, "\\'")}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
+                                <i class="fas fa-shopping-bag"></i> Add to Cart
+                            </button>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -8057,8 +8485,40 @@
             loadWatches();
         }
 
+        function syncSearchAndFilter(val) {
+            document.getElementById('searchInput').value = val;
+            applyFilters();
+        }
+
+        function updateSliderDisplay(val) {
+            const display = document.getElementById('sliderValueDisplay');
+            if (val >= 150000) {
+                display.textContent = 'Any';
+            } else {
+                display.textContent = 'AED ' + parseInt(val).toLocaleString();
+            }
+        }
+
+        function applySliderValue(val) {
+            const dropdown = document.getElementById('priceDropdown');
+            const trigger = dropdown.querySelector('.custom-dropdown-trigger');
+            
+            if (val >= 150000) {
+                document.getElementById('priceFilter').value = '';
+                trigger.textContent = 'Any Price';
+            } else {
+                document.getElementById('priceFilter').value = '0-' + val;
+                trigger.textContent = 'Under ' + parseInt(val).toLocaleString() + ' AED';
+            }
+            
+            dropdown.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
+            dropdown.classList.remove('open');
+            applyFilters();
+        }
+
         // Custom dropdown functions
-        function toggleDropdown(dropdownId) {
+
+        function toggleDropdown(event, dropdownId) {
             const dropdown = document.getElementById(dropdownId);
             const wasOpen = dropdown.classList.contains('open');
 
@@ -8071,43 +8531,68 @@
             }
 
             // Stop propagation to prevent closing when clicking inside
-            event.stopPropagation();
+            if (event) {
+                event.stopPropagation();
+            }
         }
 
         function selectFilter(type, value, element) {
-            event.stopPropagation();
+            // Update the hidden input
+            const input = document.getElementById(type + 'Filter');
+            if (input) input.value = value;
 
-            const dropdown = element.closest('.custom-dropdown');
-            const trigger = dropdown.querySelector('.custom-dropdown-trigger');
+            // Update traditional dropdown UI if element exists
+            if (element) {
+                const dropdown = element.closest('.custom-dropdown');
+                const trigger = dropdown.querySelector('.custom-dropdown-trigger');
 
-            // Update trigger text
-            trigger.textContent = element.textContent;
+                // Update trigger text
+                trigger.textContent = element.textContent;
 
-            // Update selected state
-            dropdown.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
-            element.classList.add('selected');
+                // Update selected state
+                dropdown.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
+                element.classList.add('selected');
 
-            // Close dropdown
-            dropdown.classList.remove('open');
-
-            // Apply filter
-            if (type === 'brand') {
-                document.getElementById('brandFilter').value = value;
-            } else if (type === 'price') {
-                document.getElementById('priceFilter').value = value;
-            } else if (type === 'sort') {
-                document.getElementById('sortFilter').value = value;
-            } else if (type === 'status') {
-                document.getElementById('statusFilter').value = value;
-            } else if (type === 'gender') {
-                document.getElementById('genderFilter').value = value;
-            } else if (type === 'movement') {
-                document.getElementById('movementFilter').value = value;
-            } else if (type === 'country') {
-                document.getElementById('countryFilter').value = value;
+                // Close dropdown
+                dropdown.classList.remove('open');
             }
 
+            // Apply filter
             applyFilters();
+        }
+
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('brandFilter').value = '';
+            document.getElementById('priceFilter').value = '';
+            document.getElementById('sortFilter').value = 'newest';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('genderFilter').value = '';
+            document.getElementById('movementFilter').value = '';
+            document.getElementById('searchInput').value = '';
+            if (document.getElementById('searchInputMobile')) document.getElementById('searchInputMobile').value = '';
+
+            // Reset UI Dropdowns
+            document.getElementById('brandDropdown').querySelector('.custom-dropdown-trigger').textContent = 'All Brands';
+            document.getElementById('priceDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Price';
+            
+            // Reset Drawer Dropdowns if they exist
+            if (document.getElementById('drawerSortDropdown')) document.getElementById('drawerSortDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Newest Arrivals';
+            if (document.getElementById('drawerStatusDropdown')) document.getElementById('drawerStatusDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Condition';
+            if (document.getElementById('drawerGenderDropdown')) document.getElementById('drawerGenderDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Gender';
+            if (document.getElementById('drawerMovementDropdown')) document.getElementById('drawerMovementDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Movement';
+
+            document.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
+            document.querySelectorAll('.custom-dropdown-item[data-value=""]').forEach(item => item.classList.add('selected'));
+            document.querySelectorAll('.custom-dropdown-item[data-value="newest"]').forEach(item => item.classList.add('selected'));
+
+            applyFilters();
+        }
+
+        function resetAccessoryFilters() {
+            if (document.getElementById('accessorySortFilter')) document.getElementById('accessorySortFilter').value = 'newest';
+            if (document.getElementById('accessoryStatusFilter')) document.getElementById('accessoryStatusFilter').value = '';
+            applyAccessoryFilters();
         }
 
         function selectAccessoryFilter(type, value, element) {
