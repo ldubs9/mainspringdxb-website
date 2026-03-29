@@ -2946,6 +2946,48 @@
             letter-spacing: 0.08em;
         }
 
+        /* All Accessories category card - responsive styling */
+        .category-card-all {
+            grid-column: 1 / -1;
+            height: 140px;
+            max-width: 400px;
+            margin: 20px auto 0;
+        }
+
+        .category-card-all .category-info {
+            padding: 12px 20px;
+        }
+
+        .category-card-all .category-info h3 {
+            font-size: 1rem;
+        }
+
+        .category-card-all .category-info span {
+            font-size: 0.7rem;
+        }
+
+        /* Mobile - normal size for all card */
+        @media (max-width: 992px) {
+            .category-card-all {
+                grid-column: auto;
+                height: 250px;
+                max-width: 100%;
+                margin: 0;
+            }
+
+            .category-card-all .category-info {
+                padding: 15px 20px;
+            }
+
+            .category-card-all .category-info h3 {
+                font-size: 1.1rem;
+            }
+
+            .category-card-all .category-info span {
+                font-size: 0.75rem;
+            }
+        }
+
         /* Product Detail Page */
         .detail-section {
             padding: 80px 40px 80px;
