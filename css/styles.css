@@ -5071,7 +5071,7 @@
                     height: 340px;
                     background: var(--cream);
                     overflow: hidden;
-                    margin-bottom: 60px;
+                    margin-bottom: 0;
                     position: relative;
                 }
 
@@ -5144,7 +5144,7 @@
                     height: 400px;
                     background: var(--cream);
                     overflow: hidden;
-                    margin-bottom: 70px;
+                    margin-bottom: 0;
                 }
 
                 .about-hero-image img {
@@ -5310,7 +5310,7 @@
 
                     .about-hero-image {
                         height: 260px;
-                        margin-bottom: 50px;
+                        margin-bottom: 0;
                     }
 
                     .about-story-image {
@@ -5371,7 +5371,7 @@
 
                     .page-hero-image {
                         height: 220px;
-                        margin-bottom: 40px;
+                        margin-bottom: 0;
                     }
 
                     .policy-section,
