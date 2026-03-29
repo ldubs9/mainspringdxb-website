@@ -15,8 +15,9 @@
             <div class="categories-section">
                 <div class="categories-grid" id="categoriesGrid">
                     <div class="category-card" onclick="showAccessoryCategory('pocket-watches')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-stopwatch"></i>
+                        <div class="category-image-wrapper">
+                            <img src="accessories-pocket-watches.jpg" alt="Pocket Watches"
+                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-stopwatch&quot;></i></div>'">
                         </div>
                         <div class="category-info">
                             <h3>POCKET WATCHES</h3>
@@ -24,8 +25,9 @@
                         </div>
                     </div>
                     <div class="category-card" onclick="showAccessoryCategory('standing-clocks')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-clock"></i>
+                        <div class="category-image-wrapper">
+                            <img src="accessories-clocks.jpg" alt="Standing Clocks"
+                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-clock&quot;></i></div>'">
                         </div>
                         <div class="category-info">
                             <h3>STANDING CLOCKS</h3>
@@ -33,8 +35,9 @@
                         </div>
                     </div>
                     <div class="category-card" onclick="showAccessoryCategory('watch-boxes')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-box"></i>
+                        <div class="category-image-wrapper">
+                            <img src="accessories-boxes.jpg" alt="Watch Boxes"
+                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-box&quot;></i></div>'">
                         </div>
                         <div class="category-info">
                             <h3>WATCH BOXES</h3>
@@ -42,8 +45,9 @@
                         </div>
                     </div>
                     <div class="category-card" onclick="showAccessoryCategory('bags')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-suitcase"></i>
+                        <div class="category-image-wrapper">
+                            <img src="accessories-bags.jpg" alt="Bags"
+                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-suitcase&quot;></i></div>'">
                         </div>
                         <div class="category-info">
                             <h3>BAGS</h3>
@@ -51,17 +55,36 @@
                         </div>
                     </div>
                     <div class="category-card" onclick="showAccessoryCategory('watch-straps')">
-                        <div class="category-placeholder">
-                            <i class="fas fa-tags"></i>
+                        <div class="category-image-wrapper">
+                            <img src="accessories-straps.jpg" alt="Watch Straps"
+                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-tags&quot;></i></div>'">
                         </div>
                         <div class="category-info">
                             <h3>WATCH STRAPS</h3>
                             <span>Leather & Metal</span>
                         </div>
                     </div>
+                    <div class="category-card" onclick="showAllAccessories()">
+                        <div class="category-image-wrapper">
+                            <img src="accessories-all.jpg" alt="All Accessories"
+                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-th&quot;></i></div>'">
+                        </div>
+                        <div class="category-info">
+                            <h3>ALL ACCESSORIES</h3>
+                            <span>Complete Collection</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="products-section" id="accessoryProducts" style="display:none;">
+                <div style="margin-bottom: 20px;">
+                    <button onclick="backToAccessoryCategories()"
+                        style="background: none; border: none; color: var(--gold);
+                        cursor: pointer; font-size: 0.9rem; letter-spacing: 0.1em;
+                        text-transform: uppercase; font-weight: 600; padding: 0;">
+                        ← Back to Categories
+                    </button>
+                </div>
                 <div class="filter-section" style="margin-bottom: 20px;">
                     <div class="filter-container">
                         <div class="search-box" style="max-width: 100%;">

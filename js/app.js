@@ -1712,6 +1712,33 @@
             }
         }
 
+        // Show all accessories (no category filter)
+        function showAllAccessories() {
+            currentAccessoryCategory = null; // Clear category filter
+            currentAccessoryPage = 1;
+
+            showPage('accessories', true);
+
+            document.getElementById('categoriesGrid').style.display = 'none';
+            document.getElementById('accessoryProducts').style.display = 'block';
+
+            loadAccessories();
+
+            document.getElementById('accessoryProducts').scrollIntoView({ behavior: 'smooth' });
+
+            history.pushState({ page: 'accessories', category: 'all' }, '', `?page=accessories&category=all`);
+        }
+
+        // Back to accessory categories
+        function backToAccessoryCategories() {
+            currentAccessoryCategory = null;
+            document.getElementById('categoriesGrid').style.display = 'grid';
+            document.getElementById('accessoryProducts').style.display = 'none';
+            document.getElementById('categoriesGrid').scrollIntoView({ behavior: 'smooth' });
+
+            history.pushState({ page: 'accessories' }, '', `?page=accessories`);
+        }
+
         // Load accessories
         async function loadAccessories() {
             const grid = document.getElementById('accessoryGrid');
@@ -1726,8 +1753,12 @@
                 let query = supabaseClient
                     .from('products')
                     .select('*', { count: 'exact' })
-                    .eq('category', 'accessory')
-                    .eq('subcategory', currentAccessoryCategory);
+                    .eq('category', 'accessory');
+
+                // Only filter by subcategory if a specific category is selected
+                if (currentAccessoryCategory) {
+                    query = query.eq('subcategory', currentAccessoryCategory);
+                }
 
                 // Apply status filter
                 if (statusFilter === 'available') {
