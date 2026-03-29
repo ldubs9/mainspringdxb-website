@@ -2268,7 +2268,7 @@
         }
 
         .policy-section {
-            padding: 40px 0 20px;
+            padding: 20px 0 15px;
         }
 
         .policy-container {
@@ -2687,7 +2687,7 @@
 
         /* Products Grid */
         .products-section {
-            padding: 20px 40px 40px;
+            padding: 10px 40px 40px;
             background: var(--warm-white);
         }
 
@@ -2849,7 +2849,7 @@
 
         /* Accessories Categories */
         .categories-section {
-            padding: 40px 40px;
+            padding: 20px 40px 40px;
             background: var(--white);
         }
 
