@@ -3440,7 +3440,7 @@
 
         /* About Page */
         .about-section {
-            padding: 100px 40px 100px;
+            padding: 30px 40px;
             background: var(--warm-white);
         }
 
@@ -4700,7 +4700,7 @@
 
         /* ── Contact Page ────────────────────────────────────── */
         .contact-section {
-            padding: 100px 40px;
+            padding: 30px 40px;
             background: var(--warm-white);
         }
 
@@ -4879,7 +4879,7 @@
 
         /* ── FAQ Page ────────────────────────────────────────── */
         .faq-section {
-            padding: 100px 40px;
+            padding: 30px 40px;
             background: var(--warm-white);
         }
 
