@@ -4805,7 +4805,7 @@
 
         /* ── Policy / Sourcing / Sell (shared base) ──────────── */
         .policy-section {
-            padding: 100px 40px;
+            padding: 0px 40px;
             background: var(--warm-white);
         }
 
@@ -4815,7 +4815,7 @@
         }
 
         .policy-hero {
-            margin-bottom: 70px;
+            margin-bottom: 15px;
         }
 
         .policy-hero h1 {
