@@ -5157,7 +5157,7 @@
             height: 400px;
             background: var(--cream);
             overflow: hidden;
-            margin-bottom: 70px;
+            margin-bottom: 0px;
         }
 
         .about-hero-image img {
