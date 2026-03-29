@@ -1,0 +1,176 @@
+        <section class="page-section" id="page-watches">
+            <div class="policy-section">
+                <div class="policy-container">
+                    <div class="about-hero-image hero-slim">
+                        <img src="collection-hero.jpg" alt="Our watch collection at Mainspring"
+                            onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray);opacity:0.5;&quot;><i class=&quot;fas fa-image&quot; style=&quot;font-size:2.5rem;margin-bottom:12px;&quot;></i><span style=&quot;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;&quot;>collection-hero.jpg</span></div>'">
+                    </div>
+                    <span class="section-label">Mainspring Collection</span>
+                    <div class="policy-hero">
+                        <h1>Our Collection</h1>
+                        <p>Curated timepieces for every style, budget, and era.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-section">
+                <!-- Hidden input fields for filter values -->
+                <input type="hidden" id="brandFilter" value="">
+                <input type="hidden" id="priceFilter" value="">
+                <input type="hidden" id="sortFilter" value="newest">
+                <input type="hidden" id="statusFilter" value="">
+                <input type="hidden" id="genderFilter" value="">
+                <input type="hidden" id="movementFilter" value="">
+                <input type="hidden" id="countryFilter" value="">
+                
+                <div class="filter-container">
+                    <!-- Mobile Filter Trigger -->
+                    <div class="mobile-filter-trigger" onclick="toggleFilterDrawer()">
+                        <i class="fas fa-sliders-h"></i> FILTERS & SEARCH
+                    </div>
+
+                    <!-- Desktop Main Filters -->
+                    <div class="filter-group-main">
+                        <div class="custom-dropdown" id="brandDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'brandDropdown')">All Brands</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('brand', '', this)">All Brands</div>
+                                <div class="custom-dropdown-item" data-value="Rolex" onclick="selectFilter('brand', 'Rolex', this)">Rolex</div>
+                                <div class="custom-dropdown-item" data-value="Patek Philippe" onclick="selectFilter('brand', 'Patek Philippe', this)">Patek Philippe</div>
+                                <div class="custom-dropdown-item" data-value="Omega" onclick="selectFilter('brand', 'Omega', this)">Omega</div>
+                                <div class="custom-dropdown-item" data-value="Tudor" onclick="selectFilter('brand', 'Tudor', this)">Tudor</div>
+                                <div class="custom-dropdown-item" data-value="Cartier" onclick="selectFilter('brand', 'Cartier', this)">Cartier</div>
+                                <div class="custom-dropdown-item" data-value="Audemars Piguet" onclick="selectFilter('brand', 'Audemars Piguet', this)">Audemars Piguet</div>
+                                <div class="custom-dropdown-item" data-value="IWC" onclick="selectFilter('brand', 'IWC', this)">IWC</div>
+                                <div class="custom-dropdown-item" data-value="Breitling" onclick="selectFilter('brand', 'Breitling', this)">Breitling</div>
+                                <div class="custom-dropdown-item" data-value="Panerai" onclick="selectFilter('brand', 'Panerai', this)">Panerai</div>
+                                <div class="custom-dropdown-item" data-value="Vacheron Constantin" onclick="selectFilter('brand', 'Vacheron Constantin', this)">Vacheron Constantin</div>
+                                <div class="custom-dropdown-item" data-value="Longines" onclick="selectFilter('brand', 'Longines', this)">Longines</div>
+                                <div class="custom-dropdown-item" data-value="TAG Heuer" onclick="selectFilter('brand', 'TAG Heuer', this)">TAG Heuer</div>
+                                <div class="custom-dropdown-item" data-value="Jaeger-LeCoultre" onclick="selectFilter('brand', 'Jaeger-LeCoultre', this)">Jaeger-LeCoultre</div>
+                                <div class="custom-dropdown-item" data-value="Breguet" onclick="selectFilter('brand', 'Breguet', this)">Breguet</div>
+                                <div class="custom-dropdown-item" data-value="Grand Seiko" onclick="selectFilter('brand', 'Grand Seiko', this)">Grand Seiko</div>
+                            </div>
+                        </div>
+
+                        <div class="custom-dropdown" id="priceDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'priceDropdown')">Any Price</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-slider-wrap" onclick="if(event)event.stopPropagation()">
+                                    <div class="slider-labels">
+                                        <span>Max Price</span>
+                                        <span id="sliderValueDisplay">Any</span>
+                                    </div>
+                                    <input type="range" class="luxury-slider" min="1000" max="150000" step="1000" value="150000" oninput="updateSliderDisplay(this.value)" onchange="applySliderValue(this.value)">
+                                </div>
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('price', '', this); updateSliderDisplay(150000); document.querySelector('.luxury-slider').value=150000;">Any Price</div>
+                                <div class="custom-dropdown-item" data-value="0-1000" onclick="selectFilter('price', '0-1000', this)">Under 1,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="0-5000" onclick="selectFilter('price', '0-5000', this)">Under 5,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="5000-15000" onclick="selectFilter('price', '5000-15000', this)">5,000 - 15,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="15000-30000" onclick="selectFilter('price', '15000-30000', this)">15,000 - 30,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="30000-50000" onclick="selectFilter('price', '30000-50000', this)">30,000 - 50,000 AED</div>
+                                <div class="custom-dropdown-item" data-value="50000+" onclick="selectFilter('price', '50000+', this)">50,000+ AED</div>
+                            </div>
+                        </div>
+
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search watches..." oninput="applyFilters()">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+
+                    <div class="filter-group-actions">
+                        <button class="more-filters-btn" onclick="toggleFilterDrawer()">
+                            <i class="fas fa-sliders-h"></i> More Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Drawer (Shared Mobile/Desktop Extra) -->
+            <div class="filter-drawer-overlay" id="filterDrawerOverlay" onclick="closeFilterDrawer()"></div>
+            <div class="filter-drawer" id="filterDrawer">
+                <div class="filter-drawer-header">
+                    <h2>Filters</h2>
+                    <i class="fas fa-times close-drawer" onclick="closeFilterDrawer()"></i>
+                </div>
+                <div class="drawer-content">
+                    <!-- Mobile Search (Visible only in drawer on mobile) -->
+                    <div class="drawer-section mobile-only-block" style="display: none;">
+                        <span class="drawer-section-title">Search</span>
+                        <div class="search-box" style="max-width: 100%;">
+                            <input type="text" id="searchInputMobile" placeholder="Search watches..." oninput="syncSearchAndFilter(this.value)">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Sort By</span>
+                        <div class="custom-dropdown" id="drawerSortDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerSortDropdown')">Newest Arrivals</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="newest" onclick="selectFilter('sort', 'newest', this)">Newest Arrivals</div>
+                                <div class="custom-dropdown-item" data-value="price-low" onclick="selectFilter('sort', 'price-low', this)">Price: Low to High</div>
+                                <div class="custom-dropdown-item" data-value="price-high" onclick="selectFilter('sort', 'price-high', this)">Price: High to Low</div>
+                                <div class="custom-dropdown-item" data-value="popular" onclick="selectFilter('sort', 'popular', this)">Most Popular</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Condition</span>
+                        <div class="custom-dropdown" id="drawerStatusDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerStatusDropdown')">Any Condition</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('status', '', this)">Any Condition</div>
+                                <div class="custom-dropdown-item" data-value="available" onclick="selectFilter('status', 'available', this)">Available Now</div>
+                                <div class="custom-dropdown-item" data-value="sold" onclick="selectFilter('status', 'sold', this)">Sold</div>
+                                <div class="custom-dropdown-item" data-value="reserved" onclick="selectFilter('status', 'reserved', this)">Reserved</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Gender</span>
+                        <div class="custom-dropdown" id="drawerGenderDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerGenderDropdown')">Any Gender</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('gender', '', this)">Any Gender</div>
+                                <div class="custom-dropdown-item" data-value="Men" onclick="selectFilter('gender', 'Men', this)">Men</div>
+                                <div class="custom-dropdown-item" data-value="Women" onclick="selectFilter('gender', 'Women', this)">Women</div>
+                                <div class="custom-dropdown-item" data-value="Unisex" onclick="selectFilter('gender', 'Unisex', this)">Unisex</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
+                        <span class="drawer-section-title">Movement</span>
+                        <div class="custom-dropdown" id="drawerMovementDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerMovementDropdown')">Any Movement</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('movement', '', this)">Any Movement</div>
+                                <div class="custom-dropdown-item" data-value="Automatic" onclick="selectFilter('movement', 'Automatic', this)">Automatic</div>
+                                <div class="custom-dropdown-item" data-value="Manual" onclick="selectFilter('movement', 'Manual', this)">Manual</div>
+                                <div class="custom-dropdown-item" data-value="Quartz" onclick="selectFilter('movement', 'Quartz', this)">Quartz</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="drawer-footer" style="display: flex; gap: 12px; flex-direction: column;">
+                    <button class="apply-filters-btn" onclick="closeFilterDrawer()">APPLY FILTERS</button>
+                    <button onclick="resetFilters(); closeFilterDrawer();" style="background: none; border: 1px solid rgba(0,0,0,0.1); padding: 14px; font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; color: var(--gray); text-transform: uppercase;">Clear All Filters</button>
+                </div>
+            </div>
+
+            <div class="products-section">
+                <div class="products-grid" id="watchesGrid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+                <div class="pagination" id="pagination">
+                    <button id="prevPage" onclick="changePage(-1)">Previous</button>
+                    <span id="pageInfo">Page 1</span>
+                    <button id="nextPage" onclick="changePage(1)">Next</button>
+                </div>
+            </div>
+        </section>

@@ -1,0 +1,78 @@
+    <header class="header" id="header">
+        <div class="header-left">
+            <a href="#" class="logo-link" onclick="event.preventDefault(); showPage('home');">
+                <img src="header-icon-light.png" alt="Mainspring Dubai" class="logo-img" id="mainLogo">
+            </a>
+            <!-- Desktop inline nav -->
+            <ul class="header-nav" id="headerNav">
+                <li><a href="#" onclick="event.preventDefault(); showPage('watches');">WATCHES</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('accessories');">ACCESSORIES</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('blog');">BLOG</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('about');">ABOUT</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('contact');">CONTACT</a></li>
+                <li><a href="#" onclick="event.preventDefault(); showPage('faq');">FAQ</a></li>
+                <li class="nav-more">
+                    <a href="#" onclick="event.preventDefault();">MORE <i
+                            class="fas fa-chevron-down chevron-icon"></i></a>
+                    <div class="nav-more-dropdown">
+                        <a href="#" onclick="event.preventDefault(); showPage('warranty');">Warranty &amp; Refund</a>
+                        <a href="#" onclick="event.preventDefault(); showPage('sourcing');">Watch Sourcing</a>
+                        <a href="#" onclick="event.preventDefault(); showPage('sell');">Sell Your Watch</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="header-right">
+            <i class="header-icon fas fa-search" id="searchIcon" onclick="toggleSearch()"></i>
+            <div class="header-icon-wrapper" onclick="openCart()" style="cursor: pointer;">
+                <i class="header-icon fas fa-shopping-bag"></i>
+                <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+            </div>
+            <div class="header-icon-wrapper" onclick="openWishlist()" style="cursor: pointer;">
+                <i class="header-icon far fa-heart"></i>
+                <span class="cart-badge" id="wishlistBadge" style="display: none;">0</span>
+            </div>
+            <div class="header-icon-wrapper" id="mobileCart" onclick="openCart()"
+                style="cursor: pointer; display: none;">
+                <i class="header-icon fas fa-shopping-bag"></i>
+                <span class="cart-badge" id="cartBadgeMobile" style="display: none;">0</span>
+            </div>
+            <div class="header-icon-wrapper" id="mobileWishlist" onclick="openWishlist()"
+                style="cursor: pointer; display: none;">
+                <i class="header-icon far fa-heart"></i>
+                <span class="cart-badge" id="wishlistBadgeMobile" style="display: none;">0</span>
+            </div>
+            <!-- Currency Dropdown -->
+            <div class="currency-selector">
+                <button class="currency-toggle" onclick="toggleCurrencyDropdown()">
+                    <span class="currency-flag" id="currencyFlag">🇦🇪</span>
+                    <span class="currency-code" id="currencyCode">AED</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="currency-dropdown-menu" id="currencyDropdownMenu">
+                    <div class="currency-option" data-currency="AED" onclick="selectCurrency('AED')">
+                        <span class="flag">🇦🇪</span>
+                        <span class="label">AED</span>
+                    </div>
+                    <div class="currency-option" data-currency="USD" onclick="selectCurrency('USD')">
+                        <span class="flag">🇺🇸</span>
+                        <span class="label">USD</span>
+                    </div>
+                    <div class="currency-option" data-currency="GBP" onclick="selectCurrency('GBP')">
+                        <span class="flag">🇬🇧</span>
+                        <span class="label">GBP</span>
+                    </div>
+                    <div class="currency-option" data-currency="EUR" onclick="selectCurrency('EUR')">
+                        <span class="flag">🇪🇺</span>
+                        <span class="label">EUR</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Mobile burger menu -->
+            <div class="burger-menu" id="burgerMenu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>

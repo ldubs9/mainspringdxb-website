@@ -1,0 +1,11 @@
+    <div class="search-overlay" id="globalSearchOverlay"
+        onclick="if(event.target.id==='globalSearchOverlay') closeGlobalSearch()">
+        <div class="search-panel">
+            <input class="search-input" id="globalSearchInput" placeholder="Search watches & accessories..."
+                oninput="performGlobalSearch(this.value)" />
+            <div id="globalSearchResults" class="search-results">
+                <div style="grid-column:1/-1; padding:24px; color: var(--gray);">Type to search watches and accessories
+                </div>
+            </div>
+        </div>
+    </div>

@@ -1,0 +1,111 @@
+        <section class="page-section" id="page-accessories">
+            <div class="policy-section">
+                <div class="policy-container">
+                    <div class="about-hero-image hero-slim">
+                        <img src="accessories-hero.jpg" alt="Watch accessories at Mainspring"
+                            onerror="this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--gray);opacity:0.5;&quot;><i class=&quot;fas fa-image&quot; style=&quot;font-size:2.5rem;margin-bottom:12px;&quot;></i><span style=&quot;font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;&quot;>accessories-hero.jpg</span></div>'">
+                    </div>
+                    <span class="section-label">Essentials</span>
+                    <div class="policy-hero">
+                        <h1>Accessories</h1>
+                        <p>High-quality straps, pouches, and tools for your collection.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="categories-section">
+                <div class="categories-grid" id="categoriesGrid">
+                    <div class="category-card" onclick="showAccessoryCategory('pocket-watches')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>POCKET WATCHES</h3>
+                            <span>Vintage & Classic</span>
+                        </div>
+                    </div>
+                    <div class="category-card" onclick="showAccessoryCategory('standing-clocks')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>STANDING CLOCKS</h3>
+                            <span>Desk & Mantel Clocks</span>
+                        </div>
+                    </div>
+                    <div class="category-card" onclick="showAccessoryCategory('watch-boxes')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-box"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>WATCH BOXES</h3>
+                            <span>Storage & Display</span>
+                        </div>
+                    </div>
+                    <div class="category-card" onclick="showAccessoryCategory('bags')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-suitcase"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>BAGS</h3>
+                            <span>Leather & Travel</span>
+                        </div>
+                    </div>
+                    <div class="category-card" onclick="showAccessoryCategory('watch-straps')">
+                        <div class="category-placeholder">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="category-info">
+                            <h3>WATCH STRAPS</h3>
+                            <span>Leather & Metal</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="products-section" id="accessoryProducts" style="display:none;">
+                <div class="filter-section" style="margin-bottom: 20px;">
+                    <div class="filter-container">
+                        <div class="search-box" style="max-width: 100%;">
+                            <input type="text" id="accessorySearchInput" placeholder="Search accessories..."
+                                oninput="applyAccessoryFilters()">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <input type="hidden" id="accessorySortFilter" value="newest">
+                        <input type="hidden" id="accessoryStatusFilter" value="">
+                        <div class="custom-dropdown" id="accessoryStatusDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'accessoryStatusDropdown')">All
+                                Status</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value=""
+                                    onclick="selectAccessoryFilter('status','', this)">All Status</div>
+                                <div class="custom-dropdown-item" data-value="available"
+                                    onclick="selectAccessoryFilter('status','available', this)">Available</div>
+                                <div class="custom-dropdown-item" data-value="sold"
+                                    onclick="selectAccessoryFilter('status','sold', this)">Sold</div>
+                            </div>
+                        </div>
+                        <div class="custom-dropdown" id="accessorySortDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'accessorySortDropdown')">
+                                Newest First</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="newest"
+                                    onclick="selectAccessoryFilter('sort','newest', this)">Newest First</div>
+                                <div class="custom-dropdown-item" data-value="price-low"
+                                    onclick="selectAccessoryFilter('sort','price-low', this)">Price: Low to High</div>
+                                <div class="custom-dropdown-item" data-value="price-high"
+                                    onclick="selectAccessoryFilter('sort','price-high', this)">Price: High to Low</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="products-grid" id="accessoryGrid">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+                <div class="pagination" id="accessoryPagination">
+                    <button id="prevAccessoryPage" onclick="changeAccessoryPage(-1)">Previous</button>
+                    <span id="accessoryPageInfo">Page 1</span>
+                    <button id="nextAccessoryPage" onclick="changeAccessoryPage(1)">Next</button>
+                </div>
+            </div>
+        </section>
