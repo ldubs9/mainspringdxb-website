@@ -1164,6 +1164,8 @@
                 document.getElementById('categoriesGrid').style.display = 'grid';
             } else if (pageName === 'blog') {
                 loadBlogPosts();
+            } else if (pageName === 'home') {
+                loadFeaturedWatches();
             }
 
             // Animate elements
@@ -1504,6 +1506,36 @@
             document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
             document.getElementById('prevPage').disabled = currentPage === 1;
             document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        }
+
+        // Load featured watches for the home page (12 watches)
+        async function loadFeaturedWatches() {
+            const grid = document.getElementById('featuredWatchesGrid');
+            if (!grid) return; // Grid doesn't exist on non-home pages
+
+            try {
+                let query = supabaseClient
+                    .from('products')
+                    .select('*')
+                    .eq('category', 'watch')
+                    .or(`status.eq.available,and(status.eq.sold,updated_at.gte.${getThirtyDaysAgoISO()})`)
+                    .order('status', { ascending: true })
+                    .order('id', { ascending: false })
+                    .limit(12);
+
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    renderProducts(data, grid);
+                } else {
+                    renderDemoProducts(grid, 'watch');
+                }
+            } catch (error) {
+                console.error('Error loading featured watches:', error);
+                renderDemoProducts(grid, 'watch');
+            }
         }
 
         // Change page

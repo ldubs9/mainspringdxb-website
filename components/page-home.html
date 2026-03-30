@@ -37,21 +37,42 @@
                 </div>
             </div>
 
+            <!-- Featured Collection Section -->
+            <section class="featured-collection">
+                <div class="featured-container">
+                    <span class="section-label">New Arrivals</span>
+                    <h2 class="section-title">Featured Watches</h2>
+                    <p class="section-subtitle">Discover our latest curated selection</p>
+
+                    <div class="featured-products-grid" id="featuredWatchesGrid">
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                        </div>
+                    </div>
+
+                    <div class="featured-cta-container">
+                        <a href="#" class="featured-cta-btn" onclick="event.preventDefault(); showPage('watches');">
+                            Explore the Full Collection
+                        </a>
+                    </div>
+                </div>
+            </section>
+
             <!-- Shop Section -->
             <div class="shop-section">
                 <div class="shop-block" onclick="showPage('watches'); trackClick('shop_watches')">
                     <div class="shop-block-bg"></div>
                     <div class="shop-block-content">
-                        <h2>COLLECTORS</h2>
-                        <p>Curated timepieces for every budget.</p>
+                        <h2>WATCHES</h2>
+                        <p>Discover timepieces for every journey — whether you're just starting out or expanding your collection.</p>
                         <span class="shop-cta">Shop Now</span>
                     </div>
                 </div>
                 <div class="shop-block" onclick="showPage('accessories'); trackClick('shop_accessories')">
                     <div class="shop-block-bg"></div>
                     <div class="shop-block-content">
-                        <h2>ENTHUSIASTS</h2>
-                        <p>Premium straps, rolls, and tools.</p>
+                        <h2>ACCESSORIES</h2>
+                        <p>Complete your collection with premium straps, storage, and care essentials for any watch.</p>
                         <span class="shop-cta">Shop Accessories</span>
                     </div>
                 </div>
@@ -61,7 +82,7 @@
             <section class="trust-section">
                 <div class="trust-container">
                     <span class="section-label" style="text-align: center; display: block;">The Mainspring Standard</span>
-                    <h2 class="section-title" style="text-align: center; margin-bottom: 60px;">Why Collectors Trust Us</h2>
+                    <h2 class="section-title" style="text-align: center; margin-bottom: 60px;">Why Our Customers Trust Us</h2>
                     
                     <div class="trust-grid">
                         <div class="trust-card">
@@ -72,7 +93,7 @@
                         <div class="trust-card">
                             <div class="trust-icon"><i class="fas fa-hand-holding-usd"></i></div>
                             <h3>Fair Market Value</h3>
-                            <p>Great horology should be accessible. Our pricing is transparent and reflects true market value, ensuring a sound investment for all collectors.</p>
+                            <p>Great horology should be accessible. Our pricing is transparent and reflects true market value, whether you're making your first purchase or your fiftieth.</p>
                         </div>
                         <div class="trust-card">
                             <div class="trust-icon"><i class="fas fa-search-location"></i></div>
@@ -113,8 +134,7 @@
             <!-- WhatsApp Community Section -->
             <div class="whatsapp-community">
                 <h2>JOIN OUR COMMUNITY</h2>
-                <p>Be the first to know about new arrivals, vintage finds, and special deals. Join watch enthusiasts in
-                    our Mainspring Collectors Club.</p>
+                <p>Be the first to know about new arrivals, vintage finds, and special deals. Join our community of watch lovers at every level of passion.</p>
                 <a href="https://wa.me/971585625042?text=Hello%20Mainspring%20Dubai,%20I%20would%20like%20to%20join%20the%20community!"
                     class="whatsapp-community-btn" onclick="trackClick('join_community')">
                     <i class="fab fa-whatsapp"></i>
