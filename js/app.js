@@ -1214,10 +1214,10 @@
                     query = query.eq('status', 'available');
                 } else if (statusFilter === 'sold') {
                     query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
-                } else {
-                    // "All" — show available + recently sold (within 30 days)
-                    query = query.or(`status.eq.available,and(status.eq.sold,updated_at.gte.${thirtyDaysAgo})`);
+                } else if (statusFilter === 'reserved') {
+                    query = query.eq('status', 'reserved');
                 }
+                // else: "Any Condition" (empty) — no status filter, show all watches
 
                 // Apply brand filter
                 if (brandFilter) {
@@ -1797,10 +1797,10 @@
                     query = query.eq('status', 'available');
                 } else if (statusFilter === 'sold') {
                     query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
-                } else {
-                    // "All" — show available + recently sold (within 30 days)
-                    query = query.or(`status.eq.available,and(status.eq.sold,updated_at.gte.${thirtyDaysAgo})`);
+                } else if (statusFilter === 'reserved') {
+                    query = query.eq('status', 'reserved');
                 }
+                // else: "Any Condition" (empty) — no status filter, show all
 
                 // Apply search (across name, brand, and model)
                 if (searchTerm) {
