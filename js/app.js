@@ -1213,7 +1213,7 @@
                 if (statusFilter === 'available') {
                     query = query.eq('status', 'available');
                 } else if (statusFilter === 'sold') {
-                    query = query.eq('status', 'sold');
+                    query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
                 } else if (statusFilter === 'reserved') {
                     query = query.eq('status', 'reserved');
                 }
@@ -1796,7 +1796,7 @@
                 if (statusFilter === 'available') {
                     query = query.eq('status', 'available');
                 } else if (statusFilter === 'sold') {
-                    query = query.eq('status', 'sold');
+                    query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
                 } else if (statusFilter === 'reserved') {
                     query = query.eq('status', 'reserved');
                 }
