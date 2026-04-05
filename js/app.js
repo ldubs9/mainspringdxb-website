@@ -1204,82 +1204,56 @@
                 const countryFilter = document.getElementById('countryFilter').value;
                 const thirtyDaysAgo = getThirtyDaysAgoISO();
 
-                let query = supabaseClient
-                    .from('products')
-                    .select('*', { count: 'exact' })
-                    .eq('category', 'watch');
-
-                // Apply status filter
-                if (statusFilter === 'available') {
-                    query = query.eq('status', 'available');
-                } else if (statusFilter === 'sold') {
-                    query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
-                } else if (statusFilter === 'reserved') {
-                    query = query.eq('status', 'reserved');
-                }
-                // else: "Any Condition" (empty) — no status filter, show all watches
-
-                // Apply brand filter
-                if (brandFilter) {
-                    query = query.eq('brand', brandFilter);
-                }
-
-                // Apply gender filter
-                if (genderFilter) {
-                    query = query.eq('gender', genderFilter);
-                }
-
-                // Apply movement filter
-                if (movementFilter) {
-                    query = query.eq('movement', movementFilter);
-                }
-
-                // Apply country filter
-                if (countryFilter) {
-                    query = query.eq('country', countryFilter);
-                }
-
-                // Apply search (across name, brand, and model)
-                if (searchTerm) {
-                    query = query.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`);
-                }
-
-                // Apply price filter
-                if (priceFilter) {
-                    if (priceFilter.includes('+')) {
-                        const minPrice = parseInt(priceFilter.replace('+', ''));
-                        query = query.gte('price', minPrice);
-                    } else if (priceFilter.includes('-')) {
-                        const [min, max] = priceFilter.split('-').map(p => parseInt(p));
-                        if (!isNaN(min) && !isNaN(max)) {
-                            query = query.gte('price', min).lte('price', max);
+                // Apply all active filters to a query builder
+                function applyWatchFilters(q) {
+                    q = q.eq('category', 'watch');
+                    if (statusFilter === 'available') {
+                        q = q.eq('status', 'available');
+                    } else if (statusFilter === 'sold') {
+                        q = q.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
+                    } else if (statusFilter === 'reserved') {
+                        q = q.eq('status', 'reserved');
+                    }
+                    // else: no status filter — show all watches
+                    if (brandFilter) q = q.eq('brand', brandFilter);
+                    if (genderFilter) q = q.eq('gender', genderFilter);
+                    if (movementFilter) q = q.eq('movement', movementFilter);
+                    if (countryFilter) q = q.eq('country', countryFilter);
+                    if (searchTerm) q = q.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`);
+                    if (priceFilter) {
+                        if (priceFilter.includes('+')) {
+                            q = q.gte('price', parseInt(priceFilter.replace('+', '')));
+                        } else if (priceFilter.includes('-')) {
+                            const [min, max] = priceFilter.split('-').map(p => parseInt(p));
+                            if (!isNaN(min) && !isNaN(max)) q = q.gte('price', min).lte('price', max);
                         }
                     }
+                    return q;
                 }
 
-                // Apply sorting — always sort available before sold first
-                query = query.order('status', { ascending: true }); // 'available' < 'sold'
-                if (sortBy === 'price-low') {
-                    query = query.order('price', { ascending: true });
-                } else if (sortBy === 'price-high') {
-                    query = query.order('price', { ascending: false });
-                } else {
-                    // Newest first — sort by id descending (highest id = most recently added)
-                    query = query.order('id', { ascending: false });
-                }
-
-                // Apply pagination
-                const from = (currentPage - 1) * 16;
-                const to = from + 15;
-                query = query.range(from, to);
-
-                const { data, error, count } = await query;
-
-                if (error) throw error;
-
+                // Separate count query — head:true fetches no rows, just the total
+                const { count } = await applyWatchFilters(
+                    supabaseClient.from('products').select('*', { count: 'exact', head: true })
+                );
                 totalProducts = count || 0;
 
-                // Only render actual database products, don't fall back to demo
+                // Data query with sorting and pagination
+                const from = (currentPage - 1) * 16;
+                const to = from + 15;
+                let dataQuery = applyWatchFilters(supabaseClient.from('products').select('*'));
+                dataQuery = dataQuery.order('status', { ascending: true }); // 'available' < 'sold'
+                if (sortBy === 'price-low') {
+                    dataQuery = dataQuery.order('price', { ascending: true });
+                } else if (sortBy === 'price-high') {
+                    dataQuery = dataQuery.order('price', { ascending: false });
+                } else {
+                    dataQuery = dataQuery.order('id', { ascending: false });
+                }
+                dataQuery = dataQuery.range(from, to);
+
+                const { data, error } = await dataQuery;
+                if (error) throw error;
+
                 renderProducts(data, grid);
                 updatePagination();
             } catch (error) {
