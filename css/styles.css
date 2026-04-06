@@ -4204,7 +4204,7 @@
 
             .product-image {
                 position: relative;
-                height: 300px;
+                height: 240px;
                 overflow: hidden;
                 background: var(--light-gray);
             }
@@ -4214,6 +4214,18 @@
                 height: 110%;
                 object-fit: cover;
                 transition: var(--transition);
+            }
+
+            .products-section {
+                padding: 10px 10px 30px;
+            }
+
+            .products-grid {
+                gap: 10px;
+            }
+
+            .product-info {
+                padding: 10px 12px;
             }
 
             @media (max-width: 768px) {
@@ -4422,7 +4434,7 @@
 
                 .product-image {
                     position: relative;
-                    height: 300px;
+                    height: 240px;
                     overflow: hidden;
                     background: var(--light-gray);
                 }
