@@ -1231,16 +1231,10 @@
                     return q;
                 }
 
-                // Separate count query — head:true fetches no rows, just the total
-                const { count } = await applyWatchFilters(
-                    supabaseClient.from('products').select('*', { count: 'exact', head: true })
-                );
-                totalProducts = count || 0;
-
-                // Data query with sorting and pagination
+                // Combined count + data query (matches accessories approach — more reliable than head:true)
                 const from = (currentPage - 1) * 16;
                 const to = from + 15;
-                let dataQuery = applyWatchFilters(supabaseClient.from('products').select('*'));
+                let dataQuery = applyWatchFilters(supabaseClient.from('products').select('*', { count: 'exact' }));
                 dataQuery = dataQuery.order('status', { ascending: true }); // 'available' < 'sold'
                 if (sortBy === 'price-low') {
                     dataQuery = dataQuery.order('price', { ascending: true });
@@ -1251,7 +1245,8 @@
                 }
                 dataQuery = dataQuery.range(from, to);
 
-                const { data, error } = await dataQuery;
+                const { data, error, count } = await dataQuery;
+                totalProducts = count || 0;
                 if (error) throw error;
 
                 renderProducts(data, grid);
