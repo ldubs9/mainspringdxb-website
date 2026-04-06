@@ -1231,10 +1231,17 @@
                     return q;
                 }
 
-                // Combined count + data query (matches accessories approach — more reliable than head:true)
+                // Explicit ID-only count — most reliable cross-project approach
+                const { data: countData, error: countError } = await applyWatchFilters(
+                    supabaseClient.from('products').select('id')
+                );
+                if (countError) throw countError;
+                totalProducts = (countData || []).length;
+
+                // Data query with sorting and pagination
                 const from = (currentPage - 1) * 16;
                 const to = from + 15;
-                let dataQuery = applyWatchFilters(supabaseClient.from('products').select('*', { count: 'exact' }));
+                let dataQuery = applyWatchFilters(supabaseClient.from('products').select('*'));
                 dataQuery = dataQuery.order('status', { ascending: true }); // 'available' < 'sold'
                 if (sortBy === 'price-low') {
                     dataQuery = dataQuery.order('price', { ascending: true });
@@ -1245,8 +1252,7 @@
                 }
                 dataQuery = dataQuery.range(from, to);
 
-                const { data, error, count } = await dataQuery;
-                totalProducts = count || 0;
+                const { data, error } = await dataQuery;
                 if (error) throw error;
 
                 renderProducts(data, grid);
