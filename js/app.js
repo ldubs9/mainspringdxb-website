@@ -2008,6 +2008,7 @@
                 ).join('');
                 main.innerHTML = `
                     <img src="${productImages[currentImageIndex]}" alt="Product Image" onclick="openImageZoom()">
+                    ${currentProduct && currentProduct.reference_code ? `<div class="gallery-ref-code">${currentProduct.reference_code}</div>` : ''}
                     <div class="gallery-nav-bar">
                         <button class="gallery-nav prev" onclick="prevImage()"><i class="fas fa-chevron-left"></i></button>
                         <div class="gallery-dots">${dotsHtml}</div>
