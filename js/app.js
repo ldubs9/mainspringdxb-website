@@ -1232,8 +1232,8 @@
                 }
 
                 // Combined count + data query (matches accessories approach — more reliable than head:true)
-                const from = (currentPage - 1) * 16;
-                const to = from + 15;
+                const from = (currentPage - 1) * 30;
+                const to = from + 29;
                 let dataQuery = applyWatchFilters(supabaseClient.from('products').select('*', { count: 'exact' }));
                 dataQuery = dataQuery.order('status', { ascending: true }); // 'available' < 'sold'
                 if (sortBy === 'price-low') {
@@ -1471,7 +1471,7 @@
 
         // Update pagination
         function updatePagination() {
-            const totalPages = Math.ceil(totalProducts / 16);
+            const totalPages = Math.ceil(totalProducts / 30);
             document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
             document.getElementById('prevPage').disabled = currentPage === 1;
             document.getElementById('nextPage').disabled = currentPage >= totalPages;
@@ -1787,8 +1787,8 @@
                 }
 
                 // Apply pagination
-                const from = (currentAccessoryPage - 1) * 16;
-                const to = from + 15;
+                const from = (currentAccessoryPage - 1) * 30;
+                const to = from + 29;
                 query = query.range(from, to);
 
                 const { data, error, count } = await query;
@@ -1813,7 +1813,7 @@
 
         // Update accessory pagination
         function updateAccessoryPagination() {
-            const totalPages = Math.ceil(totalAccessoryProducts / 16);
+            const totalPages = Math.ceil(totalAccessoryProducts / 30);
             document.getElementById('accessoryPageInfo').textContent = `Page ${currentAccessoryPage} of ${totalPages || 1}`;
             document.getElementById('prevAccessoryPage').disabled = currentAccessoryPage === 1;
             document.getElementById('nextAccessoryPage').disabled = currentAccessoryPage >= totalPages;
