@@ -1978,8 +1978,18 @@
                     </div>` : ''}
                     ${product.size ? `
                     <div class="meta-item">
-                        <span class="meta-label">Size</span>
+                        <span class="meta-label">Diameter</span>
                         <span class="meta-value">${product.size}</span>
+                    </div>` : ''}
+                    ${product.bracelet ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Bracelet</span>
+                        <span class="meta-value">${product.bracelet}</span>
+                    </div>` : ''}
+                    ${product.material ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Material</span>
+                        <span class="meta-value">${product.material}</span>
                     </div>` : ''}
                     ${watchDetails ? `
                     <div style="border-top: 1px solid var(--cream-dark); padding-top: 20px; margin-top: 20px;">
