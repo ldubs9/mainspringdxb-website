@@ -1930,9 +1930,11 @@
                 </div>
                 ` : `
                 <div class="detail-actions">
-                    <button class="btn-primary" onclick="addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
-                    <button class="btn-primary" style="background: #25D366;" onclick="inquireViaWhatsApp({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}, reference_number: '${refNumber}'})"><i class="fab fa-whatsapp"></i> WhatsApp Us</button>
-                    <button class="btn-secondary" onclick="addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="far fa-heart"></i></button>
+                    <button class="btn-primary btn-whatsapp-action" style="background: #25D366;" onclick="inquireViaWhatsApp({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}, reference_number: '${refNumber}'})"><i class="fab fa-whatsapp"></i> WhatsApp Us</button>
+                    <div class="detail-actions-row">
+                        <button class="btn-primary btn-cart-action" onclick="addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                        <button class="btn-secondary btn-wishlist-action" onclick="addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="far fa-heart"></i></button>
+                    </div>
                 </div>
                 `}
                 <div class="detail-meta">
