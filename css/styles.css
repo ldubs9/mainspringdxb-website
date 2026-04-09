@@ -3566,6 +3566,11 @@
             color: var(--gold);
         }
 
+        /* Desktop: make the row wrapper transparent to flex layout */
+        .detail-actions-row {
+            display: contents;
+        }
+
         .detail-meta {
             border-top: 1px solid var(--cream-dark);
             padding-top: 30px;
@@ -4211,6 +4216,34 @@
 
             .page-header {
                 padding: 120px 15px 60px;
+            }
+
+            /* Product detail page mobile button layout */
+            .detail-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn-whatsapp-action {
+                width: 100%;
+                flex: none;
+            }
+
+            .detail-actions-row {
+                display: flex;
+                width: 100%;
+                align-items: stretch;
+                gap: 0;
+            }
+
+            .detail-actions-row .btn-cart-action {
+                flex: 7;
+                padding: 16px;
+            }
+
+            .detail-actions-row .btn-wishlist-action {
+                flex: 3;
+                padding: 16px;
             }
 
             .btn-secondary {
