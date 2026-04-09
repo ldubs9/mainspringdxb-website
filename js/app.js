@@ -742,6 +742,17 @@
         };
         let lastExchangeRateUpdate = parseInt(localStorage.getItem('mainspring_last_exchange_update')) || 0;
 
+        // Pre-defined rounded price range labels per currency (internal filter values always stay in AED)
+        const PRICE_LABELS = {
+            '':            { AED: 'Any Price',          USD: 'Any Price',        GBP: 'Any Price',        EUR: 'Any Price'        },
+            '0-1000':      { AED: 'Under 1,000 AED',   USD: 'Under $300',       GBP: 'Under £200',       EUR: 'Under €300'       },
+            '0-5000':      { AED: 'Under 5,000 AED',   USD: 'Under $1,500',     GBP: 'Under £1,000',     EUR: 'Under €1,500'     },
+            '5000-15000':  { AED: '5,000 - 15,000 AED',USD: '$1,500 - $4,000',  GBP: '£1,000 - £3,000',  EUR: '€1,500 - €4,000'  },
+            '15000-30000': { AED: '15,000 - 30,000 AED',USD: '$4,000 - $8,000', GBP: '£3,000 - £6,500',  EUR: '€4,000 - €8,000'  },
+            '30000-50000': { AED: '30,000 - 50,000 AED',USD: '$8,000 - $14,000',GBP: '£6,500 - £11,000', EUR: '€8,000 - €13,000' },
+            '50000+':      { AED: '50,000+ AED',        USD: '$14,000+',         GBP: '£11,000+',         EUR: '€13,000+'         }
+        };
+
         // Fetch exchange rates from API
         async function fetchExchangeRates() {
             try {
@@ -810,6 +821,9 @@
 
             // Re-render all prices on the page
             rerenderAllPrices();
+
+            // Update price filter dropdown labels to the new currency
+            updatePriceDropdownLabels();
         }
 
         // Update currency display in header
@@ -862,6 +876,53 @@
                     element.textContent = formatPrice(priceInAED);
                 }
             });
+        }
+
+        // Format a slider AED value in the current currency with nice rounding
+        function formatSliderValue(aedVal) {
+            if (currentCurrency === 'AED') {
+                return 'AED ' + parseInt(aedVal).toLocaleString();
+            }
+            const symbols = { USD: '$', GBP: '£', EUR: '€' };
+            const converted = aedVal * exchangeRates[currentCurrency];
+            const rounded = converted < 10000
+                ? Math.round(converted / 100) * 100
+                : Math.round(converted / 1000) * 1000;
+            return symbols[currentCurrency] + rounded.toLocaleString();
+        }
+
+        // Update price dropdown labels to reflect the currently selected currency
+        function updatePriceDropdownLabels() {
+            const dropdown = document.getElementById('priceDropdown');
+            if (!dropdown) return;
+
+            // Update each item's displayed text (data-value stays in AED)
+            dropdown.querySelectorAll('.custom-dropdown-item[data-value]').forEach(item => {
+                const val = item.dataset.value;
+                if (PRICE_LABELS[val] && PRICE_LABELS[val][currentCurrency]) {
+                    item.textContent = PRICE_LABELS[val][currentCurrency];
+                }
+            });
+
+            // Update the trigger button text to match the currently selected price
+            const priceFilterEl = document.getElementById('priceFilter');
+            const trigger = dropdown.querySelector('.custom-dropdown-trigger');
+            if (!priceFilterEl || !trigger) return;
+
+            const currentVal = priceFilterEl.value;
+            if (!currentVal) {
+                trigger.textContent = 'Any Price';
+            } else if (PRICE_LABELS[currentVal] && PRICE_LABELS[currentVal][currentCurrency]) {
+                trigger.textContent = PRICE_LABELS[currentVal][currentCurrency];
+            } else if (currentVal.startsWith('0-')) {
+                // Slider set a non-standard AED value
+                const aedMax = parseInt(currentVal.split('-')[1]);
+                trigger.textContent = 'Under ' + formatSliderValue(aedMax);
+            }
+
+            // Refresh the slider display value too
+            const sliderEl = dropdown.querySelector('.luxury-slider');
+            if (sliderEl) updateSliderDisplay(sliderEl.value);
         }
 
         // Save wishlist to localStorage
@@ -1158,6 +1219,7 @@
 
             // Load data if needed
             if (pageName === 'watches') {
+                updatePriceDropdownLabels();
                 loadWatches();
             } else if (pageName === 'accessories') {
                 document.getElementById('accessoryProducts').style.display = 'none';
@@ -1530,20 +1592,20 @@
             if (val >= 150000) {
                 display.textContent = 'Any';
             } else {
-                display.textContent = 'AED ' + parseInt(val).toLocaleString();
+                display.textContent = formatSliderValue(val);
             }
         }
 
         function applySliderValue(val) {
             const dropdown = document.getElementById('priceDropdown');
             const trigger = dropdown.querySelector('.custom-dropdown-trigger');
-            
+
             if (val >= 150000) {
                 document.getElementById('priceFilter').value = '';
                 trigger.textContent = 'Any Price';
             } else {
                 document.getElementById('priceFilter').value = '0-' + val;
-                trigger.textContent = 'Under ' + parseInt(val).toLocaleString() + ' AED';
+                trigger.textContent = 'Under ' + formatSliderValue(val);
             }
             
             dropdown.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
