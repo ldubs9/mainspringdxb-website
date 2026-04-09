@@ -3476,7 +3476,7 @@
 
         /* Detail Info */
         .detail-info {
-            padding: 20px 0;
+            padding: 20px 15px;
         }
 
         .detail-brand {
@@ -3578,7 +3578,8 @@
 
         .meta-item {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 4px;
             padding: 15px 0;
             border-bottom: 1px solid var(--cream-dark);
         }
