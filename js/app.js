@@ -1343,28 +1343,15 @@
 
                 let additionalInfo = '';
                 if (product.category === 'watch') {
-                    // Build info text: priority is gender, movement, country
-                    // Fallbacks in order: size, watch_year, watch_reference
-                    const primaryFields = [product.gender, product.movement, product.country];
-                    const fallbackFields = [product.size, product.watch_year, product.watch_reference];
-                    const infoItems = [];
-                    let fallbackIndex = 0;
-                    for (let i = 0; i < primaryFields.length; i++) {
-                        const val = primaryFields[i];
-                        if (val && String(val).trim()) {
-                            infoItems.push(String(val).trim());
-                        } else {
-                            while (fallbackIndex < fallbackFields.length) {
-                                const fb = fallbackFields[fallbackIndex++];
-                                if (fb && String(fb).trim()) {
-                                    infoItems.push(String(fb).trim());
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (infoItems.length > 0) {
-                        additionalInfo = `<p style="font-size: 0.75rem; color: var(--gray); margin-bottom: 4px;">${infoItems.join(', ')}</p>`;
+                    // For watches: show watch_year and watch_reference
+                    const year = product.watch_year || product.year || '';
+                    const reference = product.watch_reference || product.reference_number || '';
+                    if (year || reference) {
+                        additionalInfo = `<p style="font-size: 0.75rem; color: var(--gray); margin-bottom: 4px;">`;
+                        if (year) additionalInfo += `${year}`;
+                        if (year && reference) additionalInfo += ` • `;
+                        if (reference) additionalInfo += `Ref: ${reference}`;
+                        additionalInfo += `</p>`;
                     }
                 }
 
@@ -1997,6 +1984,29 @@
                 ${isSoldProduct ? `<div style="background: var(--gray); color: white; padding: 10px 20px; margin-bottom: 20px; text-align: center; font-family: 'Fraunces', serif; font-size: 0.9rem; letter-spacing: 3px;">SOLD</div>` : ''}
                 <p class="detail-brand">${displayBrand}</p>
                 <h1 class="detail-name">${displayName}</h1>
+                ${(() => {
+                    const primaryFields = [product.gender, product.movement, product.country];
+                    const fallbackFields = [product.size, product.watch_year, product.watch_reference];
+                    const infoItems = [];
+                    let fallbackIndex = 0;
+                    for (let i = 0; i < primaryFields.length; i++) {
+                        const val = primaryFields[i];
+                        if (val && String(val).trim()) {
+                            infoItems.push(String(val).trim());
+                        } else {
+                            while (fallbackIndex < fallbackFields.length) {
+                                const fb = fallbackFields[fallbackIndex++];
+                                if (fb && String(fb).trim()) {
+                                    infoItems.push(String(fb).trim());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    return infoItems.length > 0
+                        ? `<p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">${infoItems.join(', ')}</p>`
+                        : '';
+                })()}
                 <p class="detail-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                 <p class="detail-description">${product.description || ''}</p>
                 ${isSoldProduct ? `
