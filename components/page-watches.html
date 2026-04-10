@@ -30,6 +30,16 @@
 
                     <!-- Desktop Main Filters -->
                     <div class="filter-group-main">
+                        <div class="custom-dropdown" id="genderDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'genderDropdown')">Any Gender</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('gender', '', this)">Any Gender</div>
+                                <div class="custom-dropdown-item" data-value="Ladies" onclick="selectFilter('gender', 'Ladies', this)">Ladies</div>
+                                <div class="custom-dropdown-item" data-value="Men" onclick="selectFilter('gender', 'Men', this)">Men</div>
+                                <div class="custom-dropdown-item" data-value="Unisex" onclick="selectFilter('gender', 'Unisex', this)">Unisex</div>
+                            </div>
+                        </div>
+
                         <div class="custom-dropdown" id="brandDropdown">
                             <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'brandDropdown')">All Brands</div>
                             <div class="custom-dropdown-menu">
@@ -104,6 +114,19 @@
                     </div>
 
                     <div class="drawer-section">
+                        <span class="drawer-section-title">Gender</span>
+                        <div class="custom-dropdown" id="drawerGenderDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerGenderDropdown')">Any Gender</div>
+                            <div class="custom-dropdown-menu">
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('gender', '', this)">Any Gender</div>
+                                <div class="custom-dropdown-item" data-value="Ladies" onclick="selectFilter('gender', 'Ladies', this)">Ladies</div>
+                                <div class="custom-dropdown-item" data-value="Men" onclick="selectFilter('gender', 'Men', this)">Men</div>
+                                <div class="custom-dropdown-item" data-value="Unisex" onclick="selectFilter('gender', 'Unisex', this)">Unisex</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="drawer-section">
                         <span class="drawer-section-title">Sort By</span>
                         <div class="custom-dropdown" id="drawerSortDropdown">
                             <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerSortDropdown')">Newest Arrivals</div>
@@ -125,19 +148,6 @@
                                 <div class="custom-dropdown-item" data-value="available" onclick="selectFilter('status', 'available', this)">Available Now</div>
                                 <div class="custom-dropdown-item" data-value="sold" onclick="selectFilter('status', 'sold', this)">Sold</div>
                                 <div class="custom-dropdown-item" data-value="reserved" onclick="selectFilter('status', 'reserved', this)">Reserved</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="drawer-section">
-                        <span class="drawer-section-title">Gender</span>
-                        <div class="custom-dropdown" id="drawerGenderDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerGenderDropdown')">Any Gender</div>
-                            <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('gender', '', this)">Any Gender</div>
-                                <div class="custom-dropdown-item" data-value="Men" onclick="selectFilter('gender', 'Men', this)">Men</div>
-                                <div class="custom-dropdown-item" data-value="Women" onclick="selectFilter('gender', 'Women', this)">Women</div>
-                                <div class="custom-dropdown-item" data-value="Unisex" onclick="selectFilter('gender', 'Unisex', this)">Unisex</div>
                             </div>
                         </div>
                     </div>
