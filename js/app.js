@@ -1816,6 +1816,16 @@
             }, 100);
         }
 
+        // Filter by gender
+        function filterByGender(gender) {
+            document.getElementById('brandFilter').value = '';
+            document.getElementById('genderFilter').value = gender;
+            showPage('watches');
+            setTimeout(() => {
+                loadWatches();
+            }, 100);
+        }
+
         // Show accessory category
         function showAccessoryCategory(category, skipPushState = false) {
             currentAccessoryCategory = category;

@@ -5,28 +5,12 @@
     <nav class="nav-overlay" id="navOverlay">
         <ul class="nav-links">
             <li><a href="#" onclick="event.preventDefault(); showPage('home'); closeNav();">HOME</a></li>
-            <li>
-                <div class="nav-item-wrapper">
-                    <a href="#" onclick="event.preventDefault(); handleNavClick(event, this, 'watches');">WATCHES</a>
-                    <ul class="nav-dropdown" id="watchesDropdown">
-                        <li><a href="#" onclick="event.preventDefault(); filterByBrand('Rolex'); closeNav();">Rolex</a>
-                        </li>
-                        <li><a href="#"
-                                onclick="event.preventDefault(); filterByBrand('Patek Philippe'); closeNav();">Patek
-                                Philippe</a></li>
-                        <li><a href="#" onclick="event.preventDefault(); filterByBrand('Omega'); closeNav();">Omega</a>
-                        </li>
-                        <li><a href="#" onclick="event.preventDefault(); filterByBrand('Tudor'); closeNav();">Tudor</a>
-                        </li>
-                        <li><a href="#"
-                                onclick="event.preventDefault(); filterByBrand('Audemars Piguet'); closeNav();">Audemars
-                                Piguet</a></li>
-                        <li><a href="#"
-                                onclick="event.preventDefault(); filterByBrand('Cartier'); closeNav();">Cartier</a></li>
-                        <li><a href="#"
-                                onclick="event.preventDefault(); filterByBrand('Vacheron Constantin'); closeNav();">Vacheron
-                                Constantin</a></li>
-                    </ul>
+            <li class="nav-watches-item">
+                <span class="nav-section-label">WATCHES</span>
+                <div class="nav-watches-filters">
+                    <a href="#" onclick="event.preventDefault(); filterByGender(''); closeNav();">Show All</a>
+                    <a href="#" onclick="event.preventDefault(); filterByGender('Men'); closeNav();">Men's</a>
+                    <a href="#" onclick="event.preventDefault(); filterByGender('Ladies'); closeNav();">Ladies'</a>
                 </div>
             </li>
             <li>

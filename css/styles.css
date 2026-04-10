@@ -1419,7 +1419,7 @@
 
         .nav-links a {
             font-family: 'Fraunces', serif;
-            font-size: 2.5rem;
+            font-size: 2.25rem;
             color: rgba(255, 255, 255, 0.5);
             text-decoration: none;
             letter-spacing: -0.01em;
@@ -1434,6 +1434,47 @@
 
         .nav-links a::after {
             display: none;
+        }
+
+        /* Watches static filter section */
+        .nav-watches-item {
+            text-align: center;
+        }
+
+        .nav-section-label {
+            font-family: 'Fraunces', serif;
+            font-size: 2.25rem;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.1em;
+            font-weight: 400;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .nav-watches-filters {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 6px;
+        }
+
+        .nav-watches-filters a {
+            font-family: 'Lato', sans-serif !important;
+            font-size: 0.85rem !important;
+            color: rgba(245, 241, 235, 0.6);
+            letter-spacing: 0.08em;
+            text-transform: capitalize;
+            padding: 4px 8px;
+            transition: color 0.2s ease;
+        }
+
+        .nav-watches-filters a:hover {
+            color: var(--gold);
+        }
+
+        .nav-watches-filters a::after {
+            display: none !important;
         }
 
         /* Dropdown in Navigation */
@@ -4361,7 +4402,7 @@
 
                 .nav-links>li>a,
                 .nav-item-wrapper>a {
-                    font-size: 1.8rem !important;
+                    font-size: 1.62rem !important;
                 }
 
                 .nav-dropdown::before {
