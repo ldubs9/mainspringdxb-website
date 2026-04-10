@@ -1652,6 +1652,20 @@
 
                 // Close dropdown
                 dropdown.classList.remove('open');
+
+                // Sync gender between desktop and drawer dropdowns
+                if (type === 'gender') {
+                    const syncIds = ['genderDropdown', 'drawerGenderDropdown'];
+                    syncIds.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el && el !== dropdown) {
+                            el.querySelector('.custom-dropdown-trigger').textContent = element.textContent;
+                            el.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
+                            const match = el.querySelector(`.custom-dropdown-item[data-value="${value}"]`);
+                            if (match) match.classList.add('selected');
+                        }
+                    });
+                }
             }
 
             // Apply filter
@@ -1676,6 +1690,7 @@
             // Reset Drawer Dropdowns if they exist
             if (document.getElementById('drawerSortDropdown')) document.getElementById('drawerSortDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Newest Arrivals';
             if (document.getElementById('drawerStatusDropdown')) document.getElementById('drawerStatusDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Condition';
+            if (document.getElementById('genderDropdown')) document.getElementById('genderDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Gender';
             if (document.getElementById('drawerGenderDropdown')) document.getElementById('drawerGenderDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Gender';
             if (document.getElementById('drawerMovementDropdown')) document.getElementById('drawerMovementDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Movement';
 
@@ -2004,7 +2019,7 @@
                         }
                     }
                     return infoItems.length > 0
-                        ? `<p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">${infoItems.join(', ')}</p>`
+                        ? `<p style="font-size: 1.1rem; color: var(--gray); margin-bottom: 8px;">${infoItems.join(', ')}</p>`
                         : '';
                 })()}
                 <p class="detail-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
