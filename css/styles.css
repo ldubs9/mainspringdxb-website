@@ -3818,6 +3818,7 @@
             align-items: center;
             justify-content: center;
             padding: 100px;
+            grid-column: 1 / -1;
         }
 
         .loading-spinner {
