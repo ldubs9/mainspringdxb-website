@@ -1220,6 +1220,7 @@
             // Load data if needed
             if (pageName === 'watches') {
                 updatePriceDropdownLabels();
+                loadBrandsFilter();
                 loadWatches();
             } else if (pageName === 'accessories') {
                 document.getElementById('accessoryProducts').style.display = 'none';
@@ -1240,6 +1241,48 @@
             // Push to browser history (unless being called from showProductDetail)
             if (!skipPushState && pageName !== 'detail') {
                 history.pushState({ page: pageName }, '', `?page=${pageName}`);
+            }
+        }
+
+        // Load brands from Supabase and populate the brand filter dropdown
+        let brandsFilterLoaded = false;
+
+        async function loadBrandsFilter() {
+            if (brandsFilterLoaded) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('brand')
+                    .eq('category', 'watch')
+                    .not('brand', 'is', null)
+                    .neq('brand', '');
+
+                if (error || !data) return;
+
+                const brands = [...new Set(data.map(p => p.brand).filter(Boolean))].sort();
+
+                const menu = document.getElementById('brandDropdown')?.querySelector('.custom-dropdown-menu');
+                if (!menu) return;
+
+                // Keep the "All Brands" item and remove any leftover items
+                const allBrandsItem = menu.querySelector('.custom-dropdown-item[data-value=""]');
+                menu.innerHTML = '';
+                if (allBrandsItem) menu.appendChild(allBrandsItem);
+
+                brands.forEach(brand => {
+                    const item = document.createElement('div');
+                    item.className = 'custom-dropdown-item';
+                    item.dataset.value = brand;
+                    item.textContent = brand;
+                    item.addEventListener('click', function () {
+                        selectFilter('brand', brand, this);
+                    });
+                    menu.appendChild(item);
+                });
+
+                brandsFilterLoaded = true;
+            } catch (e) {
+                // Silently fail — dropdown retains "All Brands" only
             }
         }
 
