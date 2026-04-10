@@ -1343,15 +1343,28 @@
 
                 let additionalInfo = '';
                 if (product.category === 'watch') {
-                    // For watches: show watch_year and watch_reference
-                    const year = product.watch_year || product.year || '';
-                    const reference = product.watch_reference || product.reference_number || '';
-                    if (year || reference) {
-                        additionalInfo = `<p style="font-size: 0.75rem; color: var(--gray); margin-bottom: 4px;">`;
-                        if (year) additionalInfo += `${year}`;
-                        if (year && reference) additionalInfo += ` • `;
-                        if (reference) additionalInfo += `Ref: ${reference}`;
-                        additionalInfo += `</p>`;
+                    // Build info text: priority is gender, movement, country
+                    // Fallbacks in order: size, watch_year, watch_reference
+                    const primaryFields = [product.gender, product.movement, product.country];
+                    const fallbackFields = [product.size, product.watch_year, product.watch_reference];
+                    const infoItems = [];
+                    let fallbackIndex = 0;
+                    for (let i = 0; i < primaryFields.length; i++) {
+                        const val = primaryFields[i];
+                        if (val && String(val).trim()) {
+                            infoItems.push(String(val).trim());
+                        } else {
+                            while (fallbackIndex < fallbackFields.length) {
+                                const fb = fallbackFields[fallbackIndex++];
+                                if (fb && String(fb).trim()) {
+                                    infoItems.push(String(fb).trim());
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (infoItems.length > 0) {
+                        additionalInfo = `<p style="font-size: 0.75rem; color: var(--gray); margin-bottom: 4px;">${infoItems.join(', ')}</p>`;
                     }
                 }
 
