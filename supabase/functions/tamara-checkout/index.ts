@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
     );
 
     const { data: order, error: fetchError } = await supabaseAdmin
-      .from("orders")
+      .from("mainspring_orders")
       .select("*")
       .eq("order_ref", order_ref)
       .single();
@@ -141,7 +141,7 @@ Deno.serve(async (req: Request) => {
 
     // Update order
     await supabaseAdmin
-      .from("orders")
+      .from("mainspring_orders")
       .update({
         payment_gateway_id: tamaraData.order_id,
         payment_status: "processing",

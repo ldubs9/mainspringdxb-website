@@ -1,7 +1,7 @@
         // Supabase Configuration
-        const SUPABASE_URL = 'https://heblmjkgsuhwjffjrhrr.supabase.co';
+        const SUPABASE_URL = 'https://sldb.swiftloop.tech';
         // Using the anon (public) key — safe to expose in frontend code
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlYmxtamtnc3Vod2pmZmpyaHJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NjQxOTcsImV4cCI6MjA4OTE0MDE5N30.XME4XDCcF961dh7l2gMIKkXo5G7tQewme6joIVNTNow';
+        const SUPABASE_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NTgzMjI0MCwiZXhwIjo0OTMxNTA1ODQwLCJyb2xlIjoiYW5vbiJ9.G7a98S-SVHYk1h5hU2VjVmbu_RF42KOK8jVDrR1kOZM';
 
         // Initialize Supabase
         const { createClient } = supabase;
@@ -1007,7 +1007,7 @@
         // New tracking function
         async function trackAndRedirect(productId, referenceCode, whatsappUrl) {
             // Fire-and-forget click log
-            fetch('https://heblmjkgsuhwjffjrhrr.supabase.co/rest/v1/watch_clicks', {
+            fetch('https://sldb.swiftloop.tech/rest/v1/mainspring_watch_clicks', {
                 method: 'POST',
                 headers: {
                     'apikey': SUPABASE_KEY,
@@ -1028,7 +1028,7 @@
         async function trackClick(element, productContext = null) {
             try {
                 await supabaseClient
-                    .from('clicks')
+                    .from('mainspring_clicks')
                     .insert({
                         element_clicked: element,
                         page_path: window.location.pathname,
@@ -1088,7 +1088,7 @@
             try {
                 const thirtyDaysAgo = getThirtyDaysAgoISO();
                 const { data, error } = await supabaseClient
-                    .from('products')
+                    .from('mainspring_products')
                     .select('*')
                     .or(`name.ilike.%${q}%,brand.ilike.%${q}%,model.ilike.%${q}%,reference_number.ilike.%${q}%`)
                     .or(`status.eq.available,and(status.eq.sold,updated_at.gte.${thirtyDaysAgo})`)
@@ -1106,20 +1106,9 @@
                 console.log('Supabase search failed, falling back to demo data', err);
             }
 
-            // Fallback to demo arrays
-            const lower = q.toLowerCase();
-            const demoMatches = [...demoWatches, ...demoAccessories].filter(p =>
-                (p.name && p.name.toLowerCase().includes(lower)) ||
-                (p.brand && p.brand.toLowerCase().includes(lower))
-            );
-
-            if (demoMatches.length === 0) {
-                resultsContainer.innerHTML = '<div style="grid-column:1/-1; padding:24px; color: var(--gray);">No results found.</div>';
-                return;
-            }
-
-            resultsContainer.innerHTML = '';
-            renderProducts(demoMatches.slice(0, 40), resultsContainer);
+            // No demo fallback — show no results when remote search fails
+            resultsContainer.innerHTML = '<div style="grid-column:1/-1; padding:24px; color: var(--gray);">No results found.</div>';
+            return;
         }
 
         // State
@@ -1251,7 +1240,7 @@
             if (brandsFilterLoaded) return;
             try {
                 const { data, error } = await supabaseClient
-                    .from('products')
+                    .from('mainspring_products')
                     .select('brand')
                     .eq('category', 'watch')
                     .not('brand', 'is', null)
@@ -1339,7 +1328,7 @@
                 // Combined count + data query (matches accessories approach — more reliable than head:true)
                 const from = (currentPage - 1) * 30;
                 const to = from + 29;
-                let dataQuery = applyWatchFilters(supabaseClient.from('products').select('*', { count: 'exact' }));
+                let dataQuery = applyWatchFilters(supabaseClient.from('mainspring_products').select('*', { count: 'exact' }));
                 dataQuery = dataQuery.order('status', { ascending: true }); // 'available' < 'sold'
                 if (sortBy === 'price-low') {
                     dataQuery = dataQuery.order('price', { ascending: true });
@@ -1359,9 +1348,9 @@
             } catch (error) {
                 console.error('Error loading watches:', error);
 
-                // Load demo products on error
-                renderDemoProducts(grid, 'watch');
-                totalProducts = 16;
+                // No demo fallback — show no products found
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: var(--gray);">No products found.</div>';
+                totalProducts = 0;
                 updatePagination();
             }
         }
@@ -1400,7 +1389,7 @@
 
                 return `
                 <div class="product-card${isSold ? ' sold' : ''}">
-                    <div class="product-image" onclick="showProductDetail('${product.reference_code || product.id}')">
+                    <div class="product-image" onclick="showProductDetail(event, '${product.reference_code || product.id}')">
                         ${firstImage ?
                         `<img src="${firstImage}" alt="${displayBrand} ${displayName}" loading="lazy">` :
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
@@ -1408,7 +1397,7 @@
                     </div>
                     <div class="product-info">
                         <p class="product-brand">${displayBrand}</p>
-                        <h3 class="product-name" onclick="showProductDetail('${product.reference_code || product.id}')">${displayName}</h3>
+                        <h3 class="product-name" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
                         ${additionalInfo}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                         <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
@@ -1430,149 +1419,7 @@
             `}).join('');
         }
 
-        // Demo data store
-        const demoWatches = [
-            { id: 1, brand: 'Seiko', name: 'Presage Cocktail Time', price: 1500, year: 2023, category: 'watch', condition: 'Excellent' },
-            { id: 2, brand: 'Omega', name: 'Seamaster De Ville', price: 3200, year: 1968, category: 'watch', condition: 'Vintage' },
-            { id: 3, brand: 'Casio', name: 'G-Shock DW-5600', price: 350, year: 2024, category: 'watch', condition: 'New' },
-            { id: 4, brand: 'Rolex', name: 'Datejust 36', price: 12500, year: 2020, category: 'watch', condition: 'Very Good' },
-            { id: 5, brand: 'Orient', name: 'Bambino v2', price: 850, year: 2023, category: 'watch', condition: 'New' },
-            { id: 6, brand: 'Tudor', name: 'Black Bay 58', price: 4800, year: 2022, category: 'watch', condition: 'Like New' },
-            { id: 7, brand: 'Tissot', name: 'PRX Powermatic 80', price: 2500, year: 2024, category: 'watch', condition: 'New' },
-            { id: 8, brand: 'Longines', name: 'Heritage Military', price: 2100, year: 1975, category: 'watch', condition: 'Vintage' },
-            { id: 9, brand: 'Hamilton', name: 'Khaki Field Mechanical', price: 1800, year: 2023, category: 'watch', condition: 'Mint' },
-            { id: 10, brand: 'Citizen', name: 'Eco-Drive Promaster', price: 1200, year: 2024, category: 'watch', condition: 'New' },
-            { id: 11, brand: 'Seiko', name: 'SKX007 Diver', price: 1400, year: 2019, category: 'watch', condition: 'Good' },
-            { id: 12, brand: 'Omega', name: 'Speedmaster Professional', price: 7500, year: 2023, category: 'watch', condition: 'Excellent' },
-            { id: 13, brand: 'Cartier', name: 'Tank Must', price: 4200, year: 2022, category: 'watch', condition: 'Like New' },
-            { id: 14, brand: 'Vostok', name: 'Komandirskie', price: 350, year: 1985, category: 'watch', condition: 'Vintage' },
-            { id: 15, brand: 'Swatch', name: 'MoonSwatch Mission to Mars', price: 1100, year: 2024, category: 'watch', condition: 'New' },
-            { id: 16, brand: 'Patek Philippe', name: 'Calatrava', price: 32000, year: 2021, category: 'watch', condition: 'Mint' }
-        ];
-
-        const demoAccessories = [
-            { id: 101, brand: 'Mainspring', name: 'Leather Watch Strap - Brown', price: 250, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 102, brand: 'Mainspring', name: 'Crocodile Strap - Black', price: 450, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 103, brand: 'Mainspring', name: 'NATO Strap - Navy', price: 85, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 104, brand: 'Mainspring', name: 'Rubber Strap - Orange', price: 120, category: 'accessory', subcategory: 'watch-straps' },
-            { id: 111, brand: 'Mainspring', name: 'Vintage Pocket Watch - Gold', price: 2800, category: 'accessory', subcategory: 'pocket-watches' },
-            { id: 112, brand: 'Mainspring', name: 'Silver Pocket Watch - Chain', price: 1500, category: 'accessory', subcategory: 'pocket-watches' },
-            { id: 113, brand: 'Mainspring', name: 'Open Face Pocket Watch', price: 900, category: 'accessory', subcategory: 'pocket-watches' },
-            { id: 121, brand: 'Mainspring', name: 'Desk Clock - Brass', price: 1200, category: 'accessory', subcategory: 'standing-clocks' },
-            { id: 122, brand: 'Mainspring', name: 'Mantel Clock - Walnut', price: 2500, category: 'accessory', subcategory: 'standing-clocks' },
-            { id: 123, brand: 'Mainspring', name: 'Skeleton Desk Clock', price: 1800, category: 'accessory', subcategory: 'standing-clocks' },
-            { id: 131, brand: 'Mainspring', name: 'Watch Box - 6 Slot', price: 350, category: 'accessory', subcategory: 'watch-boxes' },
-            { id: 132, brand: 'Mainspring', name: 'Watch Box - 12 Slot Premium', price: 650, category: 'accessory', subcategory: 'watch-boxes' },
-            { id: 133, brand: 'Mainspring', name: 'Travel Watch Case', price: 280, category: 'accessory', subcategory: 'watch-boxes' },
-            { id: 141, brand: 'Mainspring', name: 'Leather Messenger Bag', price: 850, category: 'accessory', subcategory: 'bags' },
-            { id: 142, brand: 'Mainspring', name: 'Watch Roll - 3 Slot', price: 180, category: 'accessory', subcategory: 'bags' },
-            { id: 143, brand: 'Mainspring', name: 'Canvas Travel Bag', price: 550, category: 'accessory', subcategory: 'bags' }
-        ];
-
-        // Render demo products with filtering (fallback)
-        function renderDemoProducts(grid, category) {
-            let products = category === 'watch' ? [...demoWatches] : [...demoAccessories];
-
-            if (category === 'watch') {
-                // Get filter values for watches
-                const brandFilter = document.getElementById('brandFilter').value;
-                const priceFilter = document.getElementById('priceFilter').value;
-                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-                const sortBy = document.getElementById('sortFilter').value;
-
-                // Apply brand filter
-                if (brandFilter) {
-                    products = products.filter(p => p.brand === brandFilter);
-                }
-
-                // Apply search filter
-                if (searchTerm) {
-                    products = products.filter(p =>
-                        p.name.toLowerCase().includes(searchTerm) ||
-                        p.brand.toLowerCase().includes(searchTerm)
-                    );
-                }
-
-                // Apply price filter
-                if (priceFilter) {
-                    if (priceFilter.includes('+')) {
-                        const min = parseInt(priceFilter.replace('+', ''));
-                        products = products.filter(p => p.price >= min);
-                    } else if (priceFilter.includes('-')) {
-                        const [min, max] = priceFilter.split('-').map(Number);
-                        products = products.filter(p => p.price >= min && p.price <= max);
-                    }
-                }
-
-                // Apply sorting
-                if (sortBy === 'price-low') {
-                    products.sort((a, b) => a.price - b.price);
-                } else if (sortBy === 'price-high') {
-                    products.sort((a, b) => b.price - a.price);
-                } else {
-                    // newest - sort by year descending
-                    products.sort((a, b) => b.year - a.year);
-                }
-
-                // Update total for pagination
-                totalProducts = products.length;
-
-            } else {
-                // Get filter values for accessories
-                const searchTerm = document.getElementById('accessorySearchInput')?.value?.toLowerCase() || '';
-                const sortBy = document.getElementById('accessorySortFilter')?.value || 'newest';
-
-                // Filter by current subcategory
-                if (currentAccessoryCategory) {
-                    products = products.filter(p => p.subcategory === currentAccessoryCategory);
-                }
-
-                // Apply search filter
-                if (searchTerm) {
-                    products = products.filter(p =>
-                        p.name.toLowerCase().includes(searchTerm) ||
-                        p.brand.toLowerCase().includes(searchTerm)
-                    );
-                }
-
-                // Apply sorting
-                if (sortBy === 'price-low') {
-                    products.sort((a, b) => a.price - b.price);
-                } else if (sortBy === 'price-high') {
-                    products.sort((a, b) => b.price - a.price);
-                }
-
-                // Update total for pagination
-                totalAccessoryProducts = products.length;
-            }
-
-            // Handle empty results
-            if (products.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><p>No products found matching your criteria.</p></div>';
-                return;
-            }
-
-            grid.innerHTML = products.map(product => `
-                <div class="product-card" onclick="showProductDetail('${product.id}')">
-                    <div class="product-image">
-                        <div class="product-placeholder">
-                            <i class="fas fa-${category === 'watch' ? 'clock' : 'tag'}"></i>
-                        </div>
-                    </div>
-                    <div class="product-info">
-                        <p class="product-brand">${product.brand}</p>
-                        <h3 class="product-name">${product.name}</h3>
-                        ${product.year ? `<p style="font-size: 0.85rem; color: var(--gray); margin-bottom: 8px;">${product.year}</p>` : ''}
-                        <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
-                        <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
-                            <button onclick="event.stopPropagation(); addToCart({id: ${product.id}, name: '${product.name.replace(/'/g, "\\'")}', brand: '${product.brand.replace(/'/g, "\\'")}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
-                                <i class="fas fa-shopping-bag"></i> Add to Cart
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
+        
 
         // Update pagination
         function updatePagination() {
@@ -1589,7 +1436,7 @@
 
             try {
                 let query = supabaseClient
-                    .from('products')
+                    .from('mainspring_products')
                     .select('*')
                     .eq('category', 'watch')
                     .or(`status.eq.available,and(status.eq.sold,updated_at.gte.${getThirtyDaysAgoISO()})`)
@@ -1604,11 +1451,11 @@
                 if (data && data.length > 0) {
                     renderProducts(data, grid);
                 } else {
-                    renderDemoProducts(grid, 'watch');
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">No featured watches available.</div>';
                 }
             } catch (error) {
                 console.error('Error loading featured watches:', error);
-                renderDemoProducts(grid, 'watch');
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">No featured watches available.</div>';
             }
         }
 
@@ -1882,7 +1729,7 @@
                 const thirtyDaysAgo = getThirtyDaysAgoISO();
 
                 let query = supabaseClient
-                    .from('products')
+                    .from('mainspring_products')
                     .select('*', { count: 'exact' })
                     .eq('category', 'accessory');
 
@@ -1937,7 +1784,9 @@
                 updateAccessoryPagination();
             } catch (error) {
                 console.error('Error loading accessories:', error);
-                renderDemoProducts(grid, 'accessory');
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--gray); font-size: 1.1rem;">No products found.</div>';
+                totalAccessoryProducts = 0;
+                updateAccessoryPagination();
             }
         }
 
@@ -1963,7 +1812,29 @@
         }
 
         // Show product detail
-        async function showProductDetail(productIdentifier, skipPushState = false) {
+        // Accepts either (productIdentifier, skipPushState) or (event, productIdentifier, skipPushState)
+        async function showProductDetail(evtOrId, maybeId, maybeSkip) {
+            let event = null;
+            let productIdentifier;
+            let skipPushState = false;
+
+            // Detect calling signature
+            if (evtOrId && (evtOrId instanceof Event || (typeof evtOrId === 'object' && ('metaKey' in evtOrId || 'ctrlKey' in evtOrId || 'button' in evtOrId)))) {
+                event = evtOrId;
+                productIdentifier = maybeId;
+                skipPushState = !!maybeSkip;
+            } else {
+                productIdentifier = evtOrId;
+                skipPushState = !!maybeId;
+            }
+
+            // If the user used Cmd/Ctrl click or middle mouse button, open detail in a new tab using a real URL
+            if (event && (event.metaKey || event.ctrlKey || event.button === 1)) {
+                const url = window.location.pathname + `?page=detail&product=${encodeURIComponent(productIdentifier)}`;
+                window.open(url, '_blank');
+                return;
+            }
+
             showPage('detail', true);
 
             // Push history immediately (before async load) so back/forward works correctly
@@ -1982,7 +1853,7 @@
             try {
                 const thirtyDaysAgo = getThirtyDaysAgoISO();
                 let query = supabaseClient
-                    .from('products')
+                    .from('mainspring_products')
                     .select('*')
                     .or(`status.eq.available,and(status.eq.sold,updated_at.gte.${thirtyDaysAgo})`);
 
@@ -2479,7 +2350,7 @@
             try {
                 // First, try to get products from the same brand
                 const { data: sameBrandProducts, error: brandError } = await supabaseClient
-                    .from('products')
+                    .from('mainspring_products')
                     .select('*')
                     .eq('brand', brand)
                     .neq('id', currentProductId)
@@ -2492,7 +2363,7 @@
                 // If we don't have enough products from the same brand, get some from other brands
                 if (recommendations.length < 4) {
                     const { data: otherProducts, error: otherError } = await supabaseClient
-                        .from('products')
+                        .from('mainspring_products')
                         .select('*')
                         .neq('brand', brand)
                         .neq('id', currentProductId)
@@ -2523,7 +2394,7 @@
 
                 return `
                 <div class="product-card">
-                    <div class="product-image" onclick="showProductDetail('${product.reference_code || product.id}')">
+                    <div class="product-image" onclick="showProductDetail(event, '${product.reference_code || product.id}')">
                         ${firstImage ?
                         `<img src="${firstImage}" alt="${displayBrand} ${displayName}" loading="lazy">` :
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
@@ -2531,7 +2402,7 @@
                     </div>
                     <div class="product-info">
                         <p class="product-brand">${displayBrand}</p>
-                        <h3 class="product-name" style="font-size: 1rem;" onclick="showProductDetail('${product.reference_code || product.id}')">${displayName}</h3>
+                        <h3 class="product-name" style="font-size: 1rem;" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
                         ${product.condition ? `<p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 8px;">${product.condition}</p>` : ''}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                     </div>
@@ -2605,7 +2476,7 @@
                 const to = from + 8;
 
                 const { data, error, count } = await supabaseClient
-                    .from('blog')
+                    .from('mainspring_blog')
                     .select('*', { count: 'exact' })
                     .eq('status', 'published')
                     .order('published_at', { ascending: false })
@@ -2687,7 +2558,7 @@
 
             try {
                 const isNumeric = /^\d+$/.test(String(slugOrId));
-                let query = supabaseClient.from('blog').select('*');
+                let query = supabaseClient.from('mainspring_blog').select('*');
                 if (isNumeric) {
                     query = query.eq('id', slugOrId);
                 } else {
@@ -2700,7 +2571,7 @@
 
                 // Increment views
                 if (data.id) {
-                    supabaseClient.from('blog').update({ views: (data.views || 0) + 1 }).eq('id', data.id).then(() => { });
+                    supabaseClient.from('mainspring_blog').update({ views: (data.views || 0) + 1 }).eq('id', data.id).then(() => { });
                 }
 
                 const date = data.published_at ? new Date(data.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
@@ -3204,7 +3075,7 @@
                 const track = document.getElementById('reviewsTrack');
                 try {
                     const { data: reviews, error } = await supabaseClient
-                        .from('reviews')
+                        .from('mainspring_reviews')
                         .select('first_name, last_name, content, star_rating');
 
                     if (error) throw error;

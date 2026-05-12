@@ -80,7 +80,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const { error: updateError } = await supabaseAdmin
-      .from("orders")
+      .from("mainspring_orders")
       .update({
         payment_status: paymentStatus,
         payment_gateway_id: chargeId,

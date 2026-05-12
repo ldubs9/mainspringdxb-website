@@ -36,7 +36,7 @@ Deno.serve(async (req: Request) => {
 
     // Lookup order — must match BOTH ref and phone
     const { data: order, error } = await supabaseAdmin
-      .from("orders")
+      .from("mainspring_orders")
       .select("order_ref, items, subtotal_aed, total_aed, surcharge_pct, payment_method, payment_status, order_status, tracking_number, created_at")
       .eq("order_ref", order_ref)
       .eq("customer_phone", cleanPhone)
@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
 
     // Get status history
     const { data: history } = await supabaseAdmin
-      .from("order_status_history")
+      .from("mainspring_order_status_history")
       .select("new_status, note, created_at")
       .eq("order_id", order_ref)  // This won't work — we need the UUID
       .order("created_at", { ascending: true });

@@ -46,7 +46,7 @@ Deno.serve(async (req: Request) => {
 
     // --- Calculate totals server-side (NEVER trust client totals) ---
     // In production, fetch actual prices from your products table:
-    // const { data: products } = await supabase.from('products').select('id, price').in('id', items.map(i => i.id));
+    // const { data: products } = await supabase.from('mainspring_products').select('id, price').in('id', items.map(i => i.id));
     // For now, we use the prices from the request but you SHOULD validate against DB prices.
     const subtotal = items.reduce(
       (sum: number, item: { price: number; qty: number }) => sum + item.price * item.qty,
@@ -69,7 +69,7 @@ Deno.serve(async (req: Request) => {
 
     // Insert order
     const { data: order, error: insertError } = await supabaseAdmin
-      .from("orders")
+      .from("mainspring_orders")
       .insert({
         order_ref: orderRef,
         customer_name: customer_name.substring(0, 200),
@@ -104,7 +104,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Log initial status
-    await supabaseAdmin.from("order_status_history").insert({
+    await supabaseAdmin.from("mainspring_order_status_history").insert({
       order_id: order.id,
       old_status: null,
       new_status: "pending",
