@@ -3841,17 +3841,26 @@
         .swiftloop-credit {
             margin-top: 0;
             font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.3);
+            color: var(--gold) !important;
         }
 
         .swiftloop-credit a {
-            color: rgba(255, 255, 255, 0.3);
+            color: var(--gold) !important;
             text-decoration: none;
             transition: var(--transition);
         }
 
+        /* Footer social icons: gold color, +40% size, remove underline */
+        .footer .footer-brand > div a,
+        .footer .footer-brand > div a i {
+            color: var(--gold) !important;
+            font-size: 1.rem !important;
+            text-decoration: none !important;
+            transition: var(--transition);
+        }
+
         .swiftloop-credit a:hover {
-            color: var(--gold);
+            color: rgba(255, 255, 255, 0.709) !important;
         }
 
         /* Loading State */
@@ -5036,14 +5045,24 @@
         .contact-social-icon {
             width: 42px;
             height: 42px;
-            border: 1px solid var(--cream-dark);
+            border: none; /* removed box outline */
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--gray);
-            font-size: 1rem;
+            padding: 0;
+            line-height: 1;
             text-decoration: none;
             transition: var(--transition);
+        }
+
+        .contact-social-icon i {
+            font-size: 34px; /* match the box size so the glyph fills it */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .contact-social-icon:hover {
