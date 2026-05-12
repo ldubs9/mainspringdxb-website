@@ -2,7 +2,7 @@ name: igfetch Daily
 
 on:
   schedule:
-    - cron: '0 0 * * *' # daily at 00:00 UTC
+    - cron: '0 0 */3 * *' # every 3 days (~72 hours) at 00:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -25,7 +25,7 @@ jobs:
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: |
-          python3 scripts/igfetch_fetch.py --username mainspring.dxb --count 6
+          python3 scripts/igfetch_fetch.py --username mainspring.dxb --count 10
 
       - name: Commit and push updates
         env:

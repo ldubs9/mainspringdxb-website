@@ -15,7 +15,7 @@ import json
 import requests
 import sys
 
-def fetch_user_posts_looter(username="mainspring.dxb", limit=6):
+def fetch_user_posts_looter(username="mainspring.dxb", limit=10):
     api_key = os.environ.get('RAPIDAPI_KEY')
     if not api_key:
         print("ERROR: RAPIDAPI_KEY environment variable not set")
@@ -159,6 +159,6 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--username","-u", default="mainspring.dxb")
-    parser.add_argument("--count","-c", type=int, default=6)
+    parser.add_argument("--count","-c", type=int, default=10)
     args = parser.parse_args()
     fetch_user_posts_looter(username=args.username, limit=args.count)

@@ -2020,7 +2020,7 @@
 
         .instagram-item {
             min-width: 400px;
-            background: white;
+            background: transparent;
             position: relative;
             overflow: visible;
             cursor: pointer;
@@ -2036,14 +2036,15 @@
         }
 
         /* Mask over Instagram engagement buttons (inside iframe, can't target directly) */
+        /* Removed the opaque bottom mask so embeds aren't blocked */
         .instagram-item::after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 155px;
-            background: var(--white);
+            height: 0;
+            background: transparent;
             pointer-events: none;
             z-index: 10;
         }
