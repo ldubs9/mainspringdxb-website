@@ -385,7 +385,9 @@
             `;
 
             try {
-                const res = await fetch(EDGE_FN_URL + '/ziina-checkout', {
+                const checkoutEndpoint = window.ZIINA_CHECKOUT_URL || (EDGE_FN_URL + '/ziina-checkout');
+
+                const res = await fetch(checkoutEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

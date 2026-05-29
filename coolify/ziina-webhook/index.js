@@ -9,7 +9,6 @@ app.use(bodyParser.json());
 const ZIINA_API_KEY = process.env.MAINSPRING_ZIINA_API_KEY;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const SKIP_VERIFY = process.env.SKIP_ZIINA_VERIFY === 'true';
 
 app.post('/', async (req, res) => {
   try {
@@ -17,28 +16,22 @@ app.post('/', async (req, res) => {
     const paymentIntentId = payload.id || payload.payment_intent_id;
     if (!paymentIntentId) return res.status(400).send('Missing payment_intent_id');
 
-    let intent;
-    if (!SKIP_VERIFY) {
-      if (!ZIINA_API_KEY) {
-        console.error('MAINSPRING_ZIINA_API_KEY not set');
-        return res.status(500).send('Server config error');
-      }
-
-      // Verify by fetching the payment intent from Ziina
-      const verifyResp = await fetch(`https://api-v2.ziina.com/api/payment_intent/${encodeURIComponent(paymentIntentId)}`, {
-        headers: { Authorization: `Bearer ${ZIINA_API_KEY}` },
-      });
-
-      if (!verifyResp.ok) {
-        console.error('Failed to verify Ziina payment intent', await verifyResp.text());
-        return res.status(502).send('Verification failed');
-      }
-
-      intent = await verifyResp.json();
-    } else {
-      // In dev mode we trust the webhook payload as the intent (useful for testing without Ziina access)
-      intent = payload;
+    if (!ZIINA_API_KEY) {
+      console.error('MAINSPRING_ZIINA_API_KEY not set');
+      return res.status(500).send('Server config error');
     }
+
+    // Verify by fetching the payment intent from Ziina
+    const verifyResp = await fetch(`https://api-v2.ziina.com/api/payment_intent/${encodeURIComponent(paymentIntentId)}`, {
+      headers: { Authorization: `Bearer ${ZIINA_API_KEY}` },
+    });
+
+    if (!verifyResp.ok) {
+      console.error('Failed to verify Ziina payment intent', await verifyResp.text());
+      return res.status(502).send('Verification failed');
+    }
+
+    const intent = await verifyResp.json();
 
     let paymentStatus;
     switch (intent.status) {
