@@ -48,8 +48,8 @@ supabase link --project-ref heblmjkgsuhwjffjrhrr
 Deploy all functions:
 ```bash
 supabase functions deploy create-order
-supabase functions deploy tap-checkout
-supabase functions deploy tap-webhook
+supabase functions deploy ziina-checkout
+supabase functions deploy ziina-webhook
 supabase functions deploy tabby-checkout
 supabase functions deploy tamara-checkout
 supabase functions deploy order-status
@@ -68,12 +68,15 @@ supabase functions deploy order-status
 supabase secrets set SITE_URL=https://mainspringdxb.com
 ```
 
-### For Tap Payments (Card):
-1. Sign up at https://tap.company
-2. Get your **Secret Key** from the Tap Dashboard
+### For Ziina (Card Payments):
+1. Log in to your Ziina Business account at https://business.ziina.com
+2. Copy your API key from the dashboard
 ```bash
-supabase secrets set TAP_SECRET_KEY=sk_live_xxxxxxxxxxxxxxxx
+supabase secrets set MAINSPRING_ZIINA_API_KEY=<your_ziina_api_key>
 ```
+> To register the webhook so Ziina can notify you of payment events:
+> Go to your Ziina dashboard → Webhooks → add the URL:
+> `https://<your-project-ref>.supabase.co/functions/v1/ziina-webhook`
 
 ### For Tabby (BNPL):
 1. Apply at https://tabby.ai/business
@@ -115,13 +118,15 @@ In `index.html`, search for "Emirates NBD" and "AE00 0000" and replace with your
 3. Customer confirms via WhatsApp
 4. You manually update order status in Supabase Dashboard
 
-### Tap (Card):
+### Ziina (Card):
 1. Customer fills details → selects Card → order created in DB
-2. Edge Function creates Tap charge → returns hosted payment URL
-3. Customer is redirected to Tap's secure page → enters card
-4. Tap processes payment → sends webhook to `tap-webhook` Edge Function
-5. Webhook verifies with Tap API → updates order to "paid"
-6. Customer is redirected back to your site → sees success message
+2. Edge Function calls Ziina `POST /payment_intent` → returns hosted payment URL
+3. Customer is redirected to Ziina's secure hosted page → enters card
+4. Ziina processes payment → sends webhook to `ziina-webhook` Edge Function
+5. Webhook re-fetches the Payment Intent from Ziina API to verify status
+6. Order updated to "paid" → customer redirected back with `?status=ziina_success`
+
+**Testing:** Pass `test: true` when creating a Payment Intent to use Ziina's test mode — any card number, expiry, and CVV will work and no money is charged.
 
 ### Tabby / Tamara:
 1. Customer fills details → selects Tabby/Tamara → order created in DB
@@ -139,7 +144,7 @@ In `index.html`, search for "Emirates NBD" and "AE00 0000" and replace with your
 - **Server-side total calculation** — prices are validated server-side, never trusted from client
 - **Input sanitization** — all inputs are truncated and cleaned
 - **Order lookup requires phone + ref** — prevents order enumeration
-- **Webhook verification** — Tap webhooks are verified by calling Tap API back
+- **Webhook verification** — Ziina webhooks are verified by re-fetching the Payment Intent from Ziina API
 - **Service role isolation** — only Edge Functions use the service_role key
 
 ---
@@ -149,10 +154,10 @@ In `index.html`, search for "Emirates NBD" and "AE00 0000" and replace with your
 ### Without payment gateway accounts:
 The checkout flow works immediately for **Bank Transfer** and **Cash** payments. These don't require any external accounts.
 
-For **Tap/Tabby/Tamara**, the system gracefully falls back to a WhatsApp confirmation flow until you set up the API keys.
+For **Ziina/Tabby/Tamara**, the system gracefully falls back to a WhatsApp confirmation flow until you set up the API keys.
 
 ### With sandbox accounts:
-- Tap: Use test cards from https://developers.tap.company/reference/testing
+- Ziina: Add `"test": true` to the Payment Intent body in `ziina-checkout/index.ts` — any card details work, no charge made
 - Tabby: Use sandbox credentials from Tabby dashboard
 - Tamara: Set `TAMARA_API_URL` to sandbox URL
 

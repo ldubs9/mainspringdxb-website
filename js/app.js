@@ -242,11 +242,11 @@
 
                 <p class="payment-method-label">Select Payment Method</p>
                 <div class="payment-methods">
-                    <div class="payment-method" onclick="selectPayment('tap_card', this)">
+                    <div class="payment-method" onclick="selectPayment('ziina', this)">
                         <div class="payment-method-icon"><i class="fas fa-credit-card"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Card Payment</div>
-                            <div class="payment-method-desc">Visa, Mastercard, Amex — secure via Tap</div>
+                            <div class="payment-method-desc">Visa, Mastercard, Amex — secure via Ziina</div>
                             <div class="payment-method-surcharge">+3% surcharge</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${cardTotal}">${formatPrice(cardTotal)}</div>
@@ -347,8 +347,8 @@
                 // Route to the appropriate payment flow
                 checkoutStep = 3;
 
-                if (selectedPaymentMethod === 'tap_card') {
-                    await handleTapPayment(orderRef, customer);
+                if (selectedPaymentMethod === 'ziina') {
+                    await handleZiinaPayment(orderRef);
                 } else if (selectedPaymentMethod === 'tabby') {
                     await handleTabbyPayment(orderRef);
                 } else if (selectedPaymentMethod === 'tamara') {
@@ -373,7 +373,8 @@
         }
 
         // Tap card payment — redirect to Tap hosted checkout
-        async function handleTapPayment(orderRef, customer) {
+        // Ziina card payment — redirect to Ziina hosted checkout
+        async function handleZiinaPayment(orderRef) {
             const body = document.getElementById('checkoutBody');
             body.innerHTML = `
                 ${renderStepIndicator(3)}
@@ -384,38 +385,33 @@
             `;
 
             try {
-                const res = await fetch(EDGE_FN_URL + '/tap-checkout', {
+                const res = await fetch(EDGE_FN_URL + '/ziina-checkout', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + SUPABASE_KEY,
                     },
-                    body: JSON.stringify({
-                        order_ref: orderRef,
-                        customer_name: customer.name,
-                        customer_email: customer.email,
-                        customer_phone: customer.phone,
-                    }),
+                    body: JSON.stringify({ order_ref: orderRef }),
                 });
 
                 const data = await res.json();
 
                 if (data.payment_url) {
-                    // Redirect to Tap's secure hosted payment page
+                    // Redirect to Ziina's secure hosted payment page
                     window.location.href = data.payment_url;
                 } else {
                     throw new Error(data.error || 'Payment setup failed');
                 }
             } catch (err) {
-                // Fallback: show WhatsApp option if Tap isn't configured yet
+                // Fallback: show WhatsApp option if Ziina isn't reachable
                 body.innerHTML = `
                     ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
                         <i class="fas fa-credit-card"></i>
                         <h4>Card Payment</h4>
                         <p>Your order <strong>${orderRef}</strong> has been created.</p>
-                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Card payment gateway is being set up. Please contact us via WhatsApp to arrange secure card payment.</p>
-                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tap_card', '${orderRef}')"><i class="fab fa-whatsapp"></i> Arrange Payment via WhatsApp</button>
+                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Card payment gateway is unavailable. Please contact us via WhatsApp to arrange secure card payment.</p>
+                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('ziina', '${orderRef}')"><i class="fab fa-whatsapp"></i> Arrange Payment via WhatsApp</button>
                     </div>
                 `;
             }
@@ -557,7 +553,7 @@
             const methodNames = {
                 bank_transfer: 'Bank Transfer',
                 cash: 'Cash on Delivery',
-                tap_card: 'Card Payment (Tap)',
+                ziina: 'Card Payment (Ziina)',
                 tabby: 'Tabby (BNPL)',
                 tamara: 'Tamara (BNPL)'
             };
@@ -581,7 +577,7 @@
             const body = document.getElementById('checkoutBody');
             document.getElementById('checkoutOverlay').classList.add('active');
 
-            if (status.includes('success') || status === 'tap_complete') {
+            if (status.includes('success') || status === 'tap_complete' || status === 'ziina_success') {
                 body.innerHTML = `
                     ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
@@ -665,7 +661,7 @@
                 const methodNames = {
                     bank_transfer: 'Bank Transfer',
                     cash: 'Cash on Delivery',
-                    tap_card: 'Card (Tap)',
+                    ziina: 'Card (Ziina)',
                     tabby: 'Tabby',
                     tamara: 'Tamara'
                 };
@@ -1396,8 +1392,8 @@
                     }
                     </div>
                     <div class="product-info">
-                        <p class="product-brand">${displayBrand}</p>
                         <h3 class="product-name" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
+                        <p class="product-brand">${displayBrand}</p>
                         ${additionalInfo}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                         <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
@@ -2401,8 +2397,8 @@
                     }
                     </div>
                     <div class="product-info">
-                        <p class="product-brand">${displayBrand}</p>
                         <h3 class="product-name" style="font-size: 1rem;" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
+                        <p class="product-brand">${displayBrand}</p>
                         ${product.condition ? `<p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 8px;">${product.condition}</p>` : ''}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                     </div>
@@ -3033,34 +3029,21 @@
             async function loadInstagramReels() {
                 const track = document.getElementById('instagramTrack');
 
-                    // Prefer local static data file generated by igfetch (data/instagram.json)
-                    try {
-                        const resp = await fetch('/data/instagram.json', { cache: 'no-cache' });
-                        if (resp.ok) {
-                            const posts = await resp.json();
-                            if (Array.isArray(posts) && posts.length) {
-                                // Use up to 10 most recent posts
-                                const urls = posts.slice(0, 10).map(p => p.url).filter(Boolean);
-                                instagramReelUrls.splice(0, instagramReelUrls.length, ...urls);
-                            }
-                        } else {
-                            console.log('Local instagram.json not available, falling back to backend endpoint.');
-                            // fallback to backend API if present
-                            try {
-                                const response = await fetch('/api/instagram-posts', { method: 'GET', headers: { 'Content-Type': 'application/json' } });
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    if (data.posts && Array.isArray(data.posts)) {
-                                        instagramReelUrls.splice(0, instagramReelUrls.length, ...data.posts.slice(0,10));
-                                    }
-                                }
-                            } catch (e) {
-                                console.log('Backend Instagram API not available. Using configured URLs.');
-                            }
+                // Try to fetch latest post URLs from backend (optional)
+                try {
+                    const response = await fetch('/api/instagram-posts', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.posts && Array.isArray(data.posts)) {
+                            instagramReelUrls.splice(0, instagramReelUrls.length, ...data.posts);
                         }
-                    } catch (e) {
-                        console.log('Error loading local instagram.json, using configured URLs.', e);
                     }
+                } catch (e) {
+                    console.log('Note: Backend Instagram API not available. Using configured URLs.');
+                }
 
                 // Render Instagram embeds
                 if (instagramReelUrls.length === 0) {

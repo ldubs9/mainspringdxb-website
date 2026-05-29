@@ -2828,7 +2828,7 @@
             flex: 1;
         }
 
-        .product-brand {
+        .product-name {
             font-size: 0.72rem;
             letter-spacing: 0.14em;
             text-transform: uppercase;
@@ -2837,7 +2837,7 @@
             font-weight: 500;
         }
 
-        .product-name {
+        .product-brand {
             font-family: 'Fraunces', serif;
             font-size: 1.15rem;
             font-weight: 400;
