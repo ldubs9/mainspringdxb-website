@@ -1084,12 +1084,10 @@
             resultsContainer.innerHTML = '<div style="grid-column:1/-1;"><div class="loading"><div class="loading-spinner"></div></div></div>';
 
             try {
-                const thirtyDaysAgo = getThirtyDaysAgoISO();
                 const { data, error } = await supabaseClient
                     .from('mainspring_products')
                     .select('*')
-                    .or(`name.ilike.%${q}%,brand.ilike.%${q}%,model.ilike.%${q}%,reference_number.ilike.%${q}%`)
-                    .or(`status.eq.available,and(status.eq.sold,updated_at.gte.${thirtyDaysAgo})`)
+                    .or(`name.ilike.%${q}%,brand.ilike.%${q}%,model.ilike.%${q}%,reference_number.ilike.%${q}%,reference_code.ilike.%${q}%`)
                     .order('status', { ascending: true })
                     .limit(40);
 
@@ -1311,7 +1309,7 @@
                     if (genderFilter) q = q.eq('gender', genderFilter);
                     if (movementFilter) q = q.eq('movement', movementFilter);
                     if (countryFilter) q = q.eq('country', countryFilter);
-                    if (searchTerm) q = q.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`);
+                    if (searchTerm) q = q.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%,reference_code.ilike.%${searchTerm}%,reference_number.ilike.%${searchTerm}%`);
                     if (priceFilter) {
                         if (priceFilter.includes('+')) {
                             q = q.gte('price', parseInt(priceFilter.replace('+', '')));
@@ -1333,7 +1331,8 @@
                 } else if (sortBy === 'price-high') {
                     dataQuery = dataQuery.order('price', { ascending: false });
                 } else {
-                    dataQuery = dataQuery.order('id', { ascending: false });
+                    // Default: highest reference_code first
+                    dataQuery = dataQuery.order('reference_code', { ascending: false, nullsFirst: false });
                 }
                 dataQuery = dataQuery.range(from, to);
 
@@ -1437,9 +1436,9 @@
                     .from('mainspring_products')
                     .select('*')
                     .eq('category', 'watch')
-                    .or(`status.eq.available,and(status.eq.sold,updated_at.gte.${getThirtyDaysAgoISO()})`)
+                    .in('status', ['available', 'reserved'])
                     .order('status', { ascending: true })
-                    .order('id', { ascending: false })
+                    .order('reference_code', { ascending: false, nullsFirst: false })
                     .limit(12);
 
                 const { data, error } = await query;
@@ -1846,14 +1845,12 @@
             // Determine if identifier is a numeric ID or a reference_number string
             const isNumericId = /^\d+$/.test(String(productIdentifier));
 
-            // Try to load from Supabase first (include available and recently sold)
+            // Try to load from Supabase first (fetch by ID or reference_code, no status filter)
             let product = null;
             try {
-                const thirtyDaysAgo = getThirtyDaysAgoISO();
                 let query = supabaseClient
                     .from('mainspring_products')
-                    .select('*')
-                    .or(`status.eq.available,and(status.eq.sold,updated_at.gte.${thirtyDaysAgo})`);
+                    .select('*');
 
                 if (isNumericId) {
                     query = query.eq('id', productIdentifier);
@@ -1904,6 +1901,8 @@
             const refNumber = product.reference_number || '';
 
             currentProduct = product;
+            // Reset gallery index so the new product always starts at the first image
+            currentImageIndex = 0;
             // image_urls is an array — use it directly for the gallery
             productImages = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls : [];
 
