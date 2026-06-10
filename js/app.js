@@ -1087,7 +1087,7 @@
                 const { data, error } = await supabaseClient
                     .from('mainspring_products')
                     .select('*')
-                    .or(`name.ilike.%${q}%,brand.ilike.%${q}%,model.ilike.%${q}%,reference_number.ilike.%${q}%,reference_code.ilike.%${q}%`)
+                    .or(`name.ilike.*${q}*,brand.ilike.*${q}*,model.ilike.*${q}*,reference_number.ilike.*${q}*,reference_code.ilike.*${q}*`)
                     .order('status', { ascending: true })
                     .limit(40);
 
@@ -1309,7 +1309,7 @@
                     if (genderFilter) q = q.eq('gender', genderFilter);
                     if (movementFilter) q = q.eq('movement', movementFilter);
                     if (countryFilter) q = q.eq('country', countryFilter);
-                    if (searchTerm) q = q.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%,reference_code.ilike.%${searchTerm}%,reference_number.ilike.%${searchTerm}%`);
+                    if (searchTerm) q = q.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*,reference_code.ilike.*${searchTerm}*,reference_number.ilike.*${searchTerm}*`);
                     if (priceFilter) {
                         if (priceFilter.includes('+')) {
                             q = q.gte('price', parseInt(priceFilter.replace('+', '')));
@@ -1747,7 +1747,7 @@
 
                 // Apply search (across name, brand, and model)
                 if (searchTerm) {
-                    query = query.or(`name.ilike.%${searchTerm}%,brand.ilike.%${searchTerm}%,model.ilike.%${searchTerm}%`);
+                    query = query.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*`);
                 }
 
                 // Apply sorting — always sort available before sold first
@@ -1832,15 +1832,15 @@
                 return;
             }
 
+            const detailInfo = document.getElementById('detailInfo');
+            detailInfo.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+
             showPage('detail', true);
 
             // Push history immediately (before async load) so back/forward works correctly
             if (!skipPushState) {
                 history.pushState({ page: 'detail', productId: productIdentifier }, '', `?page=detail&product=${encodeURIComponent(productIdentifier)}`);
             }
-
-            const detailInfo = document.getElementById('detailInfo');
-            detailInfo.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
 
             // Determine if identifier is a numeric ID or a reference_number string
             const isNumericId = /^\d+$/.test(String(productIdentifier));
@@ -2021,7 +2021,7 @@
             `;
 
             // Load recommendations
-            loadRecommendations(product.brand, product.id);
+            loadRecommendations(product);
 
             // Update URL with resolved reference_code if it differs from what was initially pushed
             const urlIdentifier = product.reference_code || product.id;
@@ -2338,36 +2338,83 @@
         }
 
         // Load recommendations
-        async function loadRecommendations(brand, currentProductId) {
+        async function loadRecommendations(currentProduct) {
             const grid = document.getElementById('recommendationsGrid');
             grid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
 
             let recommendations = [];
 
             try {
-                // First, try to get products from the same brand
-                const { data: sameBrandProducts, error: brandError } = await supabaseClient
+                const currentProductId = currentProduct.id;
+                const category = currentProduct.category;
+                const subcategory = currentProduct.subcategory;
+                const price = currentProduct.price;
+                const brand = currentProduct.brand;
+                const year = currentProduct.watch_year || currentProduct.year;
+
+                // 1. Try to get products from the same category first
+                const { data: sameCategoryProducts, error: categoryError } = await supabaseClient
                     .from('mainspring_products')
                     .select('*')
-                    .eq('brand', brand)
+                    .eq('category', category)
                     .neq('id', currentProductId)
                     .limit(4);
 
-                if (!brandError && sameBrandProducts) {
-                    recommendations = sameBrandProducts;
+                if (!categoryError && sameCategoryProducts && sameCategoryProducts.length > 0) {
+                    recommendations = sameCategoryProducts;
                 }
 
-                // If we don't have enough products from the same brand, get some from other brands
-                if (recommendations.length < 4) {
-                    const { data: otherProducts, error: otherError } = await supabaseClient
+                // 2. If not enough, try to get products from the same subcategory
+                if (recommendations.length < 4 && subcategory) {
+                    const { data: sameSubcategoryProducts, error: subcategoryError } = await supabaseClient
                         .from('mainspring_products')
                         .select('*')
-                        .neq('brand', brand)
+                        .eq('subcategory', subcategory)
                         .neq('id', currentProductId)
                         .limit(4 - recommendations.length);
 
-                    if (!otherError && otherProducts) {
-                        recommendations = [...recommendations, ...otherProducts];
+                    if (!subcategoryError && sameSubcategoryProducts) {
+                        // Add only products not already in recommendations
+                        const recommendedIds = new Set(recommendations.map(p => p.id));
+                        const newProducts = sameSubcategoryProducts.filter(p => !recommendedIds.has(p.id));
+                        recommendations = [...recommendations, ...newProducts];
+                    }
+                }
+
+                // 3. If still not enough, get products by similar factors (brand, price range, year)
+                if (recommendations.length < 4) {
+                    const recommendedIds = new Set(recommendations.map(p => p.id));
+                    let additionalQuery = supabaseClient
+                        .from('mainspring_products')
+                        .select('*')
+                        .neq('id', currentProductId);
+
+                    // Prefer same brand
+                    if (brand) {
+                        additionalQuery = additionalQuery.eq('brand', brand);
+                    }
+
+                    const { data: similarProducts, error: similarError } = await additionalQuery
+                        .limit(4 - recommendations.length);
+
+                    if (!similarError && similarProducts) {
+                        const newProducts = similarProducts.filter(p => !recommendedIds.has(p.id));
+                        recommendations = [...recommendations, ...newProducts];
+                    }
+                }
+
+                // 4. If still not enough, just get any other products
+                if (recommendations.length < 4) {
+                    const recommendedIds = new Set(recommendations.map(p => p.id));
+                    const { data: anyProducts, error: anyError } = await supabaseClient
+                        .from('mainspring_products')
+                        .select('*')
+                        .neq('id', currentProductId)
+                        .limit(4 - recommendations.length);
+
+                    if (!anyError && anyProducts) {
+                        const newProducts = anyProducts.filter(p => !recommendedIds.has(p.id));
+                        recommendations = [...recommendations, ...newProducts];
                     }
                 }
             } catch (e) {
@@ -2376,7 +2423,7 @@
 
             // Display recommendations or show message if none available
             if (recommendations.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><p style="color: var(--gray);">No similar watches available at this time.</p></div>';
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px;"><p style="color: var(--gray);">No similar items available at this time.</p></div>';
                 return;
             }
 
