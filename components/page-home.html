@@ -1,8 +1,11 @@
         <section class="page-section active" id="page-home">
-            <!-- Hero -->
-            <div class="hero">
-                <!-- Slideshow Background -->
-                <div class="hero-slideshow">
+
+            <!-- ============================================================
+                 HERO — fullscreen cinematic
+            ============================================================= -->
+            <div class="ms-hero" id="msHero">
+                <!-- Slideshow Background (classes preserved for app.js slideshow) -->
+                <div class="hero-slideshow ms-hero-media" id="msHeroMedia">
                     <div class="slideshow-slides">
                         <div class="slideshow-slide active" style="background-image: url('slideshow-1.jpg');"></div>
                         <div class="slideshow-slide" style="background-image: url('slideshow-2.jpg');"></div>
@@ -10,21 +13,54 @@
                         <div class="slideshow-slide" style="background-image: url('slideshow-4.jpg');"></div>
                         <div class="slideshow-slide" style="background-image: url('slideshow-5.jpg');"></div>
                     </div>
+                    <div class="ms-hero-scrim"></div>
+                    <div class="ms-hero-grain"></div>
                 </div>
 
-                <div class="hero-content">
-                    <h1 class="hero-title">Your Partners in Horology</h1>
-                    <p class="hero-tagline" style="font-family: 'Space Grotesk', sans-serif; font-size: 0.95rem; color: rgba(255,255,255,0.7); letter-spacing: 0.08em; margin-bottom: 24px; font-style: normal; font-weight: 300; animation: slideUp 1s ease 0.15s both;">Your guide to better watches.</p>
-                    <div class="hero-subtitle-container">
-                        <span class="subtitle-item">Authentication</span>
-                        <span class="subtitle-separator">&middot;</span>
-                        <span class="subtitle-item">Curation</span>
-                        <span class="subtitle-separator">&middot;</span>
-                        <span class="subtitle-item">Community</span>
+                <div class="ms-hero-frame">
+                    <span class="ms-hero-corner tl"></span>
+                    <span class="ms-hero-corner tr"></span>
+                    <span class="ms-hero-corner bl"></span>
+                    <span class="ms-hero-corner br"></span>
+                </div>
+
+                <div class="ms-hero-rail ms-hero-rail-left">
+                    <span>Dubai &middot; UAE</span>
+                </div>
+                <div class="ms-hero-rail ms-hero-rail-right">
+                    <span>Est. for the obsessed</span>
+                </div>
+
+                <div class="ms-hero-inner">
+                    <div class="ms-hero-eyebrow" data-hero="eyebrow">
+                        <span class="ms-eyebrow-dot"></span>
+                        Your personal guide to better watches
                     </div>
-                    <a href="#" class="hero-cta" onclick="event.preventDefault(); showPage('watches');">Explore the Collection</a>
-                    <!-- Navigation Dots -->
-                    <div class="slideshow-dots">
+
+                    <h1 class="ms-hero-title" data-split="lines">Your Partners<br>in Horology</h1>
+
+                    <div class="ms-hero-meta" data-hero="meta">
+                        <div class="ms-hero-tags">
+                            <span>Authentication</span>
+                            <span class="ms-sep">/</span>
+                            <span>Curation</span>
+                            <span class="ms-sep">/</span>
+                            <span>Community</span>
+                        </div>
+                        <div class="ms-hero-actions">
+                            <a href="#" class="ms-btn ms-btn-solid" data-magnetic
+                                onclick="event.preventDefault(); showPage('watches');">
+                                <span>Explore the Collection</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                            <a href="#msFeatured" class="ms-btn ms-btn-ghost" data-magnetic>
+                                <span>View Featured</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Slideshow dots (preserved for app.js goToSlide) -->
+                    <div class="slideshow-dots ms-hero-dots">
                         <button class="dot active" onclick="goToSlide(0)"></button>
                         <button class="dot" onclick="goToSlide(1)"></button>
                         <button class="dot" onclick="goToSlide(2)"></button>
@@ -32,113 +68,213 @@
                         <button class="dot" onclick="goToSlide(4)"></button>
                     </div>
                 </div>
-                <div class="scroll-indicator">
-                    <i class="fas fa-chevron-down"></i>
+
+                <a href="#msManifesto" class="ms-hero-cue" aria-label="Scroll down">
+                    <span class="ms-cue-label">Scroll</span>
+                    <span class="ms-cue-line"></span>
+                </a>
+            </div>
+
+            <!-- ============================================================
+                 MARQUEE — kinetic ticker
+            ============================================================= -->
+            <div class="ms-marquee" aria-hidden="true">
+                <div class="ms-marquee-track">
+                    <span>Vintage</span><i>&#9733;</i><span>Authenticated</span><i>&#9733;</i><span>Pre-Owned</span><i>&#9733;</i><span>Warranted</span><i>&#9733;</i><span>Curated</span><i>&#9733;</i><span>Sourced</span><i>&#9733;</i>
+                    <span>Vintage</span><i>&#9733;</i><span>Authenticated</span><i>&#9733;</i><span>Pre-Owned</span><i>&#9733;</i><span>Warranted</span><i>&#9733;</i><span>Curated</span><i>&#9733;</i><span>Sourced</span><i>&#9733;</i>
                 </div>
             </div>
 
-            <!-- Featured Collection Section -->
-            <section class="featured-collection">
-                <div class="featured-container">
-                    <span class="section-label">New Arrivals</span>
-                    <h2 class="section-title">Featured Watches</h2>
-                    <p class="section-subtitle">Discover our latest curated selection</p>
+            <!-- ============================================================
+                 MANIFESTO — minimal editorial, word-by-word reveal
+            ============================================================= -->
+            <section class="ms-manifesto" id="msManifesto">
+                <div class="ms-manifesto-top">
+                    <span class="ms-index">(01)</span>
+                    <span class="ms-kicker">The Philosophy</span>
+                </div>
+                <p class="ms-manifesto-text" data-words>
+                    We believe great horology should be accessible to everyone — from a hundred-dollar
+                    vintage classic to a gold Patek. We authenticate, we curate, and we stand behind
+                    every second on your wrist.
+                </p>
+                <div class="ms-manifesto-foot">
+                    <a href="#" class="ms-link" onclick="event.preventDefault(); showPage('about');">
+                        <span>Our Story</span><i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </section>
 
+            <!-- ============================================================
+                 FEATURED — horizontal rail
+            ============================================================= -->
+            <section class="ms-featured" id="msFeatured">
+                <div class="ms-featured-head">
+                    <div class="ms-featured-head-left">
+                        <span class="ms-index">(02)</span>
+                        <h2 class="ms-section-title">New<br>Arrivals</h2>
+                        <p class="ms-section-sub">The latest pieces to enter the vault. Drag, scroll, explore.</p>
+                        <a href="#" class="ms-btn ms-btn-outline" data-magnetic
+                            onclick="event.preventDefault(); showPage('watches');">
+                            <span>All Watches</span><i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="ms-featured-scrollhint">
+                        <span class="ms-cue-line horiz"></span>
+                        <span>Drag</span>
+                    </div>
+                </div>
+
+                <div class="ms-featured-rail" id="msFeaturedRail">
+                    <!-- renderProducts() fills this grid; styled as a horizontal flex rail -->
                     <div class="featured-products-grid" id="featuredWatchesGrid">
                         <div class="loading">
                             <div class="loading-spinner"></div>
                         </div>
                     </div>
+                </div>
+            </section>
 
-                    <div class="featured-cta-container">
-                        <a href="#" class="featured-cta-btn" onclick="event.preventDefault(); showPage('watches');">
-                            Explore the Full Collection
+            <!-- ============================================================
+                 SHOWCASE — fullscreen parallax statement
+            ============================================================= -->
+            <section class="ms-showcase">
+                <div class="ms-showcase-media" style="background-image: url('collection-hero.jpg');"></div>
+                <div class="ms-showcase-scrim"></div>
+                <div class="ms-showcase-inner">
+                    <span class="ms-kicker light">Every second accounted for</span>
+                    <h2 class="ms-showcase-title" data-split="lines">
+                        Time, kept<br>honestly.
+                    </h2>
+                    <p class="ms-showcase-copy">
+                        Every timepiece undergoes a rigorous multi-point inspection before it reaches you.
+                        We only sell what we would wear ourselves.
+                    </p>
+                </div>
+                <div class="ms-showcase-caption">
+                    <span>01 / Multi-point inspection</span>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 SHOP — asymmetric split
+            ============================================================= -->
+            <section class="ms-shop">
+                <div class="ms-shop-block ms-shop-watches" onclick="showPage('watches'); trackClick('shop_watches')">
+                    <div class="ms-shop-bg" style="background-image: url('shop-block-dark.png');"></div>
+                    <div class="ms-shop-overlay"></div>
+                    <div class="ms-shop-body">
+                        <span class="ms-shop-num">A</span>
+                        <h3>Watches</h3>
+                        <p>Timepieces for every journey — whether you are just starting out or expanding the collection.</p>
+                        <span class="ms-shop-cta"><span>Shop Watches</span><i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </div>
+                <div class="ms-shop-block ms-shop-acc" onclick="showPage('accessories'); trackClick('shop_accessories')">
+                    <div class="ms-shop-bg" style="background-image: url('shop-block-light.png');"></div>
+                    <div class="ms-shop-overlay light"></div>
+                    <div class="ms-shop-body">
+                        <span class="ms-shop-num">B</span>
+                        <h3>Accessories</h3>
+                        <p>Premium straps, storage and care essentials to complete any collection.</p>
+                        <span class="ms-shop-cta"><span>Shop Accessories</span><i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 STANDARD — numbered editorial rows (dark)
+            ============================================================= -->
+            <section class="ms-standard">
+                <div class="ms-standard-head">
+                    <span class="ms-index light">(03)</span>
+                    <h2 class="ms-section-title light">The Mainspring<br>Standard</h2>
+                </div>
+                <div class="ms-standard-list">
+                    <div class="ms-standard-row" data-reveal>
+                        <span class="ms-row-num">01</span>
+                        <h3>Guaranteed Authenticity</h3>
+                        <p>Every piece, from a vintage classic to a gold Patek, undergoes rigorous multi-point inspection. We only sell what we would wear ourselves.</p>
+                        <span class="ms-row-icon"><i class="fas fa-certificate"></i></span>
+                    </div>
+                    <div class="ms-standard-row" data-reveal>
+                        <span class="ms-row-num">02</span>
+                        <h3>Fair Market Value</h3>
+                        <p>Transparent pricing that reflects true market value, whether it is your first purchase or your fiftieth. Great horology should be accessible.</p>
+                        <span class="ms-row-icon"><i class="fas fa-hand-holding-usd"></i></span>
+                    </div>
+                    <div class="ms-standard-row" data-reveal>
+                        <span class="ms-row-num">03</span>
+                        <h3>Personalised Sourcing</h3>
+                        <p>Looking for a birth-year watch or a specific reference? Our global network finds the exact piece you are searching for, at your budget.</p>
+                        <span class="ms-row-icon"><i class="fas fa-search-location"></i></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 STATS — animated counters
+            ============================================================= -->
+            <section class="ms-stats">
+                <div class="ms-stat" data-reveal>
+                    <span class="ms-stat-num" data-count="500" data-suffix="+">0</span>
+                    <span class="ms-stat-label">Watches placed</span>
+                </div>
+                <div class="ms-stat" data-reveal>
+                    <span class="ms-stat-num" data-count="12" data-suffix="-pt">0</span>
+                    <span class="ms-stat-label">Inspection points</span>
+                </div>
+                <div class="ms-stat" data-reveal>
+                    <span class="ms-stat-num" data-count="100" data-suffix="%">0</span>
+                    <span class="ms-stat-label">Authenticity guarantee</span>
+                </div>
+                <div class="ms-stat" data-reveal>
+                    <span class="ms-stat-num" data-count="24" data-suffix="/7">0</span>
+                    <span class="ms-stat-label">Concierge on WhatsApp</span>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 INSTAGRAM — carousel (track preserved for app.js)
+            ============================================================= -->
+            <section class="ms-ig">
+                <div class="ms-ig-head">
+                    <div>
+                        <span class="ms-kicker">@mainspring.dxb</span>
+                        <h2 class="ms-section-title">From the<br>Workshop</h2>
+                    </div>
+                    <a href="https://www.instagram.com/mainspring.dxb" target="_blank" class="ms-btn ms-btn-outline" data-magnetic>
+                        <span>Follow</span><i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+                <div class="instagram-carousel ms-ig-carousel">
+                    <div class="instagram-track" id="instagramTrack"></div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+                 CLOSER — dark full CTA (inquiry + community)
+            ============================================================= -->
+            <section class="ms-closer">
+                <div class="ms-closer-grain"></div>
+                <div class="ms-closer-inner">
+                    <span class="ms-kicker light">Can't find it? We'll hunt it down.</span>
+                    <h2 class="ms-closer-title" data-split="lines">Find your<br>dream watch.</h2>
+                    <p class="ms-closer-copy">
+                        A vintage piece, a specific reference, or something unlike anything else — tell us what
+                        you are chasing and let our global network track it down.
+                    </p>
+                    <div class="ms-closer-actions">
+                        <a href="https://wa.me/971585625042?text=Hi%20Mainspring%20Dubai%2C%20I%27m%20looking%20for%20a%20specific%20watch.%20Can%20you%20help%20me%20find%20it%3F"
+                            target="_blank" class="ms-btn ms-btn-solid ms-btn-wa" data-magnetic>
+                            <i class="fab fa-whatsapp"></i><span>Message on WhatsApp</span>
+                        </a>
+                        <a href="https://wa.me/971585625042?text=Hello%20Mainspring%20Dubai,%20I%20would%20like%20to%20join%20the%20community!"
+                            class="ms-btn ms-btn-ghost light" data-magnetic onclick="trackClick('join_community')">
+                            <span>Join the Community</span>
                         </a>
                     </div>
                 </div>
             </section>
 
-            <!-- Shop Section -->
-            <div class="shop-section">
-                <div class="shop-block" onclick="showPage('watches'); trackClick('shop_watches')">
-                    <div class="shop-block-bg"></div>
-                    <div class="shop-block-content">
-                        <h2>WATCHES</h2>
-                        <p>Discover timepieces for every journey — whether you're just starting out or expanding your collection.</p>
-                        <span class="shop-cta">Shop Now</span>
-                    </div>
-                </div>
-                <div class="shop-block" onclick="showPage('accessories'); trackClick('shop_accessories')">
-                    <div class="shop-block-bg"></div>
-                    <div class="shop-block-content">
-                        <h2>ACCESSORIES</h2>
-                        <p>Complete your collection with premium straps, storage, and care essentials for any watch.</p>
-                        <span class="shop-cta">Shop Accessories</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Trust Section (The Mainspring Standard) -->
-            <section class="trust-section">
-                <div class="trust-container">
-                    <span class="section-label" style="text-align: center; display: block;">The Mainspring Standard</span>
-                    <h2 class="section-title" style="text-align: center; margin-bottom: 60px;">Why Our Customers Trust Us</h2>
-                    
-                    <div class="trust-grid">
-                        <div class="trust-card">
-                            <div class="trust-icon"><i class="fas fa-certificate"></i></div>
-                            <h3>Guaranteed Authenticity</h3>
-                            <p>Every timepiece, from a $100 vintage classic to a gold Patek, undergoes rigorous multi-point inspection. We only sell what we would wear ourselves.</p>
-                        </div>
-                        <div class="trust-card">
-                            <div class="trust-icon"><i class="fas fa-hand-holding-usd"></i></div>
-                            <h3>Fair Market Value</h3>
-                            <p>Great horology should be accessible. Our pricing is transparent and reflects true market value, whether you're making your first purchase or your fiftieth.</p>
-                        </div>
-                        <div class="trust-card">
-                            <div class="trust-icon"><i class="fas fa-search-location"></i></div>
-                            <h3>Personalized Sourcing</h3>
-                            <p>Looking for a birth-year watch or a specific mid-range reference? Our global network finds the exact piece you're searching for, at your budget.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Instagram Section -->
-            <div class="instagram-section">
-                <div class="instagram-header">
-                    <h2>@MAINSPRING.DXB</h2>
-                    <a href="https://www.instagram.com/mainspring.dxb" target="_blank">Follow Us on Instagram</a>
-                </div>
-                <div class="instagram-carousel">
-                    <div class="instagram-track" id="instagramTrack">
-                        <!-- Instagram reels will be loaded here -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Specific Watch Inquiry Section -->
-            <div class="watch-inquiry-section">
-                <div class="watch-inquiry-content">
-                    <h2 class="inquiry-title">FIND YOUR DREAM WATCH</h2>
-                    <p class="inquiry-subtitle">Can't find what you're looking for? Whether it's a vintage piece, a
-                        specific model, or something unique — let us help you track it down.</p>
-                    <p class="inquiry-text">Is there a specific watch you're looking for?</p>
-                    <a href="https://wa.me/971585625042?text=Hi%20Mainspring%20Dubai%2C%20I%27m%20looking%20for%20a%20specific%20watch.%20Can%20you%20help%20me%20find%20it%3F"
-                        target="_blank" class="inquiry-whatsapp-btn">
-                        <i class="fab fa-whatsapp"></i> Message on WhatsApp
-                    </a>
-                </div>
-            </div>
-
-            <!-- WhatsApp Community Section -->
-            <div class="whatsapp-community">
-                <h2>JOIN OUR COMMUNITY</h2>
-                <p>Be the first to know about new arrivals, vintage finds, and special deals. Join our community of watch lovers at every level of passion.</p>
-                <a href="https://wa.me/971585625042?text=Hello%20Mainspring%20Dubai,%20I%20would%20like%20to%20join%20the%20community!"
-                    class="whatsapp-community-btn" onclick="trackClick('join_community')">
-                    <i class="fab fa-whatsapp"></i>
-                    Join Now
-                </a>
-            </div>
         </section>
