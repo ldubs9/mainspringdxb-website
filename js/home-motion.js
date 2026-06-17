@@ -148,14 +148,21 @@
                 }
             }, 2800);
 
-            // hero media parallax + scale on scroll
+            // hero media parallax + scale on scroll.
+            // The media layer is oversized with a top buffer in CSS (.ms-hero-media
+            // .slideshow-slides) so this downward travel never exposes the hero
+            // background at the top edge.
             gsap.to('#msHeroMedia .slideshow-slides', {
-                yPercent: 18, ease: 'none',
+                yPercent: 12, ease: 'none',
                 scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
             });
+            // Fade the hero copy as the hero scrolls away. Start at 'top top' (not
+            // 'center center'): when the hero is shorter than the viewport, a
+            // center-based start resolves to a negative scroll position, leaving
+            // the text stuck partially faded at the top of the page.
             gsap.to('#msHero .ms-hero-inner', {
                 yPercent: -8, opacity: 0.2, ease: 'none',
-                scrollTrigger: { trigger: hero, start: 'center center', end: 'bottom top', scrub: true }
+                scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
             });
         }
 

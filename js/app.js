@@ -1436,8 +1436,9 @@
                     .from('mainspring_products')
                     .select('*')
                     .eq('category', 'watch')
-                    .in('status', ['available', 'reserved'])
-                    .order('status', { ascending: true })
+                    // Live inventory uses status 'active' (the bulk), plus 'available'/'reserved'.
+                    // 'sold', 'archived' and 'draft' are intentionally excluded from the featured rail.
+                    .in('status', ['active', 'available', 'reserved'])
                     .order('reference_code', { ascending: false, nullsFirst: false })
                     .limit(12);
 
@@ -3066,52 +3067,48 @@
                 }, true);
             }
 
-            // Instagram post configuration - can be updated from backend
-            const instagramReelUrls = [
-                // Add Instagram post URLs here (e.g., https://www.instagram.com/p/ABC123/)
-                // This array will be populated from @mainspring.dxb posts
-                // Posts are shown instead of reels for Mainspring
-            ];
-
             // Load Instagram posts into carousel
+            function escapeHtml(str) {
+                return String(str || '').replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
             async function loadInstagramReels() {
                 const track = document.getElementById('instagramTrack');
 
-                // Try to fetch latest post URLs from backend (optional)
+                // Posts are produced by the igfetch GitHub Action, which writes
+                // data/instagram.json and downloads each post image into images/.
+                let posts = [];
                 try {
-                    const response = await fetch('/api/instagram-posts', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
+                    const response = await fetch('data/instagram.json', { cache: 'no-cache' });
                     if (response.ok) {
                         const data = await response.json();
-                        if (data.posts && Array.isArray(data.posts)) {
-                            instagramReelUrls.splice(0, instagramReelUrls.length, ...data.posts);
-                        }
+                        if (Array.isArray(data)) posts = data;
                     }
                 } catch (e) {
-                    console.log('Note: Backend Instagram API not available. Using configured URLs.');
+                    console.log('Note: could not load data/instagram.json.', e);
                 }
 
-                // Render Instagram embeds
-                if (instagramReelUrls.length === 0) {
+                if (posts.length === 0) {
                     track.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">Follow @mainspring.dxb on Instagram to see our latest content</div>';
                     return;
                 }
 
-                // Create Instagram embed items for each reel (duplicated for seamless infinite scroll)
-                const reelHtml = instagramReelUrls.map(url => `
-                    <div class="instagram-item">
-                        <blockquote class="instagram-media" data-instgrm-permalink="${url}?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style="background: #FFF; border: 0; border-radius: 3px; box-shadow: 0 0 1px 0 rgba(0,0,0,0.5), 0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width: 100%; padding: 0; width: 100%;"></blockquote>
-                    </div>
-                `).join('');
-                // Duplicate the set so scrolling wraps seamlessly from last to first
-                track.innerHTML = reelHtml + reelHtml;
-
-                // Process Instagram embeds
-                if (window.instgrm && window.instgrm.Embeds) {
-                    window.instgrm.Embeds.process();
-                }
+                // Render the locally cached images, each linking to its real
+                // Instagram post. Duplicated so the drag carousel wraps seamlessly.
+                const itemHtml = posts.map(post => {
+                    const url = post.url || 'https://www.instagram.com/mainspring.dxb';
+                    const img = post.image_url || '';
+                    const cap = escapeHtml((post.caption || '').slice(0, 140));
+                    return `
+                    <a class="instagram-item" href="${escapeHtml(url)}" target="_blank" rel="noopener" aria-label="${cap || 'View Instagram post'}">
+                        <div class="ms-ig-media">
+                            <img src="${escapeHtml(img)}" alt="${cap}" loading="lazy" draggable="false">
+                        </div>
+                    </a>`;
+                }).join('');
+                track.innerHTML = itemHtml + itemHtml;
             }
 
             // Load reviews from Supabase and render into carousel

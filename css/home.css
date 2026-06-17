@@ -158,8 +158,7 @@
 ============================================================================ */
 .ms-hero {
     position: relative;
-    min-height: 100vh;
-    min-height: 100svh;
+    min-height: clamp(500px, 74vh, 720px);
     display: flex;
     align-items: flex-end;
     overflow: hidden;
@@ -167,8 +166,10 @@
     isolation: isolate;
 }
 
-.ms-hero-media { position: absolute; inset: 0; z-index: 0; }
-.ms-hero-media .slideshow-slides,
+.ms-hero-media { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+/* Oversize the slides with a top buffer so the scroll parallax (translateY down)
+   never exposes the hero background at the top edge. */
+.ms-hero-media .slideshow-slides { height: 130%; top: -16%; }
 .ms-hero-media .slideshow-slide { height: 100%; }
 .ms-hero-media .slideshow-slide { transform-origin: center; }
 
