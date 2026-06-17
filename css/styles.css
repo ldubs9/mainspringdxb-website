@@ -1967,12 +1967,17 @@
         }
 
         .instagram-track {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            display: flex;
             gap: 16px;
             padding: 0 var(--ms-pad);
-            max-width: 1400px;
-            margin: 0 auto;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .instagram-track::-webkit-scrollbar {
+            display: none;
         }
 
         .instagram-item {
@@ -1980,6 +1985,8 @@
             position: relative;
             overflow: hidden;
             cursor: pointer;
+            flex: 0 0 300px;
+            scroll-snap-align: start;
         }
 
         .instagram-item .instagram-media {
@@ -2761,18 +2768,24 @@
         }
 
         /* Sold product styles */
-        .product-card.sold {
+        .product-card.sold,
+        .product-card.reserved {
             opacity: 0.7;
         }
 
-        .product-card.sold .product-image::after {
-            content: 'SOLD';
+        .product-card.sold .product-image img,
+        .product-card.reserved .product-image img {
+            filter: grayscale(100%);
+        }
+
+        .product-card.sold .product-image::after,
+        .product-card.reserved .product-image::after {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.45);
             color: white;
             display: flex;
             align-items: center;
@@ -2785,7 +2798,16 @@
             pointer-events: none;
         }
 
-        .product-card.sold:hover {
+        .product-card.sold .product-image::after {
+            content: 'SOLD';
+        }
+
+        .product-card.reserved .product-image::after {
+            content: 'RESERVED';
+        }
+
+        .product-card.sold:hover,
+        .product-card.reserved:hover {
             transform: translateY(-5px);
             opacity: 0.8;
         }
@@ -2826,12 +2848,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
             margin-top: 60px;
+            flex-wrap: wrap;
         }
 
         .pagination button {
-            padding: 11px 24px;
+            padding: 10px 16px;
             border: 1px solid rgba(0, 0, 0, 0.1);
             background: var(--white);
             font-family: 'Space Grotesk', sans-serif;
@@ -2841,22 +2864,33 @@
             cursor: pointer;
             transition: var(--transition);
             border-radius: 0;
+            min-width: 42px;
+            text-align: center;
         }
 
-        .pagination button:hover:not(:disabled) {
+        .pagination button:hover:not(:disabled):not(.pagination-active) {
             background: var(--black);
             color: var(--white);
             border-color: var(--black);
         }
 
+        .pagination button.pagination-active {
+            background: var(--primary-green);
+            color: var(--white);
+            border-color: var(--primary-green);
+            pointer-events: none;
+        }
+
         .pagination button:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
-        .pagination span {
+        .pagination .pagination-ellipsis {
             font-size: 1rem;
             color: var(--gray);
+            padding: 0 4px;
+            user-select: none;
         }
 
         /* Featured Collection Section */
@@ -4141,10 +4175,6 @@
                 font-size: 1.5rem;
             }
 
-            .instagram-item {
-                width: 100%;
-            }
-
             .instagram-track {
                 /* JS-driven scroll speed handled via data-mobile attribute */
             }
@@ -4520,12 +4550,8 @@
                 }
 
                 .instagram-item {
-                    min-width: 260px;
+                    flex: 0 0 260px;
                     touch-action: pan-x;
-                }
-
-                .instagram-track {
-                    animation-duration: 10s;
                 }
 
                 .gallery-main {
