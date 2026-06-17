@@ -33,5 +33,13 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/instagram.json images/ || true
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update Instagram posts (igfetch)" && git push
+          git add data/instagram.json images/
+          # Commit/push only when the tracked output actually changed. Gate on the
+          # staged diff so the untracked debug dump (data/instagram_raw.json) can't
+          # trigger a commit with nothing staged, which previously failed the job.
+          if git diff --staged --quiet; then
+            echo "No changes to Instagram posts; nothing to commit."
+          else
+            git commit -m "Update Instagram posts (igfetch)"
+            git push
+          fi

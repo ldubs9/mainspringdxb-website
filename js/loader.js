@@ -63,7 +63,9 @@
     // We append the script and then explicitly call an init function
     // to ensure it runs even if DOMContentLoaded already fired during loading.
     const script = document.createElement('script');
-    script.src = 'js/app.js';
+    // Versioned to bust the browser cache when app.js changes (matches the
+    // ?v= convention used for other scripts in index.html).
+    script.src = 'js/app.js?v=3';
     script.onload = () => {
         // Dispatch a custom event that app.js can listen for
         window.dispatchEvent(new CustomEvent('componentsLoaded'));

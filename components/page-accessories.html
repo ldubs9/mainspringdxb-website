@@ -9,12 +9,21 @@
                     <div class="policy-hero">
                         <h1>Accessories</h1>
                         <p>High-quality straps, pouches, and tools for your collection.</p>
-                        <a href="#" class="hero-cta hero-secondary-cta" onclick="event.preventDefault(); showAllAccessories();" style="display:inline-block; margin-top:16px;">View All Accessories</a>
                     </div>
                 </div>
             </div>
             <div class="categories-section">
                 <div class="categories-grid" id="categoriesGrid">
+                    <div class="category-card category-card-all" onclick="showAllAccessories()">
+                        <div class="category-image-wrapper">
+                            <img src="accessories-all.jpg" alt="All Accessories"
+                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-th&quot;></i></div>'">
+                        </div>
+                        <div class="category-info">
+                            <h3>ALL ACCESSORIES</h3>
+                            <span>Complete Collection</span>
+                        </div>
+                    </div>
                     <div class="category-card" onclick="showAccessoryCategory('pocket-watches')">
                         <div class="category-image-wrapper">
                             <img src="accessories-pocket-watches.jpg" alt="Pocket Watches"
@@ -63,16 +72,6 @@
                         <div class="category-info">
                             <h3>WATCH STRAPS</h3>
                             <span>Leather & Metal</span>
-                        </div>
-                    </div>
-                    <div class="category-card category-card-all" onclick="showAllAccessories()">
-                        <div class="category-image-wrapper">
-                            <img src="accessories-all.jpg" alt="All Accessories"
-                                onerror="this.parentElement.parentElement.innerHTML='<div class=&quot;category-placeholder&quot;><i class=&quot;fas fa-th&quot;></i></div>'">
-                        </div>
-                        <div class="category-info">
-                            <h3>ALL ACCESSORIES</h3>
-                            <span>Complete Collection</span>
                         </div>
                     </div>
                 </div>
@@ -126,10 +125,6 @@
                         <div class="loading-spinner"></div>
                     </div>
                 </div>
-                <div class="pagination" id="accessoryPagination">
-                    <button id="prevAccessoryPage" onclick="changeAccessoryPage(-1)">Previous</button>
-                    <span id="accessoryPageInfo">Page 1</span>
-                    <button id="nextAccessoryPage" onclick="changeAccessoryPage(1)">Next</button>
-                </div>
+                <div class="pagination" id="accessoryPagination"></div>
             </div>
         </section>

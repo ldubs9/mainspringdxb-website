@@ -17,7 +17,11 @@
             if (event.state) {
                 if (event.state.page === 'detail' && event.state.productId) {
                     showProductDetail(event.state.productId, true);
+                } else if (event.state.page === 'watches') {
+                    currentPage = event.state.pg || 1;
+                    showPage('watches', true, true);
                 } else if (event.state.page === 'accessories' && event.state.category) {
+                    currentAccessoryPage = event.state.pg || 1;
                     showAccessoryCategory(event.state.category, true);
                 } else if (event.state.page === 'blog-detail' && event.state.blogId) {
                     showBlogDetail(event.state.blogId, true);
@@ -25,7 +29,6 @@
                     showPage(event.state.page, true);
                 }
             } else {
-                // No state, go to home
                 showPage('home', true);
             }
         });
@@ -1087,7 +1090,7 @@
                 const { data, error } = await supabaseClient
                     .from('mainspring_products')
                     .select('*')
-                    .or(`name.ilike.*${q}*,brand.ilike.*${q}*,model.ilike.*${q}*,reference_number.ilike.*${q}*,reference_code.ilike.*${q}*`)
+                    .or(`name.ilike.*${q}*,brand.ilike.*${q}*,model.ilike.*${q}*,watch_reference.ilike.*${q}*,reference_code.ilike.*${q}*`)
                     .order('status', { ascending: true })
                     .limit(40);
 
@@ -1188,12 +1191,13 @@
         }
 
         // Navigation logic
-        function showPage(pageName, skipPushState = false) {
-            // Reset filters if navigating to Watches or Accessories newly
-            if (pageName === 'watches') {
-                resetFilters();
-            } else if (pageName === 'accessories') {
-                resetAccessoryFilters();
+        function showPage(pageName, skipPushState = false, skipReset = false) {
+            if (!skipReset) {
+                if (pageName === 'watches') {
+                    resetFilters();
+                } else if (pageName === 'accessories') {
+                    resetAccessoryFilters();
+                }
             }
 
             document.querySelectorAll('.page-section').forEach(section => {
@@ -1309,7 +1313,7 @@
                     if (genderFilter) q = q.eq('gender', genderFilter);
                     if (movementFilter) q = q.eq('movement', movementFilter);
                     if (countryFilter) q = q.eq('country', countryFilter);
-                    if (searchTerm) q = q.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*,reference_code.ilike.*${searchTerm}*,reference_number.ilike.*${searchTerm}*`);
+                    if (searchTerm) q = q.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*,reference_code.ilike.*${searchTerm}*,watch_reference.ilike.*${searchTerm}*`);
                     if (priceFilter) {
                         if (priceFilter.includes('+')) {
                             q = q.gte('price', parseInt(priceFilter.replace('+', '')));
@@ -1322,10 +1326,9 @@
                 }
 
                 // Combined count + data query (matches accessories approach — more reliable than head:true)
-                const from = (currentPage - 1) * 30;
-                const to = from + 29;
+                const from = (currentPage - 1) * 28;
+                const to = from + 27;
                 let dataQuery = applyWatchFilters(supabaseClient.from('mainspring_products').select('*', { count: 'exact' }));
-                dataQuery = dataQuery.order('status', { ascending: true }); // 'available' < 'sold'
                 if (sortBy === 'price-low') {
                     dataQuery = dataQuery.order('price', { ascending: true });
                 } else if (sortBy === 'price-high') {
@@ -1340,7 +1343,7 @@
                 totalProducts = count || 0;
                 if (error) throw error;
 
-                renderProducts(data, grid);
+                renderProducts(sortByStatus(data || []), grid);
                 updatePagination();
             } catch (error) {
                 console.error('Error loading watches:', error);
@@ -1352,8 +1355,12 @@
             }
         }
 
-        // Render products from Supabase
-        // Your table columns: id, reference_number, name, brand, model, description, condition, price, image_urls, category, subcategory, watch_year, watch_reference, watch_details
+        const statusOrder = { available: 0, active: 1, reserved: 2, sold: 3 };
+
+        function sortByStatus(products) {
+            return products.slice().sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
+        }
+
         function renderProducts(products, grid) {
             if (!products || products.length === 0) {
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><p>No products found.</p></div>';
@@ -1369,6 +1376,8 @@
                 const safeDisplayName = (displayName || '').replace(/'/g, "\\'");
                 const safeBrand = (displayBrand || '').replace(/'/g, "\\'");
                 const isSold = product.status === 'sold';
+                const isReserved = product.status === 'reserved';
+                const isUnavailable = isSold || isReserved;
 
                 let additionalInfo = '';
                 if (product.category === 'watch') {
@@ -1384,8 +1393,10 @@
                     }
                 }
 
+                const statusClass = isSold ? ' sold' : isReserved ? ' reserved' : '';
+
                 return `
-                <div class="product-card${isSold ? ' sold' : ''}">
+                <div class="product-card${statusClass}">
                     <div class="product-image" onclick="showProductDetail(event, '${product.reference_code || product.id}')">
                         ${firstImage ?
                         `<img src="${firstImage}" alt="${displayBrand} ${displayName}" loading="lazy">` :
@@ -1398,9 +1409,9 @@
                         ${additionalInfo}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                         <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
-                            ${isSold ? `
+                            ${isUnavailable ? `
                             <button disabled style="flex: 1; padding: 10px; background: var(--gray); color: white; border: none; cursor: default; font-size: 0.8rem; opacity: 0.7;">
-                                <i class="fas fa-ban"></i> Sold
+                                <i class="fas fa-ban"></i> ${isSold ? 'Sold' : 'Reserved'}
                             </button>
                             ` : `
                             <button onclick="event.stopPropagation(); addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
@@ -1418,12 +1429,19 @@
 
         
 
-        // Update pagination
         function updatePagination() {
-            const totalPages = Math.ceil(totalProducts / 30);
-            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages || 1}`;
-            document.getElementById('prevPage').disabled = currentPage === 1;
-            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+            const totalPages = Math.ceil(totalProducts / 28) || 1;
+            const container = document.getElementById('pagination');
+            container.innerHTML = renderPaginationButtons(currentPage, totalPages, 'goToWatchPage');
+        }
+
+        function goToWatchPage(page) {
+            currentPage = page;
+            const params = new URLSearchParams(window.location.search);
+            params.set('pg', page);
+            history.pushState({ page: 'watches', pg: page }, '', '?' + params.toString());
+            loadWatches();
+            window.scrollTo(0, 300);
         }
 
         // Load featured watches for the home page (12 watches)
@@ -1436,8 +1454,9 @@
                     .from('mainspring_products')
                     .select('*')
                     .eq('category', 'watch')
-                    .in('status', ['available', 'reserved'])
-                    .order('status', { ascending: true })
+                    // Live inventory uses status 'active' (the bulk), plus 'available'/'reserved'.
+                    // 'sold', 'archived' and 'draft' are intentionally excluded from the featured rail.
+                    .in('status', ['active', 'available', 'reserved'])
                     .order('reference_code', { ascending: false, nullsFirst: false })
                     .limit(12);
 
@@ -1456,11 +1475,27 @@
             }
         }
 
-        // Change page
-        function changePage(direction) {
-            currentPage += direction;
-            loadWatches();
-            window.scrollTo(0, 300);
+        function renderPaginationButtons(current, total, fnName) {
+            if (total <= 1) return '';
+            let html = '';
+            html += `<button ${current === 1 ? 'disabled' : ''} onclick="${fnName}(${current - 1})">Previous</button>`;
+            const pages = [];
+            pages.push(1);
+            let start = Math.max(2, current - 2);
+            let end = Math.min(total - 1, current + 2);
+            if (start > 2) pages.push('...');
+            for (let i = start; i <= end; i++) pages.push(i);
+            if (end < total - 1) pages.push('...');
+            if (total > 1) pages.push(total);
+            pages.forEach(p => {
+                if (p === '...') {
+                    html += `<span class="pagination-ellipsis">...</span>`;
+                } else {
+                    html += `<button class="${p === current ? 'pagination-active' : ''}" onclick="${fnName}(${p})">${p}</button>`;
+                }
+            });
+            html += `<button ${current >= total ? 'disabled' : ''} onclick="${fnName}(${current + 1})">Next</button>`;
+            return html;
         }
 
         // Apply filters
@@ -1750,8 +1785,6 @@
                     query = query.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*`);
                 }
 
-                // Apply sorting — always sort available before sold first
-                query = query.order('status', { ascending: true }); // 'available' < 'sold'
                 if (sortBy === 'price-low') {
                     query = query.order('price', { ascending: true });
                 } else if (sortBy === 'price-high') {
@@ -1761,8 +1794,8 @@
                 }
 
                 // Apply pagination
-                const from = (currentAccessoryPage - 1) * 30;
-                const to = from + 29;
+                const from = (currentAccessoryPage - 1) * 28;
+                const to = from + 27;
                 query = query.range(from, to);
 
                 const { data, error, count } = await query;
@@ -1772,10 +1805,9 @@
                 totalAccessoryProducts = count || 0;
 
                 if (!data || data.length === 0) {
-                    // Show "No products found" message
                     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--gray); font-size: 1.1rem;">No products found.</div>';
                 } else {
-                    renderProducts(data, grid);
+                    renderProducts(sortByStatus(data), grid);
                 }
 
                 updateAccessoryPagination();
@@ -1787,12 +1819,19 @@
             }
         }
 
-        // Update accessory pagination
         function updateAccessoryPagination() {
-            const totalPages = Math.ceil(totalAccessoryProducts / 30);
-            document.getElementById('accessoryPageInfo').textContent = `Page ${currentAccessoryPage} of ${totalPages || 1}`;
-            document.getElementById('prevAccessoryPage').disabled = currentAccessoryPage === 1;
-            document.getElementById('nextAccessoryPage').disabled = currentAccessoryPage >= totalPages;
+            const totalPages = Math.ceil(totalAccessoryProducts / 28) || 1;
+            const container = document.getElementById('accessoryPagination');
+            container.innerHTML = renderPaginationButtons(currentAccessoryPage, totalPages, 'goToAccessoryPage');
+        }
+
+        function goToAccessoryPage(page) {
+            currentAccessoryPage = page;
+            const params = new URLSearchParams(window.location.search);
+            params.set('pg', page);
+            history.pushState({ page: 'accessories', category: currentAccessoryCategory, pg: page }, '', '?' + params.toString());
+            loadAccessories();
+            window.scrollTo(0, 300);
         }
 
         // Apply accessory filters
@@ -1801,12 +1840,6 @@
             loadAccessories();
         }
 
-        // Change accessory page
-        function changeAccessoryPage(direction) {
-            currentAccessoryPage += direction;
-            loadAccessories();
-            window.scrollTo(0, 300);
-        }
 
         // Show product detail
         // Accepts either (productIdentifier, skipPushState) or (event, productIdentifier, skipPushState)
@@ -1915,9 +1948,12 @@
             const watchDetails = product.product_details || '';
 
             const isSoldProduct = product.status === 'sold';
+            const isReservedProduct = product.status === 'reserved';
+            const isUnavailableProduct = isSoldProduct || isReservedProduct;
+            const unavailableLabel = isSoldProduct ? 'SOLD' : 'RESERVED';
 
             detailInfo.innerHTML = `
-                ${isSoldProduct ? `<div style="background: var(--gray); color: white; padding: 10px 20px; margin-bottom: 20px; text-align: center; font-family: 'Fraunces', serif; font-size: 0.9rem; letter-spacing: 3px;">SOLD</div>` : ''}
+                ${isUnavailableProduct ? `<div style="background: var(--gray); color: white; padding: 10px 20px; margin-bottom: 20px; text-align: center; font-family: 'Fraunces', serif; font-size: 0.9rem; letter-spacing: 3px;">${unavailableLabel}</div>` : ''}
                 <p class="detail-brand">${displayBrand}</p>
                 <h1 class="detail-name">${displayName}</h1>
                 ${(() => {
@@ -1945,9 +1981,13 @@
                 })()}
                 <p class="detail-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                 <p class="detail-description">${product.description || ''}</p>
-                ${isSoldProduct ? `
+                ${isUnavailableProduct ? `
                 <div class="detail-actions">
-                    <button class="btn-primary" disabled style="opacity: 0.5; cursor: default;"><i class="fas fa-ban"></i> Sold</button>
+                    <button class="btn-primary" disabled style="opacity: 0.5; cursor: default;"><i class="fas fa-ban"></i> ${unavailableLabel}</button>
+                    <div class="detail-actions-row">
+                        <button class="btn-primary btn-cart-action" disabled style="opacity: 0.4; cursor: default;"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                        <button class="btn-secondary btn-wishlist-action" disabled style="opacity: 0.4; cursor: default;"><i class="far fa-heart"></i></button>
+                    </div>
                 </div>
                 ` : `
                 <div class="detail-actions">
@@ -2763,21 +2803,37 @@
             const urlParams = new URLSearchParams(window.location.search);
             const pageName = urlParams.get('page');
             const productId = urlParams.get('product');
-
             const blogPostId = urlParams.get('post');
+            const urlPageNum = parseInt(urlParams.get('pg')) || 1;
 
             if (pageName === 'detail' && productId) {
-                // Use skipPushState=true since we use replaceState below
                 showProductDetail(decodeURIComponent(productId), true);
                 history.replaceState({ page: 'detail', productId: decodeURIComponent(productId) }, '', window.location.search);
             } else if (pageName === 'blog-detail' && blogPostId) {
                 showBlogDetail(decodeURIComponent(blogPostId), true);
                 history.replaceState({ page: 'blog-detail', blogId: decodeURIComponent(blogPostId) }, '', window.location.search);
+            } else if (pageName === 'watches') {
+                currentPage = urlPageNum;
+                showPage('watches', true, true);
+                history.replaceState({ page: 'watches', pg: urlPageNum }, '', window.location.search);
+            } else if (pageName === 'accessories') {
+                currentAccessoryPage = urlPageNum;
+                const cat = urlParams.get('category');
+                if (cat && cat !== 'all') {
+                    showAccessoryCategory(cat, true);
+                } else if (cat === 'all') {
+                    showPage('accessories', true, true);
+                    document.getElementById('categoriesGrid').style.display = 'none';
+                    document.getElementById('accessoryProducts').style.display = 'block';
+                    loadAccessories();
+                } else {
+                    showPage('accessories', true);
+                }
+                history.replaceState({ page: 'accessories', category: cat, pg: urlPageNum }, '', window.location.search);
             } else if (pageName) {
                 showPage(pageName, true);
                 history.replaceState({ page: pageName }, '', window.location.search);
             } else {
-                // Default to home page
                 showPage('home', true);
                 history.replaceState({ page: 'home' }, '', window.location.pathname);
             }
@@ -3066,52 +3122,47 @@
                 }, true);
             }
 
-            // Instagram post configuration - can be updated from backend
-            const instagramReelUrls = [
-                // Add Instagram post URLs here (e.g., https://www.instagram.com/p/ABC123/)
-                // This array will be populated from @mainspring.dxb posts
-                // Posts are shown instead of reels for Mainspring
-            ];
-
             // Load Instagram posts into carousel
+            function escapeHtml(str) {
+                return String(str || '').replace(/[&<>"']/g, function (c) {
+                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+            }
+
             async function loadInstagramReels() {
                 const track = document.getElementById('instagramTrack');
 
-                // Try to fetch latest post URLs from backend (optional)
+                // Posts are produced by the igfetch GitHub Action, which writes
+                // data/instagram.json and downloads each post image into images/.
+                let posts = [];
                 try {
-                    const response = await fetch('/api/instagram-posts', {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' }
-                    });
+                    const response = await fetch('data/instagram.json', { cache: 'no-cache' });
                     if (response.ok) {
                         const data = await response.json();
-                        if (data.posts && Array.isArray(data.posts)) {
-                            instagramReelUrls.splice(0, instagramReelUrls.length, ...data.posts);
-                        }
+                        if (Array.isArray(data)) posts = data;
                     }
                 } catch (e) {
-                    console.log('Note: Backend Instagram API not available. Using configured URLs.');
+                    console.log('Note: could not load data/instagram.json.', e);
                 }
 
-                // Render Instagram embeds
-                if (instagramReelUrls.length === 0) {
+                if (posts.length === 0) {
                     track.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">Follow @mainspring.dxb on Instagram to see our latest content</div>';
                     return;
                 }
 
-                // Create Instagram embed items for each reel (duplicated for seamless infinite scroll)
-                const reelHtml = instagramReelUrls.map(url => `
-                    <div class="instagram-item">
-                        <blockquote class="instagram-media" data-instgrm-permalink="${url}?utm_source=ig_embed&amp;utm_campaign=loading" data-instgrm-version="14" style="background: #FFF; border: 0; border-radius: 3px; box-shadow: 0 0 1px 0 rgba(0,0,0,0.5), 0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width: 100%; padding: 0; width: 100%;"></blockquote>
-                    </div>
-                `).join('');
-                // Duplicate the set so scrolling wraps seamlessly from last to first
-                track.innerHTML = reelHtml + reelHtml;
-
-                // Process Instagram embeds
-                if (window.instgrm && window.instgrm.Embeds) {
-                    window.instgrm.Embeds.process();
-                }
+                // Render the locally cached images, each linking to its real Instagram post
+                const itemHtml = posts.map(post => {
+                    const url = post.url || 'https://www.instagram.com/mainspring.dxb';
+                    const img = post.image_url || '';
+                    const cap = escapeHtml((post.caption || '').slice(0, 140));
+                    return `
+                    <a class="instagram-item" href="${escapeHtml(url)}" target="_blank" rel="noopener" aria-label="${cap || 'View Instagram post'}">
+                        <div class="ms-ig-media">
+                            <img src="${escapeHtml(img)}" alt="${cap}" loading="lazy" draggable="false">
+                        </div>
+                    </a>`;
+                }).join('');
+                track.innerHTML = itemHtml;
             }
 
             // Load reviews from Supabase and render into carousel
@@ -3172,9 +3223,6 @@
 
             // Refresh Instagram reels every 12 hours (43200000 ms)
             setInterval(loadInstagramReels, 12 * 60 * 60 * 1000);
-
-            // Set up Instagram carousel
-            setupDragCarousel('#instagramTrack', '.instagram-carousel');
         }
 
         // Run on DOMContentLoaded or custom event from loader
