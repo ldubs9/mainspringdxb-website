@@ -1963,68 +1963,23 @@
         .instagram-carousel {
             position: relative;
             width: 100%;
-            overflow: hidden;
-            cursor: grab;
-            -webkit-user-select: none;
-            user-select: none;
-            touch-action: pan-y;
-            padding-top: 45px;
-        }
-
-        .instagram-carousel::before {
-            content: '\2190  DRAG TO SCROLL  \2192';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 45px;
-            z-index: 2;
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: inherit;
-            font-size: 11px;
-            letter-spacing: 2px;
-            color: rgba(0, 0, 0, 0.35);
-            background: rgba(0, 0, 0, 0.03);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-            transition: color 0.2s, background 0.2s;
-        }
-
-        .instagram-carousel:hover::before {
-            color: rgba(0, 0, 0, 0.6);
-            background: rgba(0, 0, 0, 0.06);
-        }
-
-        .instagram-carousel:active::before {
-            cursor: grabbing;
-            content: '\2190  SCROLLING  \2192';
-            color: rgba(0, 0, 0, 0.8);
-            background: rgba(0, 0, 0, 0.08);
-        }
-
-        .instagram-carousel:active {
-            cursor: grabbing;
+            overflow: visible;
         }
 
         .instagram-track {
-            display: flex;
-            gap: 0px;
-            will-change: transform;
-        }
-
-        .instagram-track.dragging {
-            transition: none !important;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            padding: 0 var(--ms-pad);
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .instagram-item {
-            min-width: 400px;
             background: transparent;
             position: relative;
-            overflow: visible;
+            overflow: hidden;
             cursor: pointer;
-            touch-action: pan-x;
         }
 
         .instagram-item .instagram-media {
@@ -4186,28 +4141,8 @@
                 font-size: 1.5rem;
             }
 
-            .review-card {
-                min-width: 300px;
-                padding: 25px;
-            }
-
             .instagram-item {
-                min-width: 253px;
-                touch-action: pan-x;
-            }
-
-            .instagram-carousel {
-                margin-bottom: 30px;
-                padding-bottom: 10px;
-                padding-top: 35px;
-                touch-action: pan-x;
-            }
-
-            .instagram-carousel::before {
-                height: 35px;
-                font-size: 10px;
-                letter-spacing: 1.5px;
-                content: '\2190  SWIPE TO SCROLL  \2192';
+                width: 100%;
             }
 
             .instagram-track {

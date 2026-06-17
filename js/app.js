@@ -3095,8 +3095,7 @@
                     return;
                 }
 
-                // Render the locally cached images, each linking to its real
-                // Instagram post. Duplicated so the drag carousel wraps seamlessly.
+                // Render the locally cached images, each linking to its real Instagram post
                 const itemHtml = posts.map(post => {
                     const url = post.url || 'https://www.instagram.com/mainspring.dxb';
                     const img = post.image_url || '';
@@ -3108,7 +3107,7 @@
                         </div>
                     </a>`;
                 }).join('');
-                track.innerHTML = itemHtml + itemHtml;
+                track.innerHTML = itemHtml;
             }
 
             // Load reviews from Supabase and render into carousel
@@ -3169,9 +3168,6 @@
 
             // Refresh Instagram reels every 12 hours (43200000 ms)
             setInterval(loadInstagramReels, 12 * 60 * 60 * 1000);
-
-            // Set up Instagram carousel
-            setupDragCarousel('#instagramTrack', '.instagram-carousel');
         }
 
         // Run on DOMContentLoaded or custom event from loader
