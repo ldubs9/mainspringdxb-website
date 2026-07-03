@@ -138,11 +138,9 @@
         // Edge Functions URL (used by tabby/tamara/order-status)
         const EDGE_FN_URL = SUPABASE_URL + '/functions/v1';
 
-        // Payments service (Coolify "mainspring-payments" app). Handles
+        // Payments service (Coolify "mainspringpayments" app). Handles
         // /create-order, /ziina-checkout and /ziina-webhook.
-        // After deploying it in Coolify, paste the app's public URL here
-        // (no trailing slash), e.g. 'https://pay.mainspringdxb.com'.
-        const PAYMENTS_BASE = window.PAYMENTS_BASE || 'PASTE_COOLIFY_PAYMENTS_URL_HERE';
+        const PAYMENTS_BASE = window.PAYMENTS_BASE || 'https://pay.mainspring.swiftloop.tech';
 
         let selectedPaymentMethod = null;
         let checkoutStep = 1; // 1=details, 2=payment, 3=confirm

@@ -70,7 +70,7 @@ app.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: customer_name, customer_phone, items, payment_method' });
     }
 
-    const validMethods = ['bank_transfer', 'tap_card', 'ziina', 'tabby', 'tamara', 'cash'];
+    const validMethods = ['bank_transfer', 'ziina', 'tabby', 'tamara', 'cash'];
     if (!validMethods.includes(payment_method)) {
       return res.status(400).json({ error: 'Invalid payment method' });
     }
@@ -84,7 +84,7 @@ app.post('/create-order', async (req, res) => {
     const subtotal = items.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
 
     const surchargeRate = (payment_method === 'tabby' || payment_method === 'tamara') ? 8.5
-      : (payment_method === 'tap_card' || payment_method === 'ziina') ? 3
+      : (payment_method === 'ziina') ? 3
       : 0;
     const total = Math.round(subtotal * (1 + surchargeRate / 100));
 
