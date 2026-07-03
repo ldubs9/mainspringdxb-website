@@ -57,6 +57,10 @@ Deno.serve(async (req: Request) => {
 
     const ZIINA_API_KEY = Deno.env.get("MAINSPRING_ZIINA_API_KEY");
     const SITE_URL = Deno.env.get("SITE_URL") || "https://mainspringdxb.com";
+    // When ZIINA_TEST_MODE=true, Ziina creates a test payment intent: no real
+    // card/charge, the hosted page can be completed without a payment method.
+    // Leave unset (or "false") in production.
+    const ZIINA_TEST_MODE = Deno.env.get("ZIINA_TEST_MODE") === "true";
 
     if (!ZIINA_API_KEY) {
       console.error("ZIINA_API_KEY not configured");
@@ -88,6 +92,7 @@ Deno.serve(async (req: Request) => {
         amount: amountInFils,
         currency_code: "AED",
         message: `Mainspring Dubai — Order ${order_ref}`,
+        test: ZIINA_TEST_MODE,
         success_url: `${SITE_URL}?order=${order_ref}&status=ziina_success`,
         cancel_url: `${SITE_URL}?order=${order_ref}&status=ziina_cancel`,
         failure_url: `${SITE_URL}?order=${order_ref}&status=ziina_failed`,

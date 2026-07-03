@@ -9,14 +9,50 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// Hex-encoded HMAC-SHA256 of the raw body, compared in constant time.
+async function verifyHmac(secret: string, rawBody: string, signature: string): Promise<boolean> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sigBuf = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
+  const expected = Array.from(new Uint8Array(sigBuf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  if (expected.length !== signature.length) return false;
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
   try {
-    const payload = await req.json();
-    const paymentIntentId = payload.id || payload.payment_intent_id;
+    // Read the raw body first so we can verify the HMAC signature over the exact bytes.
+    const rawBody = await req.text();
+
+    // Optional signature check. Set ZIINA_WEBHOOK_SECRET to the same secret you
+    // passed when registering the webhook (POST /api/webhook { secret }).
+    const WEBHOOK_SECRET = Deno.env.get("ZIINA_WEBHOOK_SECRET");
+    if (WEBHOOK_SECRET) {
+      const signature = req.headers.get("x-hmac-signature") || "";
+      if (!signature || !(await verifyHmac(WEBHOOK_SECRET, rawBody, signature))) {
+        console.error("Ziina webhook: invalid HMAC signature");
+        return new Response("Invalid signature", { status: 401 });
+      }
+    }
+
+    const payload = JSON.parse(rawBody);
+    // Ziina delivers an event envelope: { event: "payment_intent.status.updated", data: { id, status, ... } }
+    const paymentIntentId = payload?.data?.id || payload?.id || payload?.payment_intent_id;
 
     if (!paymentIntentId) {
       return new Response("Missing payment_intent_id", { status: 400 });

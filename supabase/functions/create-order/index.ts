@@ -27,7 +27,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const validMethods = ["bank_transfer", "tap_card", "tabby", "tamara", "cash"];
+    const validMethods = ["bank_transfer", "tap_card", "ziina", "tabby", "tamara", "cash"];
     if (!validMethods.includes(payment_method)) {
       return new Response(
         JSON.stringify({ error: "Invalid payment method" }),
@@ -54,7 +54,7 @@ Deno.serve(async (req: Request) => {
     );
 
     const surchargeRate = (payment_method === "tabby" || payment_method === "tamara") ? 8.5
-      : (payment_method === "tap_card") ? 3
+      : (payment_method === "tap_card" || payment_method === "ziina") ? 3
       : 0;
     const total = Math.round(subtotal * (1 + surchargeRate / 100));
 
