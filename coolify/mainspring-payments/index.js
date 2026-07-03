@@ -21,8 +21,9 @@ const cors = require('cors');
 const crypto = require('crypto');
 
 const ZIINA_API_KEY = process.env.MAINSPRING_ZIINA_API_KEY;
-const SUPABASE_URL = (process.env.SUPABASE_URL || '').replace(/\/$/, '');
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Accept the common self-hosted / Coolify variable names too.
+const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.SUPABASE_PUBLIC_URL || '').replace(/\/$/, '');
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY;
 const SITE_URL = process.env.SITE_URL || 'https://mainspringdxb.com';
 const ZIINA_TEST_MODE = process.env.ZIINA_TEST_MODE === 'true';
 const ZIINA_WEBHOOK_SECRET = process.env.ZIINA_WEBHOOK_SECRET;
@@ -45,6 +46,17 @@ const sbHeaders = {
 
 function sbUrl(path) {
   return `${SUPABASE_URL}/rest/v1/${path}`;
+}
+
+// Decode the "role" claim from a Supabase JWT (payload only, no secret exposed).
+// Used by /health to confirm the service is actually holding a service_role key.
+function jwtRole(token) {
+  try {
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString('utf8'));
+    return payload.role || null;
+  } catch {
+    return null;
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -106,8 +118,13 @@ app.post('/create-order', async (req, res) => {
     });
 
     if (!insertResp.ok) {
-      console.error('Order insert error:', await insertResp.text());
-      return res.status(500).json({ error: 'Failed to create order' });
+      const errText = await insertResp.text();
+      console.error('Order insert error:', insertResp.status, errText);
+      // Surface the DB error only in test mode to aid debugging.
+      return res.status(500).json({
+        error: 'Failed to create order',
+        ...(ZIINA_TEST_MODE ? { status: insertResp.status, detail: errText } : {}),
+      });
     }
 
     const inserted = await insertResp.json();
@@ -278,7 +295,15 @@ app.post('/ziina-webhook', async (req, res) => {
   }
 });
 
-app.get('/health', (_req, res) => res.json({ ok: true, test_mode: ZIINA_TEST_MODE }));
+app.get('/health', (_req, res) => res.json({
+  ok: true,
+  test_mode: ZIINA_TEST_MODE,
+  supabase_url_set: !!SUPABASE_URL,
+  service_key_present: !!SUPABASE_SERVICE_ROLE_KEY,
+  service_key_role: SUPABASE_SERVICE_ROLE_KEY ? jwtRole(SUPABASE_SERVICE_ROLE_KEY) : null,
+  ziina_key_present: !!ZIINA_API_KEY,
+  webhook_secret_set: !!ZIINA_WEBHOOK_SECRET,
+}));
 app.get('/', (_req, res) => res.send('Mainspring payments service'));
 
 const port = process.env.PORT || 3000;
