@@ -536,7 +536,7 @@
                     </div>
                     <p style="font-size: 0.9rem; color: var(--gray);">Send a screenshot of your transfer confirmation via WhatsApp for faster processing.</p>
                     <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('bank_transfer', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
-                    <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Done</button>
+                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Done</button>
                 </div>
             `;
         }
@@ -553,7 +553,7 @@
                     <p style="margin-top: 5px;">Total: <strong>${formatPrice(total)}</strong> — payable upon collection or delivery.</p>
                     <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">We will contact you via WhatsApp to arrange the details.</p>
                     <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
-                    <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Done</button>
+                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Done</button>
                 </div>
             `;
         }
@@ -595,7 +595,7 @@
                         <p>Your order <strong>${orderRef}</strong> has been confirmed.</p>
                         <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">We will contact you via WhatsApp with updates on your order.</p>
                         <button class="checkout-confirm-btn" onclick="closeCheckout(); showPage('home');">CONTINUE SHOPPING</button>
-                        <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout(); showOrderTracking('${orderRef}');">TRACK ORDER</button>
+                        <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="viewReceipt('${orderRef}');">VIEW RECEIPT</button>
                     </div>
                 `;
             } else if (status.includes('cancel')) {
@@ -607,7 +607,7 @@
                         <p>Your order <strong>${orderRef}</strong> payment was cancelled.</p>
                         <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">You can contact us to retry or choose a different payment method.</p>
                         <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cancelled', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
-                        <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Close</button>
+                        <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Close</button>
                     </div>
                 `;
             } else if (status.includes('failure') || status.includes('fail')) {
@@ -619,13 +619,18 @@
                         <p>Your payment for order <strong>${orderRef}</strong> could not be processed.</p>
                         <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Please try again or contact us for assistance.</p>
                         <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('failed', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
-                        <button class="checkout-confirm-btn" style="margin-top: 10px; background: none; color: var(--primary-green); border: 1px solid var(--cream-dark);" onclick="closeCheckout()">Close</button>
+                        <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Close</button>
                     </div>
                 `;
             }
         }
 
-        // Order tracking page
+        // Receipt — opens a printable, branded invoice for the order in a new tab
+        function viewReceipt(orderRef) {
+            window.open('receipt.html?order=' + encodeURIComponent(orderRef), '_blank');
+        }
+
+        // Order tracking page (currently hidden from navigation)
         function showOrderTracking(prefillRef) {
             showPage('order-tracking');
 

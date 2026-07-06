@@ -295,6 +295,34 @@ app.post('/ziina-webhook', async (req, res) => {
   }
 });
 
+// ----------------------------------------------------------------------------
+// GET /order/:order_ref — used to render the printable receipt after checkout
+// ----------------------------------------------------------------------------
+app.get('/order/:order_ref', async (req, res) => {
+  try {
+    const orderRef = req.params.order_ref;
+    if (!orderRef) return res.status(400).json({ error: 'Missing order_ref' });
+
+    const fields = 'order_ref,customer_name,customer_email,customer_phone,customer_address,items,subtotal_aed,surcharge_pct,total_aed,payment_method,payment_status,order_status,created_at';
+    const orderResp = await fetch(
+      sbUrl(`mainspring_orders?order_ref=eq.${encodeURIComponent(orderRef)}&select=${fields}`),
+      { headers: sbHeaders }
+    );
+    if (!orderResp.ok) {
+      console.error('Supabase fetch error', await orderResp.text());
+      return res.status(502).json({ error: 'Failed to look up order' });
+    }
+    const orders = await orderResp.json();
+    const order = orders && orders[0];
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    return res.json({ success: true, order });
+  } catch (err) {
+    console.error('order lookup error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/health', (_req, res) => res.json({
   ok: true,
   test_mode: ZIINA_TEST_MODE,

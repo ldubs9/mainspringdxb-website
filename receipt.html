@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt | Mainspring Dubai</title>
+    <link rel="icon" type="image/svg+xml" href="mainspring-favicon.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --ms-ink: #0b0b0b;
+            --ms-ink-2: #141414;
+            --ms-cream: #f0ece4;
+            --ms-gold: #c4a265;
+            --ms-gray: #6b6b6b;
+            --ms-line: rgba(0, 0, 0, 0.10);
+            --ms-line-2: rgba(0, 0, 0, 0.16);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--ms-cream);
+            color: var(--ms-ink);
+            padding: 48px 20px 80px;
+        }
+
+        .receipt-toolbar {
+            max-width: 780px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .receipt-toolbar button {
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            padding: 12px 24px;
+            border-radius: 100px;
+            border: none;
+            cursor: pointer;
+            background: var(--ms-ink);
+            color: var(--ms-cream);
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .receipt-toolbar button:hover { background: var(--ms-gold); color: var(--ms-ink); }
+
+        .receipt-sheet {
+            max-width: 780px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid var(--ms-line);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08);
+            padding: 56px;
+        }
+
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--ms-line-2);
+        }
+
+        .receipt-brand { display: flex; align-items: center; gap: 14px; }
+        .receipt-brand img { height: 40px; width: auto; }
+        .receipt-brand-name {
+            font-family: 'Fraunces', serif;
+            font-size: 1.3rem;
+            letter-spacing: 0.04em;
+        }
+        .receipt-brand-tag {
+            font-size: 0.75rem;
+            color: var(--ms-gray);
+            margin-top: 2px;
+        }
+
+        .receipt-meta { text-align: right; }
+        .receipt-meta .receipt-title {
+            font-family: 'Fraunces', serif;
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+        }
+        .receipt-meta p { font-size: 0.85rem; color: var(--ms-gray); }
+        .receipt-meta strong { color: var(--ms-ink); }
+
+        .receipt-status {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 14px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            background: var(--ms-cream);
+            border: 1px solid var(--ms-line-2);
+        }
+
+        .receipt-parties {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 28px 0;
+            border-bottom: 1px solid var(--ms-line-2);
+        }
+
+        .receipt-parties h4 {
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ms-gray);
+            margin-bottom: 8px;
+        }
+
+        .receipt-parties p { font-size: 0.95rem; line-height: 1.6; }
+
+        table.receipt-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 28px;
+        }
+
+        .receipt-items th {
+            text-align: left;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--ms-gray);
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--ms-line-2);
+        }
+
+        .receipt-items th:last-child, .receipt-items td:last-child { text-align: right; }
+        .receipt-items th:nth-child(2), .receipt-items td:nth-child(2) { text-align: center; }
+
+        .receipt-items td {
+            padding: 16px 0;
+            border-bottom: 1px solid var(--ms-line);
+            font-size: 0.95rem;
+        }
+
+        .receipt-items .item-name { font-weight: 500; }
+        .receipt-items .item-brand { color: var(--ms-gray); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+        .receipt-totals {
+            margin-top: 20px;
+            margin-left: auto;
+            width: 280px;
+        }
+
+        .receipt-totals .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 0.92rem;
+        }
+
+        .receipt-totals .row.total {
+            border-top: 1px solid var(--ms-line-2);
+            margin-top: 6px;
+            padding-top: 14px;
+            font-family: 'Fraunces', serif;
+            font-size: 1.3rem;
+        }
+
+        .receipt-footer {
+            margin-top: 44px;
+            padding-top: 24px;
+            border-top: 1px solid var(--ms-line-2);
+            font-size: 0.82rem;
+            color: var(--ms-gray);
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .receipt-footer .thanks {
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-size: 1.05rem;
+            color: var(--ms-ink);
+            margin-bottom: 10px;
+        }
+
+        .receipt-state {
+            max-width: 780px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid var(--ms-line);
+            padding: 80px 40px;
+            text-align: center;
+            color: var(--ms-gray);
+        }
+
+        .receipt-state i { font-size: 2rem; margin-bottom: 16px; display: block; }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .receipt-toolbar { display: none; }
+            .receipt-sheet { box-shadow: none; border: none; max-width: 100%; padding: 0; }
+        }
+
+        @media (max-width: 640px) {
+            .receipt-sheet { padding: 30px 22px; }
+            .receipt-header { flex-direction: column; gap: 20px; }
+            .receipt-meta { text-align: left; }
+            .receipt-parties { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="receipt-toolbar" id="receiptToolbar" style="display: none;">
+        <button onclick="window.print()"><i class="fas fa-print"></i>&nbsp; Print / Save as PDF</button>
+    </div>
+
+    <div id="receiptRoot">
+        <div class="receipt-state">
+            <i class="fas fa-spinner fa-spin"></i>
+            Loading your receipt...
+        </div>
+    </div>
+
+    <script>
+        const PAYMENTS_BASE = window.PAYMENTS_BASE || 'https://pay.mainspring.swiftloop.tech';
+
+        const methodNames = {
+            bank_transfer: 'Bank Transfer',
+            cash: 'Cash on Delivery',
+            ziina: 'Card Payment (Ziina)',
+            tabby: 'Tabby (Buy Now, Pay Later)',
+            tamara: 'Tamara (Buy Now, Pay Later)'
+        };
+
+        function formatAED(value) {
+            const n = Number(value) || 0;
+            return 'AED ' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '-';
+            const d = new Date(iso);
+            return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str == null ? '' : String(str);
+            return div.innerHTML;
+        }
+
+        function renderError(message) {
+            document.getElementById('receiptRoot').innerHTML = `
+                <div class="receipt-state">
+                    <i class="fas fa-file-circle-exclamation"></i>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+            `;
+        }
+
+        function renderReceipt(order) {
+            const items = Array.isArray(order.items) ? order.items : [];
+            const surcharge = Number(order.surcharge_pct) || 0;
+            const subtotal = Number(order.subtotal_aed) || 0;
+            const total = Number(order.total_aed) || 0;
+            const surchargeAmount = total - subtotal;
+
+            document.title = `Receipt ${order.order_ref} | Mainspring Dubai`;
+            document.getElementById('receiptToolbar').style.display = 'flex';
+
+            document.getElementById('receiptRoot').innerHTML = `
+                <div class="receipt-sheet">
+                    <div class="receipt-header">
+                        <div class="receipt-brand">
+                            <img src="header-icon-dark.png" alt="Mainspring Dubai">
+                            <div>
+                                <div class="receipt-brand-name">MAINSPRING DUBAI</div>
+                                <div class="receipt-brand-tag">The B1 Mall, Gate 11, Al Barsha, Dubai, UAE</div>
+                            </div>
+                        </div>
+                        <div class="receipt-meta">
+                            <div class="receipt-title">Receipt</div>
+                            <p>Order <strong>${escapeHtml(order.order_ref)}</strong></p>
+                            <p>${formatDate(order.created_at)}</p>
+                            <div class="receipt-status">${escapeHtml(order.payment_status || 'pending')}</div>
+                        </div>
+                    </div>
+
+                    <div class="receipt-parties">
+                        <div>
+                            <h4>Billed To</h4>
+                            <p>
+                                ${escapeHtml(order.customer_name)}<br>
+                                ${order.customer_phone ? escapeHtml(order.customer_phone) + '<br>' : ''}
+                                ${order.customer_email ? escapeHtml(order.customer_email) + '<br>' : ''}
+                                ${order.customer_address ? escapeHtml(order.customer_address) : ''}
+                            </p>
+                        </div>
+                        <div>
+                            <h4>Payment</h4>
+                            <p>
+                                ${escapeHtml(methodNames[order.payment_method] || order.payment_method)}<br>
+                                Order status: ${escapeHtml(order.order_status || 'pending')}
+                            </p>
+                        </div>
+                    </div>
+
+                    <table class="receipt-items">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map(item => `
+                                <tr>
+                                    <td>
+                                        <div class="item-brand">${escapeHtml(item.brand || '')}</div>
+                                        <div class="item-name">${escapeHtml(item.name || '')}</div>
+                                    </td>
+                                    <td>${escapeHtml(item.qty)}</td>
+                                    <td>${formatAED(item.price)}</td>
+                                    <td>${formatAED(Number(item.price) * Number(item.qty))}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="receipt-totals">
+                        <div class="row">
+                            <span>Subtotal</span>
+                            <span>${formatAED(subtotal)}</span>
+                        </div>
+                        ${surcharge > 0 ? `
+                        <div class="row">
+                            <span>Surcharge (${surcharge}%)</span>
+                            <span>${formatAED(surchargeAmount)}</span>
+                        </div>` : ''}
+                        <div class="row total">
+                            <span>Total</span>
+                            <span>${formatAED(total)}</span>
+                        </div>
+                    </div>
+
+                    <div class="receipt-footer">
+                        <p class="thanks">Thank you for your purchase.</p>
+                        <p>Mainspring Dubai &mdash; Authentic vintage and pre-owned timepieces, personally sourced, inspected, and warranted.</p>
+                        <p>+971 58 562 5042 &nbsp;&middot;&nbsp; mainspringdubai@gmail.com</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadReceipt() {
+            const params = new URLSearchParams(window.location.search);
+            const orderRef = params.get('order');
+
+            if (!orderRef) {
+                renderError('No order reference was provided.');
+                return;
+            }
+
+            try {
+                const res = await fetch(PAYMENTS_BASE + '/order/' + encodeURIComponent(orderRef));
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    renderError(data.error || 'We could not find that order.');
+                    return;
+                }
+
+                renderReceipt(data.order);
+            } catch (err) {
+                console.error('Receipt load error:', err);
+                renderError('Something went wrong loading your receipt. Please try again shortly.');
+            }
+        }
+
+        loadReceipt();
+    </script>
+</body>
+
+</html>
