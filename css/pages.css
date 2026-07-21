@@ -605,6 +605,7 @@
     color: var(--ms-gold); font-size: 2rem; opacity: 0.5;
 }
 .product-card .product-info {
+    --product-model-font-size: 1.05rem;
     padding: 20px 20px 22px;
     display: flex;
     flex-direction: column;
@@ -613,7 +614,7 @@
 .product-card .product-brand {
     order: -1;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.66rem;
+    font-size: calc(var(--product-model-font-size) * 0.9);
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--ms-gold);
@@ -622,7 +623,7 @@
 .product-card .product-name {
     font-family: 'Fraunces', serif;
     font-weight: 500;
-    font-size: 1.05rem;
+    font-size: var(--product-model-font-size);
     line-height: 1.2;
     color: var(--ms-ink);
     cursor: pointer;
@@ -1133,7 +1134,7 @@
     .policy-section, .about-section, .contact-section, .faq-section {
         border-radius: 18px 18px 0 0;
     }
-    .product-card .product-name { font-size: 0.95rem; }
+    .product-card .product-info { --product-model-font-size: 0.95rem; }
 }
 @media (max-width: 480px) {
     .products-grid, .recommendations-grid { grid-template-columns: 1fr 1fr; }
