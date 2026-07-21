@@ -1725,6 +1725,7 @@
             document.getElementById('accessoryProducts').style.display = 'block';
 
             loadAccessories();
+            document.getElementById('accessoryProducts').scrollIntoView({ behavior: 'smooth' });
 
             if (!skipPushState) {
                 history.pushState({ page: 'accessories', category: category }, '', `?page=accessories&category=${encodeURIComponent(category)}`);
@@ -2040,6 +2041,11 @@
                     <div class="meta-item">
                         <span class="meta-label">Movement</span>
                         <span class="meta-value">${product.movement}</span>
+                    </div>` : ''}
+                    ${product.deliverables && String(product.deliverables).trim() ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Deliverables</span>
+                        <span class="meta-value">${String(product.deliverables).trim()}</span>
                     </div>` : ''}
                     ${product.country ? `
                     <div class="meta-item">

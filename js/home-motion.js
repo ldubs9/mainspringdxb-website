@@ -156,14 +156,7 @@
                 yPercent: 12, ease: 'none',
                 scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
             });
-            // Fade the hero copy as the hero scrolls away. Start at 'top top' (not
-            // 'center center'): when the hero is shorter than the viewport, a
-            // center-based start resolves to a negative scroll position, leaving
-            // the text stuck partially faded at the top of the page.
-            gsap.to('#msHero .ms-hero-inner', {
-                yPercent: -8, opacity: 0.2, ease: 'none',
-                scrollTrigger: { trigger: hero, start: 'top top', end: 'bottom top', scrub: true }
-            });
+
         }
 
         /* Manifesto word-by-word color */

@@ -1105,6 +1105,7 @@
     transition: background 0.35s var(--ms-ease);
 }
 .checkout-confirm-btn:hover { background: var(--ms-gold) !important; color: var(--ms-ink) !important; }
+.checkout-confirm-btn .fa-whatsapp { color: inherit !important; }
 .checkout-confirm-btn.is-secondary { color: var(--ms-cream) !important; border: none !important; }
 .checkout-confirm-btn.is-secondary:hover { color: var(--ms-ink) !important; }
 
