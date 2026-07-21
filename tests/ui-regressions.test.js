@@ -38,3 +38,52 @@ test('opening a specific accessory category scrolls the filtered products into v
     const fn = app.slice(start, end);
     assert.match(fn, /accessoryProducts['"]\)\.scrollIntoView\(\{\s*behavior:\s*['"]smooth['"]\s*\}\)/);
 });
+
+test('product pagination fetches all non-sold products before the sold products', async () => {
+    const start = app.indexOf('async function fetchProductsWithSoldLast');
+    const end = app.indexOf('function renderProducts', start);
+    const fn = app.slice(start, end);
+
+    assert.ok(start >= 0, 'sold-last pagination helper is present');
+    const fetchProductsWithSoldLast = new Function(`const PRODUCTS_PER_PAGE = 28; ${fn}; return fetchProductsWithSoldLast;`)();
+    const products = [
+        ...Array.from({ length: 30 }, (_, index) => ({ id: `available-${index}`, status: 'available' })),
+        ...Array.from({ length: 3 }, (_, index) => ({ id: `sold-${index}`, status: 'sold' }))
+    ];
+
+    function createQuery(columns, options) {
+        const filters = [];
+        let range;
+        return {
+            or(value) {
+                filters.push(['or', value]);
+                return this;
+            },
+            eq(column, value) {
+                filters.push(['eq', column, value]);
+                return this;
+            },
+            range(from, to) {
+                range = [from, to];
+                return this;
+            },
+            then(resolve, reject) {
+                const matchingProducts = products.filter((product) => filters.every(([type, column, value]) => {
+                    if (type === 'or') return product.status !== 'sold' || product.status == null;
+                    return product[column] === value;
+                }));
+                const result = options?.head
+                    ? { count: matchingProducts.length, error: null }
+                    : { data: matchingProducts.slice(range[0], range[1] + 1), error: null };
+                return Promise.resolve(result).then(resolve, reject);
+            }
+        };
+    }
+
+    const firstPage = await fetchProductsWithSoldLast(createQuery, (query) => query, 1);
+    const secondPage = await fetchProductsWithSoldLast(createQuery, (query) => query, 2);
+
+    assert.deepEqual(firstPage.data.map((product) => product.status), Array(28).fill('available'));
+    assert.deepEqual(secondPage.data.map((product) => product.status), ['available', 'available', 'sold', 'sold', 'sold']);
+    assert.equal(secondPage.count, 33);
+});

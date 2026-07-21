@@ -1334,25 +1334,22 @@
                     return q;
                 }
 
-                // Combined count + data query (matches accessories approach — more reliable than head:true)
-                const from = (currentPage - 1) * 28;
-                const to = from + 27;
-                let dataQuery = applyWatchFilters(supabaseClient.from('mainspring_products').select('*', { count: 'exact' }));
-                if (sortBy === 'price-low') {
-                    dataQuery = dataQuery.order('price', { ascending: true });
-                } else if (sortBy === 'price-high') {
-                    dataQuery = dataQuery.order('price', { ascending: false });
-                } else {
-                    // Default: highest reference_code first
-                    dataQuery = dataQuery.order('reference_code', { ascending: false, nullsFirst: false });
-                }
-                dataQuery = dataQuery.range(from, to);
+                const createWatchQuery = (columns = '*', options) => applyWatchFilters(
+                    supabaseClient.from('mainspring_products').select(columns, options)
+                );
+                const sortWatches = (query) => {
+                    if (sortBy === 'price-low') return query.order('price', { ascending: true });
+                    if (sortBy === 'price-high') return query.order('price', { ascending: false });
+                    return query.order('reference_code', { ascending: false, nullsFirst: false });
+                };
+                const { data, count } = await fetchProductsWithSoldLast(
+                    createWatchQuery,
+                    sortWatches,
+                    currentPage
+                );
+                totalProducts = count;
 
-                const { data, error, count } = await dataQuery;
-                totalProducts = count || 0;
-                if (error) throw error;
-
-                renderProducts(sortByStatus(data || []), grid);
+                renderProducts(data, grid);
                 updatePagination();
             } catch (error) {
                 console.error('Error loading watches:', error);
@@ -1364,10 +1361,56 @@
             }
         }
 
-        const statusOrder = { available: 0, active: 1, reserved: 2, sold: 3 };
+        const PRODUCTS_PER_PAGE = 28;
 
-        function sortByStatus(products) {
-            return products.slice().sort((a, b) => (statusOrder[a.status] ?? 9) - (statusOrder[b.status] ?? 9));
+        // Pagination must happen after the status split. Sorting a single page locally
+        // can move sold products to the end of that page, but still leaves them before
+        // available products that were placed on later pages by the database query.
+        async function fetchProductsWithSoldLast(createQuery, sortQuery, page) {
+            const [{ count: totalCount, error: totalError }, { count: availableCount, error: availableError }] = await Promise.all([
+                createQuery('id', { count: 'exact', head: true }),
+                createQuery('id', { count: 'exact', head: true })
+                    .or('status.neq.sold,status.is.null')
+            ]);
+
+            if (totalError) throw totalError;
+            if (availableError) throw availableError;
+
+            const total = totalCount || 0;
+            const available = availableCount || 0;
+            const offset = (page - 1) * PRODUCTS_PER_PAGE;
+            const fetchRange = (query, from, to) => sortQuery(query).range(from, to);
+            let data = [];
+
+            if (offset < available) {
+                const availableOnPage = Math.min(PRODUCTS_PER_PAGE, available - offset);
+                const availableQuery = fetchRange(
+                    createQuery().or('status.neq.sold,status.is.null'),
+                    offset,
+                    offset + availableOnPage - 1
+                );
+                const soldOnPage = PRODUCTS_PER_PAGE - availableOnPage;
+                const soldQuery = soldOnPage > 0
+                    ? fetchRange(createQuery().eq('status', 'sold'), 0, soldOnPage - 1)
+                    : null;
+                const [availableResult, soldResult] = await Promise.all([availableQuery, soldQuery]);
+
+                if (availableResult.error) throw availableResult.error;
+                if (soldResult?.error) throw soldResult.error;
+                data = [...(availableResult.data || []), ...(soldResult?.data || [])];
+            } else {
+                const soldOffset = offset - available;
+                const soldResult = await fetchRange(
+                    createQuery().eq('status', 'sold'),
+                    soldOffset,
+                    soldOffset + PRODUCTS_PER_PAGE - 1
+                );
+
+                if (soldResult.error) throw soldResult.error;
+                data = soldResult.data || [];
+            }
+
+            return { data, count: total };
         }
 
         function renderProducts(products, grid) {
@@ -1439,7 +1482,7 @@
         
 
         function updatePagination() {
-            const totalPages = Math.ceil(totalProducts / 28) || 1;
+            const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE) || 1;
             const container = document.getElementById('pagination');
             container.innerHTML = renderPaginationButtons(currentPage, totalPages, 'goToWatchPage');
         }
@@ -1770,54 +1813,46 @@
                 const statusFilter = document.getElementById('accessoryStatusFilter')?.value || '';
                 const thirtyDaysAgo = getThirtyDaysAgoISO();
 
-                let query = supabaseClient
-                    .from('mainspring_products')
-                    .select('*', { count: 'exact' })
-                    .eq('category', 'accessory');
+                const createAccessoryQuery = (columns = '*', options) => {
+                    let query = supabaseClient
+                        .from('mainspring_products')
+                        .select(columns, options)
+                        .eq('category', 'accessory');
 
-                // Only filter by subcategory if a specific category is selected
-                if (currentAccessoryCategory) {
-                    query = query.eq('subcategory', currentAccessoryCategory);
-                }
+                    if (currentAccessoryCategory) {
+                        query = query.eq('subcategory', currentAccessoryCategory);
+                    }
 
-                // Apply status filter
-                if (statusFilter === 'available') {
-                    query = query.eq('status', 'available');
-                } else if (statusFilter === 'sold') {
-                    query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
-                } else if (statusFilter === 'reserved') {
-                    query = query.eq('status', 'reserved');
-                }
-                // else: "Any Condition" (empty) — no status filter, show all
+                    if (statusFilter === 'available') {
+                        query = query.eq('status', 'available');
+                    } else if (statusFilter === 'sold') {
+                        query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
+                    } else if (statusFilter === 'reserved') {
+                        query = query.eq('status', 'reserved');
+                    }
 
-                // Apply search (across name, brand, and model)
-                if (searchTerm) {
-                    query = query.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*`);
-                }
+                    if (searchTerm) {
+                        query = query.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*`);
+                    }
 
-                if (sortBy === 'price-low') {
-                    query = query.order('price', { ascending: true });
-                } else if (sortBy === 'price-high') {
-                    query = query.order('price', { ascending: false });
-                } else {
-                    query = query.order('id', { ascending: false });
-                }
-
-                // Apply pagination
-                const from = (currentAccessoryPage - 1) * 28;
-                const to = from + 27;
-                query = query.range(from, to);
-
-                const { data, error, count } = await query;
-
-                if (error) throw error;
-
-                totalAccessoryProducts = count || 0;
+                    return query;
+                };
+                const sortAccessories = (query) => {
+                    if (sortBy === 'price-low') return query.order('price', { ascending: true });
+                    if (sortBy === 'price-high') return query.order('price', { ascending: false });
+                    return query.order('id', { ascending: false });
+                };
+                const { data, count } = await fetchProductsWithSoldLast(
+                    createAccessoryQuery,
+                    sortAccessories,
+                    currentAccessoryPage
+                );
+                totalAccessoryProducts = count;
 
                 if (!data || data.length === 0) {
                     grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--gray); font-size: 1.1rem;">No products found.</div>';
                 } else {
-                    renderProducts(sortByStatus(data), grid);
+                    renderProducts(data, grid);
                 }
 
                 updateAccessoryPagination();
@@ -1830,7 +1865,7 @@
         }
 
         function updateAccessoryPagination() {
-            const totalPages = Math.ceil(totalAccessoryProducts / 28) || 1;
+            const totalPages = Math.ceil(totalAccessoryProducts / PRODUCTS_PER_PAGE) || 1;
             const container = document.getElementById('accessoryPagination');
             container.innerHTML = renderPaginationButtons(currentAccessoryPage, totalPages, 'goToAccessoryPage');
         }
