@@ -171,6 +171,50 @@
                 grid-template-columns: repeat(2, 1fr);
                 gap: 12px;
             }
+
+            /* Mobile navbar search metadata */
+            .search-results .product-card {
+                height: auto;
+            }
+
+            .search-results .product-card .product-info {
+                --product-model-font-size: 0.68rem;
+                display: flex;
+                padding: 9px 10px 11px;
+                min-height: 88px;
+                background: var(--white);
+            }
+
+            .search-results .product-card .product-name {
+                display: -webkit-box;
+                overflow: hidden;
+                -webkit-box-orient: vertical;
+                -webkit-line-clamp: 2;
+                font-size: 0.68rem;
+                line-height: 1.25;
+                margin-bottom: 4px;
+            }
+
+            .search-results .product-card .product-brand {
+                overflow: hidden;
+                font-size: 0.64rem;
+                line-height: 1.2;
+                margin-bottom: 6px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .search-results .product-card .product-price {
+                font-size: 0.74rem;
+                line-height: 1.2;
+                margin-top: auto;
+            }
+
+            .search-results .product-card .product-info > p:not(.product-brand):not(.product-price),
+            .search-results .product-card .product-info > div {
+                display: none !important;
+            }
+            /* End mobile navbar search metadata */
         }
 
         .header.scrolled {

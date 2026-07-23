@@ -96,6 +96,20 @@ test('navbar search overlay has rounded chrome, larger zoomed images, and reduce
     assert.match(styles, /\.search-results \.product-price\s*\{[^}]*font-size:\s*0\.8925rem/s);
 });
 
+test('mobile navbar search keeps image sizing and shows compact brand, model, and price metadata', () => {
+    const mobileStart = styles.indexOf('/* Mobile navbar search metadata */');
+    const mobileEnd = styles.indexOf('/* End mobile navbar search metadata */', mobileStart);
+    const mobileSearch = styles.slice(mobileStart, mobileEnd);
+
+    assert.ok(mobileStart >= 0 && mobileEnd > mobileStart, 'mobile search metadata rules exist');
+    assert.match(mobileSearch, /\.search-results \.product-card\s*\{[^}]*height:\s*auto/s);
+    assert.match(mobileSearch, /\.search-results \.product-card \.product-info\s*\{[^}]*--product-model-font-size:\s*0\.68rem[^}]*display:\s*flex/s);
+    assert.match(mobileSearch, /\.search-results \.product-card \.product-name\s*\{[^}]*font-size:\s*0\.68rem/s);
+    assert.match(mobileSearch, /\.search-results \.product-card \.product-brand\s*\{[^}]*font-size:\s*0\.64rem/s);
+    assert.match(mobileSearch, /\.search-results \.product-card \.product-price\s*\{[^}]*font-size:\s*0\.74rem/s);
+    assert.doesNotMatch(mobileSearch, /\.search-results \.product-image\s*\{/);
+});
+
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
     assert.match(header, /<li class="nav-more">/);
     assert.match(styles, /\.header-nav\s*>\s*li\s*\{[^}]*display:\s*flex[^}]*align-items:\s*center/s);
