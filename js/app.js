@@ -279,7 +279,7 @@
                         <div class="payment-method-icon"><i class="fas fa-store"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Cash Payment in Store</div>
-                            <div class="payment-method-desc">Your watches will be available at the store within 48 hours. Confirm the reservation with us on WhatsApp.</div>
+                            <div class="payment-method-desc">Your watches will be available within 48 hours at the store. Confirm the reservation with us on WhatsApp.</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
                     </div>
@@ -447,7 +447,7 @@
                     <h4>Reserved — Cash Payment in Store</h4>
                     <p>Your order <strong>${orderRef}</strong> is reserved for one hour.</p>
                     <p style="margin-top: 5px;">Total: <strong>${formatPrice(total)}</strong>, payable in cash at the store.</p>
-                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">Your watches will be available at the store within 48 hours. Start a WhatsApp conversation now so we can confirm the reservation and collection details.</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">Your watches will be available within 48 hours at the store. Start a WhatsApp conversation now so we can confirm the reservation and collection details.</p>
                     <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash_in_store', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm on WhatsApp</button>
                     <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Done</button>
                 </div>
