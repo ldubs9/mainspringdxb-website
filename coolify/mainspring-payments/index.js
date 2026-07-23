@@ -70,7 +70,7 @@ app.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: customer_name, customer_phone, items, payment_method' });
     }
 
-    const validMethods = ['bank_transfer', 'ziina', 'tabby', 'tamara', 'cash'];
+    const validMethods = ['bank_transfer', 'ziina', 'cash_in_store'];
     if (!validMethods.includes(payment_method)) {
       return res.status(400).json({ error: 'Invalid payment method' });
     }
@@ -80,79 +80,56 @@ app.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Invalid phone number' });
     }
 
-    // Server-side total calculation. Never trust client totals.
-    const subtotal = items.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+    const cleanItems = items.map((item) => ({
+      id: Number(item?.id),
+      qty: Number(item?.qty || 1),
+    }));
+    if (cleanItems.some((item) => !Number.isSafeInteger(item.id) || item.id <= 0 || item.qty !== 1)) {
+      return res.status(400).json({ error: 'Each cart item must identify one valid inventory record' });
+    }
 
-    const surchargeRate = (payment_method === 'tabby' || payment_method === 'tamara') ? 8.5
-      : (payment_method === 'ziina') ? 3
-      : 0;
-    const total = Math.round(subtotal * (1 + surchargeRate / 100));
-
-    const orderRef = 'MS-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-
-    const insertResp = await fetch(sbUrl('mainspring_orders'), {
+    const orderRef = 'MS-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+    const rpcResp = await fetch(sbUrl('rpc/create_mainspring_order_with_reservation'), {
       method: 'POST',
-      headers: { ...sbHeaders, Prefer: 'return=representation' },
+      headers: sbHeaders,
       body: JSON.stringify({
-        order_ref: orderRef,
-        customer_name: String(customer_name).substring(0, 200),
-        customer_email: customer_email ? String(customer_email).substring(0, 200) : null,
-        customer_phone: cleanPhone.substring(0, 20),
-        customer_address: customer_address ? String(customer_address).substring(0, 500) : null,
-        items: items.map((i) => ({
-          id: i.id,
-          brand: String(i.brand).substring(0, 100),
-          name: String(i.name).substring(0, 200),
-          price: Number(i.price),
-          qty: Math.min(Math.max(1, Math.floor(Number(i.qty))), 10),
-        })),
-        subtotal_aed: subtotal,
-        surcharge_pct: surchargeRate,
-        total_aed: total,
-        payment_method,
-        payment_status: 'pending',
-        order_status: 'pending',
-        device_type: (req.headers['user-agent'] || '').includes('Mobile') ? 'mobile' : 'desktop',
-        user_agent: (req.headers['user-agent'] || '').substring(0, 500),
+        p_order_ref: orderRef,
+        p_customer_name: String(customer_name).substring(0, 200),
+        p_customer_email: customer_email ? String(customer_email).substring(0, 200) : null,
+        p_customer_phone: cleanPhone.substring(0, 20),
+        p_customer_address: customer_address ? String(customer_address).substring(0, 500) : null,
+        p_items: cleanItems,
+        p_payment_method: payment_method,
+        p_device_type: (req.headers['user-agent'] || '').includes('Mobile') ? 'mobile' : 'desktop',
+        p_user_agent: (req.headers['user-agent'] || '').substring(0, 500),
       }),
     });
 
-    if (!insertResp.ok) {
-      const errText = await insertResp.text();
-      console.error('Order insert error:', insertResp.status, errText);
-      // Surface the DB error only in test mode to aid debugging.
-      return res.status(500).json({
-        error: 'Failed to create order',
-        ...(ZIINA_TEST_MODE ? { status: insertResp.status, detail: errText } : {}),
+    if (!rpcResp.ok) {
+      const detail = await rpcResp.text();
+      const unavailable = /sold or reserved|no longer reserved/i.test(detail);
+      console.error('Atomic order reservation failed:', rpcResp.status, detail);
+      return res.status(unavailable ? 409 : 400).json({
+        error: unavailable
+          ? 'One or more items were just reserved or sold. Please refresh your cart.'
+          : 'Unable to create this order. Please check your details and try again.',
       });
     }
 
-    const inserted = await insertResp.json();
-    const order = Array.isArray(inserted) ? inserted[0] : inserted;
-
-    // Best-effort audit log; do not fail the order if this errors.
-    try {
-      await fetch(sbUrl('mainspring_order_status_history'), {
-        method: 'POST',
-        headers: sbHeaders,
-        body: JSON.stringify({
-          order_id: order.id,
-          old_status: null,
-          new_status: 'pending',
-          changed_by: 'system',
-          note: `Order created via ${payment_method}`,
-        }),
-      });
-    } catch (e) {
-      console.error('status history insert failed (non-fatal):', e);
+    const rows = await rpcResp.json();
+    const order = Array.isArray(rows) ? rows[0] : rows;
+    if (!order?.order_ref) {
+      console.error('Atomic order reservation returned no order:', rows);
+      return res.status(500).json({ error: 'Failed to create order' });
     }
 
     return res.status(201).json({
       success: true,
-      order_ref: orderRef,
-      total_aed: total,
-      payment_method,
-      surcharge_pct: surchargeRate,
+      order_ref: order.order_ref,
+      total_aed: Number(order.total_aed),
+      payment_method: order.payment_method,
+      surcharge_pct: Number(order.surcharge_pct),
+      reservation_expires_at: order.reservation_expires_at,
     });
   } catch (err) {
     console.error('create-order error:', err);

@@ -4,6 +4,7 @@ const fs = require('node:fs');
 
 const app = fs.readFileSync('js/app.js', 'utf8');
 const accessories = fs.readFileSync('components/page-accessories.html', 'utf8');
+const navOverlay = fs.readFileSync('components/nav-overlay.html', 'utf8');
 const pagesCss = fs.readFileSync('css/pages.css', 'utf8');
 const homeMotion = fs.readFileSync('js/home-motion.js', 'utf8');
 
@@ -27,9 +28,23 @@ test('hero copy remains fully visible while scrolling the hero', () => {
 });
 
 test('accessory cards use the canonical Supabase subcategory values', () => {
-    for (const category of ['pocket-watch', 'standing-clocks', 'watch-box', 'bags-and-more', 'watch-straps']) {
+    for (const category of ['pocket-watch', 'books', 'standing-clocks', 'watch-box', 'bags-and-more', 'watch-straps']) {
         assert.match(accessories, new RegExp(`showAccessoryCategory\\('${category}'\\)`));
     }
+});
+
+test('accessory categories expose Books & Catalogues and Pocket Watches and Dials', () => {
+    assert.match(accessories, /<h3>BOOKS &amp; CATALOGUES<\/h3>/);
+    assert.match(accessories, /accessories-books-catalogues\.png/);
+    assert.match(accessories, /<h3>POCKET WATCHES AND DIALS<\/h3>/);
+});
+
+test('mobile accessory navigation uses the same canonical categories and labels', () => {
+    assert.match(navOverlay, /showAccessoryCategory\('books'\)/);
+    assert.match(navOverlay, /Books &amp; Catalogues/);
+    assert.match(navOverlay, /showAccessoryCategory\('pocket-watch'\)/);
+    assert.match(navOverlay, /Pocket Watches and Dials/);
+    assert.doesNotMatch(navOverlay, /showAccessoryCategory\('(pocket-watches|watch-boxes|bags-and-others)'\)/);
 });
 
 test('opening a specific accessory category scrolls the filtered products into view', () => {

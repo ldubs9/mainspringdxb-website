@@ -12,6 +12,17 @@
             }
         });
 
+        if (!window.MainspringSearch) {
+            throw new Error('Product search helpers failed to load');
+        }
+        const {
+            buildProductSearchFilter,
+            fetchAllProductSearchResults,
+            createLatestRequestGuard,
+        } = window.MainspringSearch;
+        const globalSearchRequestGuard = createLatestRequestGuard();
+        let globalSearchDebounceTimer = null;
+
         // Handle browser back/forward buttons
         window.addEventListener('popstate', function (event) {
             if (event.state) {
@@ -135,7 +146,7 @@
         }
 
         // Checkout — Secure multi-step flow
-        // Edge Functions URL (used by tabby/tamara/order-status)
+        // Edge Functions URL (used by order tracking)
         const EDGE_FN_URL = SUPABASE_URL + '/functions/v1';
 
         // Payments service (Coolify "mainspringpayments" app). Handles
@@ -240,8 +251,6 @@
         function renderCheckoutStep2() {
             const total = getCartTotal();
             const cardTotal = Math.round(total * 1.03);
-            const tabbyTotal = Math.round(total * 1.085);
-            const tamaraTotal = Math.round(total * 1.085);
             const body = document.getElementById('checkoutBody');
 
             body.innerHTML = `
@@ -262,35 +271,17 @@
                         <div class="payment-method-icon"><i class="fas fa-university"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Bank Transfer</div>
-                            <div class="payment-method-desc">Direct bank transfer</div>
+                            <div class="payment-method-desc">Transfer directly to our business account</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
                     </div>
-                    <div class="payment-method" onclick="selectPayment('cash', this)">
-                        <div class="payment-method-icon"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="payment-method" onclick="selectPayment('cash_in_store', this)">
+                        <div class="payment-method-icon"><i class="fas fa-store"></i></div>
                         <div class="payment-method-info">
-                            <div class="payment-method-name">Cash on Delivery</div>
-                            <div class="payment-method-desc">Pay upon collection / delivery</div>
+                            <div class="payment-method-name">Cash Payment in Store</div>
+                            <div class="payment-method-desc">Your watches will be available at the store within 48 hours. Confirm the reservation with us on WhatsApp.</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
-                    </div>
-                    <div class="payment-method" onclick="selectPayment('tabby', this)">
-                        <div class="payment-method-icon"><i class="fas fa-calendar-alt"></i></div>
-                        <div class="payment-method-info">
-                            <div class="payment-method-name">Tabby</div>
-                            <div class="payment-method-desc">Split in 4 payments</div>
-                            <div class="payment-method-surcharge">+8.5% surcharge</div>
-                        </div>
-                        <div class="payment-method-price" data-price-aed="${tabbyTotal}">${formatPrice(tabbyTotal)}</div>
-                    </div>
-                    <div class="payment-method" onclick="selectPayment('tamara', this)">
-                        <div class="payment-method-icon"><i class="fas fa-calendar-check"></i></div>
-                        <div class="payment-method-info">
-                            <div class="payment-method-name">Tamara</div>
-                            <div class="payment-method-desc">Buy now, pay later</div>
-                            <div class="payment-method-surcharge">+8.5% surcharge</div>
-                        </div>
-                        <div class="payment-method-price" data-price-aed="${tamaraTotal}">${formatPrice(tamaraTotal)}</div>
                     </div>
                 </div>
 
@@ -356,14 +347,10 @@
 
                 if (selectedPaymentMethod === 'ziina') {
                     await handleZiinaPayment(orderRef);
-                } else if (selectedPaymentMethod === 'tabby') {
-                    await handleTabbyPayment(orderRef);
-                } else if (selectedPaymentMethod === 'tamara') {
-                    await handleTamaraPayment(orderRef);
                 } else if (selectedPaymentMethod === 'bank_transfer') {
                     showBankTransferConfirmation(orderRef, orderTotal);
-                } else if (selectedPaymentMethod === 'cash') {
-                    showCashConfirmation(orderRef, orderTotal);
+                } else if (selectedPaymentMethod === 'cash_in_store') {
+                    showCashInStoreConfirmation(orderRef, orderTotal);
                 }
 
             } catch (err) {
@@ -426,97 +413,6 @@
             }
         }
 
-        // Tabby BNPL — redirect to Tabby checkout
-        async function handleTabbyPayment(orderRef) {
-            const body = document.getElementById('checkoutBody');
-            body.innerHTML = `
-                ${renderStepIndicator(3)}
-                <div class="checkout-loading">
-                    <i class="fas fa-spinner"></i>
-                    <p style="margin-top: 15px; color: var(--gray);">Setting up Tabby installments...</p>
-                </div>
-            `;
-
-            try {
-                const res = await fetch(EDGE_FN_URL + '/tabby-checkout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + SUPABASE_KEY,
-                    },
-                    body: JSON.stringify({ order_ref: orderRef }),
-                });
-
-                const data = await res.json();
-
-                if (data.payment_url) {
-                    window.location.href = data.payment_url;
-                } else {
-                    throw new Error(data.error || 'Tabby setup failed');
-                }
-            } catch (err) {
-                const total = getCartTotal();
-                const tabbyTotal = Math.round(total * 1.085);
-                const installment = Math.round(tabbyTotal / 4);
-                body.innerHTML = `
-                    ${renderStepIndicator(3)}
-                    <div class="checkout-confirmation">
-                        <i class="fas fa-calendar-alt"></i>
-                        <h4>Tabby — Split in 4</h4>
-                        <p>Your order <strong>${orderRef}</strong> has been created.</p>
-                        <p style="margin-top: 10px;">Estimated total: <strong>${formatPrice(tabbyTotal)}</strong> (4 x ${formatPrice(installment)})</p>
-                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Tabby integration is being finalized. Contact us via WhatsApp to complete your Tabby payment.</p>
-                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tabby', '${orderRef}')"><i class="fab fa-whatsapp"></i> Set Up Tabby via WhatsApp</button>
-                    </div>
-                `;
-            }
-        }
-
-        // Tamara BNPL — redirect to Tamara checkout
-        async function handleTamaraPayment(orderRef) {
-            const body = document.getElementById('checkoutBody');
-            body.innerHTML = `
-                ${renderStepIndicator(3)}
-                <div class="checkout-loading">
-                    <i class="fas fa-spinner"></i>
-                    <p style="margin-top: 15px; color: var(--gray);">Setting up Tamara payment plan...</p>
-                </div>
-            `;
-
-            try {
-                const res = await fetch(EDGE_FN_URL + '/tamara-checkout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + SUPABASE_KEY,
-                    },
-                    body: JSON.stringify({ order_ref: orderRef }),
-                });
-
-                const data = await res.json();
-
-                if (data.payment_url) {
-                    window.location.href = data.payment_url;
-                } else {
-                    throw new Error(data.error || 'Tamara setup failed');
-                }
-            } catch (err) {
-                const total = getCartTotal();
-                const tamaraTotal = Math.round(total * 1.085);
-                body.innerHTML = `
-                    ${renderStepIndicator(3)}
-                    <div class="checkout-confirmation">
-                        <i class="fas fa-calendar-check"></i>
-                        <h4>Tamara — Buy Now, Pay Later</h4>
-                        <p>Your order <strong>${orderRef}</strong> has been created.</p>
-                        <p style="margin-top: 10px;">Estimated total: <strong>${formatPrice(tamaraTotal)}</strong> (includes 8.5% surcharge)</p>
-                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Tamara integration is being finalized. Contact us via WhatsApp to complete your Tamara payment.</p>
-                        <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('tamara', '${orderRef}')"><i class="fab fa-whatsapp"></i> Set Up Tamara via WhatsApp</button>
-                    </div>
-                `;
-            }
-        }
-
         // Bank transfer confirmation
         function showBankTransferConfirmation(orderRef, total) {
             const body = document.getElementById('checkoutBody');
@@ -528,9 +424,9 @@
                     <p>Your order <strong>${orderRef}</strong> has been recorded.</p>
                     <p style="margin-top: 5px;">Please transfer the total to the following account:</p>
                     <div class="checkout-bank-details">
-                        <p><strong>Bank:</strong> Emirates NBD</p>
-                        <p><strong>Account Name:</strong> Mainspring Trading LLC</p>
-                        <p><strong>IBAN:</strong> AE00 0000 0000 0000 0000 000</p>
+                        <p><strong>Account holder:</strong> ERKAN GULMEZ TRADING L.L.C</p>
+                        <p><strong>IBAN:</strong> AE360860000009547681874</p>
+                        <p><strong>BIC:</strong> WIOBAEADXXX</p>
                         <p><strong>Reference:</strong> ${orderRef}</p>
                         <p><strong>Amount:</strong> ${formatPrice(total)}</p>
                     </div>
@@ -541,18 +437,18 @@
             `;
         }
 
-        // Cash on delivery confirmation
-        function showCashConfirmation(orderRef, total) {
+        // Cash payment in store confirmation
+        function showCashInStoreConfirmation(orderRef, total) {
             const body = document.getElementById('checkoutBody');
             body.innerHTML = `
                 ${renderStepIndicator(3)}
                 <div class="checkout-confirmation">
                     <i class="fas fa-check-circle" style="color: #27ae60;"></i>
-                    <h4>Order Placed — Cash on Delivery</h4>
-                    <p>Your order <strong>${orderRef}</strong> has been placed.</p>
-                    <p style="margin-top: 5px;">Total: <strong>${formatPrice(total)}</strong> — payable upon collection or delivery.</p>
-                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">We will contact you via WhatsApp to arrange the details.</p>
-                    <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm via WhatsApp</button>
+                    <h4>Reserved — Cash Payment in Store</h4>
+                    <p>Your order <strong>${orderRef}</strong> is reserved for one hour.</p>
+                    <p style="margin-top: 5px;">Total: <strong>${formatPrice(total)}</strong>, payable in cash at the store.</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">Your watches will be available at the store within 48 hours. Start a WhatsApp conversation now so we can confirm the reservation and collection details.</p>
+                    <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash_in_store', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm on WhatsApp</button>
                     <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Done</button>
                 </div>
             `;
@@ -561,10 +457,8 @@
         function sendOrderWhatsApp(method, orderRef) {
             const methodNames = {
                 bank_transfer: 'Bank Transfer',
-                cash: 'Cash on Delivery',
-                ziina: 'Card Payment (Ziina)',
-                tabby: 'Tabby (BNPL)',
-                tamara: 'Tamara (BNPL)'
+                cash_in_store: 'Cash Payment in Store',
+                ziina: 'Card Payment (Ziina)'
             };
             const customer = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
             const message = `Hello Mainspring, I have placed an order.\n\nOrder Ref: ${orderRef}\nName: ${customer.name || ''}\nPayment: ${methodNames[method] || method}\n\nPlease confirm and arrange the next steps. Thank you!`;
@@ -572,7 +466,7 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Handle payment gateway return (Tap/Tabby/Tamara redirects back here)
+        // Handle the Ziina card-payment return redirect
         function handlePaymentReturn() {
             const params = new URLSearchParams(window.location.search);
             const orderRef = params.get('order');
@@ -586,7 +480,7 @@
             const body = document.getElementById('checkoutBody');
             document.getElementById('checkoutOverlay').classList.add('active');
 
-            if (status.includes('success') || status === 'tap_complete' || status === 'ziina_success') {
+            if (status.includes('success') || status === 'ziina_success') {
                 body.innerHTML = `
                     ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
@@ -674,10 +568,8 @@
 
                 const methodNames = {
                     bank_transfer: 'Bank Transfer',
-                    cash: 'Cash on Delivery',
-                    ziina: 'Card (Ziina)',
-                    tabby: 'Tabby',
-                    tamara: 'Tamara'
+                    cash_in_store: 'Cash Payment in Store',
+                    ziina: 'Card (Ziina)'
                 };
 
                 resultEl.innerHTML = `
@@ -1074,49 +966,55 @@
             }
             overlay.classList.add('active');
             document.getElementById('globalSearchInput').value = '';
+            document.getElementById('globalSearchResults').innerHTML = '<div class="search-message">Type to search watches and accessories</div>';
             document.getElementById('globalSearchInput').focus();
         }
 
         function closeGlobalSearch() {
             const overlay = document.getElementById('globalSearchOverlay');
             overlay.classList.remove('active');
+            clearTimeout(globalSearchDebounceTimer);
+            globalSearchRequestGuard.invalidate();
             document.getElementById('globalSearchResults').innerHTML = '';
         }
 
-        // Perform global search across categories (Supabase fallback to demo data)
-        async function performGlobalSearch(q) {
-            const resultsContainer = document.getElementById('globalSearchResults');
-            q = (q || '').trim();
+        function queueGlobalSearch(value) {
+            clearTimeout(globalSearchDebounceTimer);
+            globalSearchDebounceTimer = setTimeout(() => performGlobalSearch(value), 180);
+        }
 
-            if (!q) {
-                resultsContainer.innerHTML = '<div style="grid-column:1/-1; padding:24px; color: var(--gray);">Type to search watches and accessories</div>';
+        // Search every matching product record and discard responses from older keystrokes.
+        async function performGlobalSearch(value) {
+            const resultsContainer = document.getElementById('globalSearchResults');
+            const searchFilter = buildProductSearchFilter(value);
+            const requestId = globalSearchRequestGuard.next();
+
+            if (!searchFilter) {
+                resultsContainer.innerHTML = '<div class="search-message">Type to search watches and accessories</div>';
                 return;
             }
 
-            resultsContainer.innerHTML = '<div style="grid-column:1/-1;"><div class="loading"><div class="loading-spinner"></div></div></div>';
+            resultsContainer.innerHTML = '<div class="search-message"><div class="loading"><div class="loading-spinner"></div></div></div>';
 
             try {
-                const { data, error } = await supabaseClient
+                const createGlobalProductSearchQuery = () => supabaseClient
                     .from('mainspring_products')
                     .select('*')
-                    .or(`name.ilike.*${q}*,brand.ilike.*${q}*,model.ilike.*${q}*,watch_reference.ilike.*${q}*,reference_code.ilike.*${q}*`)
-                    .order('status', { ascending: true })
-                    .limit(40);
+                    .or(searchFilter);
+                const data = await fetchAllProductSearchResults(createGlobalProductSearchQuery, value);
 
-                if (error) throw error;
-
-                if (data && data.length) {
-                    resultsContainer.innerHTML = '';
-                    renderProducts(data, resultsContainer);
+                if (!globalSearchRequestGuard.isCurrent(requestId)) return;
+                if (!data.length) {
+                    resultsContainer.innerHTML = '<div class="search-message">No results found.</div>';
                     return;
                 }
-            } catch (err) {
-                console.log('Supabase search failed, falling back to demo data', err);
-            }
 
-            // No demo fallback — show no results when remote search fails
-            resultsContainer.innerHTML = '<div style="grid-column:1/-1; padding:24px; color: var(--gray);">No results found.</div>';
-            return;
+                renderProducts(data, resultsContainer, { fromGlobalSearch: true });
+            } catch (err) {
+                if (!globalSearchRequestGuard.isCurrent(requestId)) return;
+                console.error('Product search failed:', err);
+                resultsContainer.innerHTML = '<div class="search-message">Search is temporarily unavailable. Please try again.</div>';
+            }
         }
 
         // State
@@ -1300,6 +1198,7 @@
                 const brandFilter = document.getElementById('brandFilter').value;
                 const priceFilter = document.getElementById('priceFilter').value;
                 const searchTerm = document.getElementById('searchInput').value;
+                const searchFilter = buildProductSearchFilter(searchTerm);
                 const sortBy = document.getElementById('sortFilter').value;
                 const statusFilter = document.getElementById('statusFilter').value;
                 const genderFilter = document.getElementById('genderFilter').value;
@@ -1322,7 +1221,7 @@
                     if (genderFilter) q = q.eq('gender', genderFilter);
                     if (movementFilter) q = q.eq('movement', movementFilter);
                     if (countryFilter) q = q.eq('country', countryFilter);
-                    if (searchTerm) q = q.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*,reference_code.ilike.*${searchTerm}*,watch_reference.ilike.*${searchTerm}*`);
+                    if (searchFilter) q = q.or(searchFilter);
                     if (priceFilter) {
                         if (priceFilter.includes('+')) {
                             q = q.gte('price', parseInt(priceFilter.replace('+', '')));
@@ -1342,11 +1241,23 @@
                     if (sortBy === 'price-high') return query.order('price', { ascending: false });
                     return query.order('reference_code', { ascending: false, nullsFirst: false });
                 };
-                const { data, count } = await fetchProductsWithSoldLast(
-                    createWatchQuery,
-                    sortWatches,
-                    currentPage
-                );
+                let data;
+                let count;
+                if (searchFilter) {
+                    const createWatchSearchQuery = () => sortWatches(createWatchQuery());
+                    const matchingProducts = await fetchAllProductSearchResults(createWatchSearchQuery, searchTerm);
+                    count = matchingProducts.length;
+                    const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
+                    data = matchingProducts.slice(offset, offset + PRODUCTS_PER_PAGE);
+                } else {
+                    const result = await fetchProductsWithSoldLast(
+                        createWatchQuery,
+                        sortWatches,
+                        currentPage
+                    );
+                    data = result.data;
+                    count = result.count;
+                }
                 totalProducts = count;
 
                 renderProducts(data, grid);
@@ -1413,7 +1324,12 @@
             return { data, count: total };
         }
 
-        function renderProducts(products, grid) {
+        function openProductFromSearch(event, productIdentifier) {
+            closeGlobalSearch();
+            showProductDetail(event, productIdentifier);
+        }
+
+        function renderProducts(products, grid, options = {}) {
             if (!products || products.length === 0) {
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><p>No products found.</p></div>';
                 return;
@@ -1446,17 +1362,21 @@
                 }
 
                 const statusClass = isSold ? ' sold' : isReserved ? ' reserved' : '';
+                const productIdentifier = product.reference_code || product.id;
+                const openProductCall = options.fromGlobalSearch
+                    ? `openProductFromSearch(event, '${productIdentifier}')`
+                    : `showProductDetail(event, '${productIdentifier}')`;
 
                 return `
                 <div class="product-card${statusClass}">
-                    <div class="product-image" onclick="showProductDetail(event, '${product.reference_code || product.id}')">
+                    <div class="product-image" onclick="${openProductCall}">
                         ${firstImage ?
                         `<img src="${firstImage}" alt="${displayBrand} ${displayName}" loading="lazy">` :
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
                     }
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
+                        <h3 class="product-name" onclick="${openProductCall}">${displayName}</h3>
                         <p class="product-brand">${displayBrand}</p>
                         ${additionalInfo}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
