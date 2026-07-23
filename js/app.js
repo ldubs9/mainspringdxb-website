@@ -1375,11 +1375,11 @@
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
                     }
                     </div>
-                    <div class="product-info">
-                        <h3 class="product-name" onclick="${openProductCall}">${displayName}</h3>
-                        <p class="product-brand">${displayBrand}</p>
+                    <div class="product-info${options.fromGlobalSearch ? ' search-result-meta' : ''}">
+                        <h3 class="product-name${options.fromGlobalSearch ? ' search-result-model' : ''}" onclick="${openProductCall}">${displayName}</h3>
+                        <p class="product-brand${options.fromGlobalSearch ? ' search-result-brand' : ''}">${displayBrand}</p>
                         ${additionalInfo}
-                        <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
+                        <p class="product-price${options.fromGlobalSearch ? ' search-result-price' : ''}" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                         <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
                             ${isUnavailable ? `
                             <button disabled style="flex: 1; padding: 10px; background: var(--gray); color: white; border: none; cursor: default; font-size: 0.8rem; opacity: 0.7;">

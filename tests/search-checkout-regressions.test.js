@@ -7,6 +7,7 @@ const app = fs.readFileSync('js/app.js', 'utf8');
 const styles = fs.readFileSync('css/styles.css', 'utf8');
 const pageStyles = fs.readFileSync('css/pages.css', 'utf8');
 const index = fs.readFileSync('index.html', 'utf8');
+const loader = fs.readFileSync('js/loader.js', 'utf8');
 const header = fs.readFileSync('components/header.html', 'utf8');
 const payments = fs.readFileSync('coolify/mainspring-payments/index.js', 'utf8');
 const migrationPath = 'supabase/migrations/20260723_atomic_checkout_inventory.sql';
@@ -110,6 +111,11 @@ test('mobile navbar search keeps image sizing and shows compact brand, model, an
     assert.match(mobileSearch, /\.search-results \.product-card \.product-brand\s*\{[^}]*font-size:\s*0\.64rem/s);
     assert.match(mobileSearch, /\.search-results \.product-card \.product-price\s*\{[^}]*font-size:\s*0\.74rem/s);
     assert.doesNotMatch(mobileSearch, /\.search-results \.product-image\s*\{/);
+    assert.match(app, /search-result-meta/);
+    assert.match(app, /search-result-model/);
+    assert.match(app, /search-result-brand/);
+    assert.match(app, /search-result-price/);
+    assert.match(pageStyles, /\.search-result-meta\s*\{[^}]*display:\s*flex/s);
 });
 
 test('final stylesheet keeps navbar search typography compact on desktop and metadata visible on mobile', () => {
@@ -118,7 +124,8 @@ test('final stylesheet keeps navbar search typography compact on desktop and met
     assert.match(pageStyles, /\.search-results \.product-card \.product-price\s*\{[^}]*font-size:\s*0\.8925rem/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card\s*\{[^}]*height:\s*auto/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card \.product-info\s*\{[^}]*display:\s*flex[^}]*min-height:/s);
-    assert.match(index, /css\/pages\.css\?v=7/);
+    assert.match(index, /css\/pages\.css\?v=8/);
+    assert.match(loader, /js\/app\.js\?v=6/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {

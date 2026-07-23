@@ -1198,3 +1198,46 @@
         display: none !important;
     }
 }
+
+/* Search metadata has its own explicit layout so listing-card rules cannot hide it. */
+.search-results .search-result-meta {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 768px) {
+    .search-results .search-result-meta {
+        min-height: 76px;
+        padding: 8px 9px 10px;
+    }
+    .search-results .search-result-model,
+    .search-results .search-result-brand,
+    .search-results .search-result-price {
+        display: block;
+        opacity: 1;
+        visibility: visible;
+    }
+    .search-results .search-result-model {
+        font-size: 0.68rem;
+        line-height: 1.2;
+        order: 2;
+    }
+    .search-results .search-result-brand {
+        font-size: 0.64rem;
+        line-height: 1.2;
+        margin-bottom: 3px;
+        order: 1;
+    }
+    .search-results .search-result-price {
+        font-size: 0.74rem;
+        line-height: 1.2;
+        margin-top: 5px;
+        order: 3;
+    }
+}
