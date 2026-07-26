@@ -1868,11 +1868,11 @@
             // Demo product data (fallback)
             if (!product) {
                 const demoProducts = {
-                    1: { id: 1, brand: 'Rolex', model: 'Submariner Date', name: 'Submariner Date', price: 14500, description: 'The Oyster Perpetual Submariner Date is a reference among divers\' watches.', image_urls: [] },
-                    2: { id: 2, brand: 'Rolex', model: 'Daytona Cosmograph', name: 'Daytona Cosmograph', price: 28500, description: 'The Cosmograph Daytona is the ultimate racing watch.', image_urls: [] },
-                    3: { id: 3, brand: 'Omega', model: 'Speedmaster Professional', name: 'Speedmaster Professional', price: 7500, description: 'The iconic moonwatch, the only chronograph worn on the Moon.', image_urls: [] },
-                    4: { id: 4, brand: 'Patek Philippe', model: 'Nautilus 5711', name: 'Nautilus 5711', price: 125000, description: 'An icon of luxury sports watches. Designed by Gérald Genta in 1974.', image_urls: [] },
-                    5: { id: 5, brand: 'Audemars Piguet', model: 'Royal Oak', name: 'Royal Oak', price: 45000, description: 'Revolutionized the watch industry when launched in 1972.', image_urls: [] }
+                    1: { id: 1, brand: 'Rolex', model: 'Submariner Date', name: 'Submariner Date', price: 14500, caption: 'The Oyster Perpetual Submariner Date is a reference among divers\' watches.', image_urls: [] },
+                    2: { id: 2, brand: 'Rolex', model: 'Daytona Cosmograph', name: 'Daytona Cosmograph', price: 28500, caption: 'The Cosmograph Daytona is the ultimate racing watch.', image_urls: [] },
+                    3: { id: 3, brand: 'Omega', model: 'Speedmaster Professional', name: 'Speedmaster Professional', price: 7500, caption: 'The iconic moonwatch, the only chronograph worn on the Moon.', image_urls: [] },
+                    4: { id: 4, brand: 'Patek Philippe', model: 'Nautilus 5711', name: 'Nautilus 5711', price: 125000, caption: 'An icon of luxury sports watches. Designed by Gérald Genta in 1974.', image_urls: [] },
+                    5: { id: 5, brand: 'Audemars Piguet', model: 'Royal Oak', name: 'Royal Oak', price: 45000, caption: 'Revolutionized the watch industry when launched in 1972.', image_urls: [] }
                 };
                 product = demoProducts[productIdentifier];
                 if (!product) {
@@ -1885,7 +1885,7 @@
                         model: `${models[numericId % models.length]} ${numericId}`,
                         name: `${models[numericId % models.length]} ${numericId}`,
                         price: (numericId * 2500) + 5000,
-                        description: 'Experience the pinnacle of Swiss craftsmanship with this exceptional timepiece.',
+                        caption: 'Experience the pinnacle of Swiss craftsmanship with this exceptional timepiece.',
                         image_urls: []
                     };
                 }
@@ -1945,7 +1945,7 @@
                         : '';
                 })()}
                 <p class="detail-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
-                <p class="detail-description">${product.description || ''}</p>
+                <p class="detail-description">${product.caption || ''}</p>
                 ${isUnavailableProduct ? `
                 <div class="detail-actions">
                     <button class="btn-primary" disabled style="opacity: 0.5; cursor: default;"><i class="fas fa-ban"></i> ${unavailableLabel}</button>
