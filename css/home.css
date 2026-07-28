@@ -298,21 +298,22 @@
    MANIFESTO
 ============================================================================ */
 .ms-manifesto {
-    padding: clamp(90px, 16vh, 200px) var(--ms-pad);
+    padding: clamp(60px, 11vh, 140px) var(--ms-pad);
     max-width: 1400px; margin: 0 auto;
 }
-.ms-manifesto-top { display: flex; align-items: center; gap: 18px; margin-bottom: clamp(36px, 6vh, 70px); }
+.ms-manifesto-top { display: flex; align-items: center; gap: 18px; margin-bottom: clamp(24px, 4vh, 48px); }
 .ms-manifesto-text {
+    /* 15% down from the original clamp(1.7rem, 4.6vw, 4rem) */
     font-family: 'Fraunces', serif;
     font-weight: 400;
-    font-size: clamp(1.7rem, 4.6vw, 4rem);
+    font-size: clamp(1.45rem, 3.9vw, 3.4rem);
     line-height: 1.18;
     letter-spacing: -0.02em;
     color: var(--ms-ink);
     max-width: 20ch;
 }
 .ms-manifesto-text .ms-w { transition: color 0.3s linear; }
-.ms-manifesto-foot { margin-top: clamp(40px, 7vh, 80px); }
+.ms-manifesto-foot { margin-top: clamp(26px, 4.5vh, 52px); }
 
 /* ============================================================================
    FEATURED (horizontal rail)
@@ -372,7 +373,8 @@
 ============================================================================ */
 .ms-showcase {
     position: relative;
-    min-height: 92vh;
+    /* 100px off the top + 100px off the bottom */
+    min-height: calc(92vh - 200px);
     display: flex; align-items: center;
     overflow: hidden;
     isolation: isolate;
@@ -409,7 +411,7 @@
 /* ============================================================================
    SHOP (asymmetric split)
 ============================================================================ */
-.ms-shop { display: grid; grid-template-columns: 1.35fr 0.65fr; min-height: 78vh; }
+.ms-shop { display: grid; grid-template-columns: 1.35fr 0.65fr; min-height: calc(78vh - 50px); }
 .ms-shop-block { position: relative; overflow: hidden; cursor: pointer; display: flex; align-items: flex-end; isolation: isolate; }
 .ms-shop-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.04); transition: transform 0.9s var(--ms-ease); z-index: 0; }
 .ms-shop-block:hover .ms-shop-bg { transform: scale(1.12); }
@@ -483,7 +485,7 @@
 ============================================================================ */
 @media (max-width: 992px) {
     .ms-shop { grid-template-columns: 1fr; }
-    .ms-shop-block { min-height: 56vh; }
+    .ms-shop-block { min-height: calc(56vh - 50px); }
     .ms-standard-row { grid-template-columns: 56px 1fr; grid-template-areas: "num title" "num desc"; row-gap: 14px; }
     .ms-standard-row h3 { grid-area: title; }
     .ms-standard-row p { grid-area: desc; }

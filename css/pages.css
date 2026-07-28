@@ -651,17 +651,22 @@
    9. CATEGORY CARDS (accessories)
 ============================================================================ */
 .categories-section { padding: clamp(24px, 3.5vw, 48px) var(--ms-pad) clamp(40px, 6vw, 70px); }
+/* No !important here: it beat both the responsive rules below and the inline
+   display:none used to swap the grid out for the product list. */
 .categories-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    grid-template-rows: auto !important;
-    grid-template-areas: none !important;
-    grid-auto-rows: auto !important;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: none;
+    grid-auto-rows: auto;
     gap: clamp(16px, 2vw, 26px);
     max-width: 1320px;
 }
 .category-card {
     position: relative;
+    /* height: auto so the aspect-ratio below wins over the fixed heights
+       still declared for .category-card in styles.css. */
+    height: auto;
     border-radius: 16px;
     overflow: hidden;
     cursor: pointer;
@@ -710,6 +715,7 @@
 }
 @media (max-width: 768px) {
     .categories-grid .category-card-all { height: clamp(180px, 50vw, 240px) !important; }
+    .category-info { left: 18px; right: 18px; bottom: 18px; }
 }
 
 /* ============================================================================
@@ -1142,102 +1148,75 @@
     .sell-cta-btn { justify-content: center; }
 }
 
-/* Navbar search cards: compact type without changing approved image geometry. */
-.search-results .product-card .product-info {
-    --product-model-font-size: 0.7875rem;
-    padding: 15px 16px 17px;
-}
-.search-results .product-card .product-brand {
-    font-size: 0.70875rem;
-}
-.search-results .product-card .product-price {
-    font-size: 0.8925rem;
-}
-.search-results .product-card .product-info > p:not(.product-brand):not(.product-price) {
-    font-size: 0.5625rem !important;
-}
-.search-results .product-card .product-info button {
-    font-size: 0.6rem !important;
-}
-
-@media (max-width: 768px) {
-    .search-results .product-card {
-        height: auto;
-    }
-    .search-results .product-card .product-info {
-        --product-model-font-size: 0.68rem;
-        display: flex;
-        min-height: 88px;
-        padding: 9px 10px 11px;
-        background: var(--ms-warm);
-    }
-    .search-results .product-card .product-name {
-        display: -webkit-box;
-        overflow: hidden;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        font-size: 0.68rem;
-        line-height: 1.25;
-        margin-bottom: 4px;
-    }
-    .search-results .product-card .product-brand {
-        overflow: hidden;
-        font-size: 0.64rem;
-        line-height: 1.2;
-        margin-bottom: 6px;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .search-results .product-card .product-price {
-        font-size: 0.74rem;
-        line-height: 1.2;
-        margin-top: auto;
-    }
-    .search-results .product-card .product-info > p:not(.product-brand):not(.product-price),
-    .search-results .product-card .product-info > div {
-        display: none !important;
-    }
-}
-
-/* Search metadata has its own explicit layout so listing-card rules cannot hide it. */
-.search-results .search-result-meta {
+/* ============================================================================
+   15. NAVBAR SEARCH RESULT CARDS
+   Standalone markup (.search-card) rather than the listing card, so nothing
+   in the listing-card cascade can reshape the results.
+============================================================================ */
+.search-card {
     display: flex;
-    flex: 0 0 auto;
     flex-direction: column;
-    height: auto;
-    min-height: 0;
-    overflow: visible;
-    opacity: 1;
-    visibility: visible;
+    gap: 9px;
+    cursor: pointer;
+    min-width: 0;
 }
-
+.search-card-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 12px;
+    background: var(--ms-cream);
+}
+.search-card-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s var(--ms-ease);
+}
+.search-card:hover .search-card-image img { transform: scale(1.06); }
+.search-card-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ms-gold);
+    font-size: 1.6rem;
+    opacity: 0.5;
+}
+.search-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    padding: 0 2px;
+}
+.search-card-brand {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ms-gold);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.search-card-model {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    color: var(--ms-ink);
+}
 @media (max-width: 768px) {
-    .search-results .search-result-meta {
-        min-height: 76px;
-        padding: 8px 9px 10px;
-    }
-    .search-results .search-result-model,
-    .search-results .search-result-brand,
-    .search-results .search-result-price {
-        display: block;
-        opacity: 1;
-        visibility: visible;
-    }
-    .search-results .search-result-model {
-        font-size: 0.68rem;
-        line-height: 1.2;
-        order: 2;
-    }
-    .search-results .search-result-brand {
-        font-size: 0.64rem;
-        line-height: 1.2;
-        margin-bottom: 3px;
-        order: 1;
-    }
-    .search-results .search-result-price {
-        font-size: 0.74rem;
-        line-height: 1.2;
-        margin-top: 5px;
-        order: 3;
-    }
+    .search-card { gap: 7px; }
+    .search-card-image { border-radius: 10px; }
+    .search-card-brand { font-size: 0.58rem; letter-spacing: 0.14em; }
+    .search-card-model { font-size: 0.76rem; }
 }

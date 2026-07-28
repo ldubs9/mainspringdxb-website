@@ -997,10 +997,10 @@
             resultsContainer.innerHTML = '<div class="search-message"><div class="loading"><div class="loading-spinner"></div></div></div>';
 
             try {
-                const createGlobalProductSearchQuery = () => supabaseClient
+                const createGlobalProductSearchQuery = () => excludeUnavailableProducts(supabaseClient
                     .from('mainspring_products')
                     .select('*')
-                    .or(searchFilter);
+                    .or(searchFilter));
                 const data = await fetchAllProductSearchResults(createGlobalProductSearchQuery, value);
 
                 if (!globalSearchRequestGuard.isCurrent(requestId)) return;
@@ -1119,8 +1119,7 @@
                 loadBrandsFilter();
                 loadWatches();
             } else if (pageName === 'accessories') {
-                document.getElementById('accessoryProducts').style.display = 'none';
-                document.getElementById('categoriesGrid').style.display = 'grid';
+                setAccessoryCategoriesVisible(true);
             } else if (pageName === 'blog') {
                 loadBlogPosts();
             } else if (pageName === 'home') {
@@ -1183,11 +1182,9 @@
         }
 
         // Load watches from Supabase
-        // Helper to get the date 30 days ago in ISO format
-        function getThirtyDaysAgoISO() {
-            const d = new Date();
-            d.setDate(d.getDate() - 30);
-            return d.toISOString();
+        // Sold and archived products are never shown on the site.
+        function excludeUnavailableProducts(query) {
+            return query.or('status.not.in.(sold,archived),status.is.null');
         }
 
         async function loadWatches() {
@@ -1204,19 +1201,18 @@
                 const genderFilter = document.getElementById('genderFilter').value;
                 const movementFilter = document.getElementById('movementFilter').value;
                 const countryFilter = document.getElementById('countryFilter').value;
-                const thirtyDaysAgo = getThirtyDaysAgoISO();
 
                 // Apply all active filters to a query builder
                 function applyWatchFilters(q) {
                     q = q.eq('category', 'watch');
                     if (statusFilter === 'available') {
                         q = q.eq('status', 'available');
-                    } else if (statusFilter === 'sold') {
-                        q = q.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
                     } else if (statusFilter === 'reserved') {
                         q = q.eq('status', 'reserved');
+                    } else {
+                        // No status filter selected — still never show sold/archived products.
+                        q = excludeUnavailableProducts(q);
                     }
-                    // else: no status filter — show all watches
                     if (brandFilter) q = q.eq('brand', brandFilter);
                     if (genderFilter) q = q.eq('gender', genderFilter);
                     if (movementFilter) q = q.eq('movement', movementFilter);
@@ -1250,7 +1246,7 @@
                     const offset = (currentPage - 1) * PRODUCTS_PER_PAGE;
                     data = matchingProducts.slice(offset, offset + PRODUCTS_PER_PAGE);
                 } else {
-                    const result = await fetchProductsWithSoldLast(
+                    const result = await fetchProductsPage(
                         createWatchQuery,
                         sortWatches,
                         currentPage
@@ -1274,54 +1270,15 @@
 
         const PRODUCTS_PER_PAGE = 28;
 
-        // Pagination must happen after the status split. Sorting a single page locally
-        // can move sold products to the end of that page, but still leaves them before
-        // available products that were placed on later pages by the database query.
-        async function fetchProductsWithSoldLast(createQuery, sortQuery, page) {
-            const [{ count: totalCount, error: totalError }, { count: availableCount, error: availableError }] = await Promise.all([
-                createQuery('id', { count: 'exact', head: true }),
-                createQuery('id', { count: 'exact', head: true })
-                    .or('status.neq.sold,status.is.null')
-            ]);
+        async function fetchProductsPage(createQuery, sortQuery, page) {
+            const { count, error: countError } = await createQuery('id', { count: 'exact', head: true });
+            if (countError) throw countError;
 
-            if (totalError) throw totalError;
-            if (availableError) throw availableError;
-
-            const total = totalCount || 0;
-            const available = availableCount || 0;
             const offset = (page - 1) * PRODUCTS_PER_PAGE;
-            const fetchRange = (query, from, to) => sortQuery(query).range(from, to);
-            let data = [];
+            const { data, error } = await sortQuery(createQuery()).range(offset, offset + PRODUCTS_PER_PAGE - 1);
+            if (error) throw error;
 
-            if (offset < available) {
-                const availableOnPage = Math.min(PRODUCTS_PER_PAGE, available - offset);
-                const availableQuery = fetchRange(
-                    createQuery().or('status.neq.sold,status.is.null'),
-                    offset,
-                    offset + availableOnPage - 1
-                );
-                const soldOnPage = PRODUCTS_PER_PAGE - availableOnPage;
-                const soldQuery = soldOnPage > 0
-                    ? fetchRange(createQuery().eq('status', 'sold'), 0, soldOnPage - 1)
-                    : null;
-                const [availableResult, soldResult] = await Promise.all([availableQuery, soldQuery]);
-
-                if (availableResult.error) throw availableResult.error;
-                if (soldResult?.error) throw soldResult.error;
-                data = [...(availableResult.data || []), ...(soldResult?.data || [])];
-            } else {
-                const soldOffset = offset - available;
-                const soldResult = await fetchRange(
-                    createQuery().eq('status', 'sold'),
-                    soldOffset,
-                    soldOffset + PRODUCTS_PER_PAGE - 1
-                );
-
-                if (soldResult.error) throw soldResult.error;
-                data = soldResult.data || [];
-            }
-
-            return { data, count: total };
+            return { data: data || [], count: count || 0 };
         }
 
         function openProductFromSearch(event, productIdentifier) {
@@ -1329,9 +1286,48 @@
             showProductDetail(event, productIdentifier);
         }
 
+        function escapeMarkup(value) {
+            return String(value ?? '').replace(/[&<>"']/g, c => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+            ));
+        }
+
+        // Navbar search results are deliberately minimal: a square image with the
+        // brand and model underneath. They do not reuse the listing card markup.
+        function renderSearchResults(products, grid) {
+            grid.innerHTML = products.map(product => {
+                const firstImage = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
+                const brand = escapeMarkup(product.brand || '');
+                const model = escapeMarkup(product.model || product.name || '');
+                const identifier = escapeMarkup(product.reference_code || product.id);
+                const alt = escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}`.trim());
+
+                return `
+                <div class="search-card" role="button" tabindex="0"
+                    onclick="openProductFromSearch(event, '${identifier}')"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductFromSearch(event, '${identifier}');}">
+                    <div class="search-card-image">
+                        ${firstImage
+                        ? `<img src="${escapeMarkup(firstImage)}" alt="${alt}" loading="lazy">`
+                        : `<div class="search-card-placeholder"><i class="fas fa-clock"></i></div>`}
+                    </div>
+                    <div class="search-card-meta">
+                        ${brand ? `<span class="search-card-brand">${brand}</span>` : ''}
+                        <span class="search-card-model">${model}</span>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
         function renderProducts(products, grid, options = {}) {
             if (!products || products.length === 0) {
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><p>No products found.</p></div>';
+                return;
+            }
+
+            if (options.fromGlobalSearch) {
+                renderSearchResults(products, grid);
                 return;
             }
 
@@ -1363,9 +1359,7 @@
 
                 const statusClass = isSold ? ' sold' : isReserved ? ' reserved' : '';
                 const productIdentifier = product.reference_code || product.id;
-                const openProductCall = options.fromGlobalSearch
-                    ? `openProductFromSearch(event, '${productIdentifier}')`
-                    : `showProductDetail(event, '${productIdentifier}')`;
+                const openProductCall = `showProductDetail(event, '${productIdentifier}')`;
 
                 return `
                 <div class="product-card${statusClass}">
@@ -1375,11 +1369,11 @@
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
                     }
                     </div>
-                    <div class="product-info${options.fromGlobalSearch ? ' search-result-meta' : ''}">
-                        <h3 class="product-name${options.fromGlobalSearch ? ' search-result-model' : ''}" onclick="${openProductCall}">${displayName}</h3>
-                        <p class="product-brand${options.fromGlobalSearch ? ' search-result-brand' : ''}">${displayBrand}</p>
+                    <div class="product-info">
+                        <h3 class="product-name" onclick="${openProductCall}">${displayName}</h3>
+                        <p class="product-brand">${displayBrand}</p>
                         ${additionalInfo}
-                        <p class="product-price${options.fromGlobalSearch ? ' search-result-price' : ''}" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
+                        <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
                         <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
                             ${isUnavailable ? `
                             <button disabled style="flex: 1; padding: 10px; background: var(--gray); color: white; border: none; cursor: default; font-size: 0.8rem; opacity: 0.7;">
@@ -1566,8 +1560,9 @@
             applyFilters();
         }
 
-        // Reset all filters
-        function resetFilters() {
+        // Reset all filters. Pass applyAfter = false to reset without querying,
+        // e.g. when a caller is about to set its own filter and load once.
+        function resetFilters(applyAfter = true) {
             document.getElementById('brandFilter').value = '';
             document.getElementById('priceFilter').value = '';
             document.getElementById('sortFilter').value = 'newest';
@@ -1592,13 +1587,38 @@
             document.querySelectorAll('.custom-dropdown-item[data-value=""]').forEach(item => item.classList.add('selected'));
             document.querySelectorAll('.custom-dropdown-item[data-value="newest"]').forEach(item => item.classList.add('selected'));
 
-            applyFilters();
+            if (applyAfter) applyFilters();
         }
 
-        function resetAccessoryFilters() {
-            if (document.getElementById('accessorySortFilter')) document.getElementById('accessorySortFilter').value = 'newest';
-            if (document.getElementById('accessoryStatusFilter')) document.getElementById('accessoryStatusFilter').value = '';
-            applyAccessoryFilters();
+        const ACCESSORY_FILTERS = {
+            sort: { input: 'accessorySortFilter', dropdown: 'accessorySortDropdown' },
+            status: { input: 'accessoryStatusFilter', dropdown: 'accessoryStatusDropdown' },
+        };
+
+        // Set an accessory filter and its dropdown UI without running a query.
+        function setAccessoryFilter(type, value) {
+            const config = ACCESSORY_FILTERS[type];
+            if (!config) return;
+
+            const input = document.getElementById(config.input);
+            if (input) input.value = value;
+
+            const dropdown = document.getElementById(config.dropdown);
+            if (!dropdown) return;
+            dropdown.querySelectorAll('.custom-dropdown-item').forEach(i => i.classList.remove('selected'));
+            const item = dropdown.querySelector(`.custom-dropdown-item[data-value="${value}"]`);
+            if (!item) return;
+            item.classList.add('selected');
+            const trigger = dropdown.querySelector('.custom-dropdown-trigger');
+            if (trigger) trigger.textContent = item.textContent.trim();
+        }
+
+        function resetAccessoryFilters(applyAfter = true) {
+            const searchInput = document.getElementById('accessorySearchInput');
+            if (searchInput) searchInput.value = '';
+            setAccessoryFilter('sort', 'newest');
+            setAccessoryFilter('status', '');
+            if (applyAfter) applyAccessoryFilters();
         }
 
         function selectAccessoryFilter(type, value, element) {
@@ -1658,23 +1678,66 @@
             }
         });
 
+        // Visible dropdowns mirroring each hidden watch filter input, so the
+        // shortcuts below can set a filter and keep the controls in agreement.
+        const WATCH_FILTER_DROPDOWNS = {
+            brand: ['brandDropdown'],
+            gender: ['genderDropdown', 'drawerGenderDropdown'],
+            status: ['drawerStatusDropdown'],
+            movement: ['drawerMovementDropdown'],
+        };
+
+        // Set a watch filter and its dropdown UI without running a query.
+        function setWatchFilter(type, value) {
+            const input = document.getElementById(type + 'Filter');
+            if (input) input.value = value;
+
+            (WATCH_FILTER_DROPDOWNS[type] || []).forEach(id => {
+                const dropdown = document.getElementById(id);
+                if (!dropdown) return;
+                const trigger = dropdown.querySelector('.custom-dropdown-trigger');
+                const item = dropdown.querySelector(`.custom-dropdown-item[data-value="${value}"]`);
+
+                dropdown.querySelectorAll('.custom-dropdown-item').forEach(i => i.classList.remove('selected'));
+                if (item) {
+                    item.classList.add('selected');
+                    if (trigger) trigger.textContent = item.textContent.trim();
+                } else if (trigger && value) {
+                    // Brand items are populated asynchronously — fall back to the raw value.
+                    trigger.textContent = value;
+                }
+            });
+        }
+
         // Filter by brand
         function filterByBrand(brand) {
-            document.getElementById('brandFilter').value = brand;
-            showPage('watches');
-            setTimeout(() => {
-                loadWatches();
-            }, 100);
+            resetFilters(false);
+            setWatchFilter('brand', brand);
+            currentPage = 1;
+            // skipReset, otherwise showPage would clear the filter we just set.
+            showPage('watches', false, true);
         }
 
         // Filter by gender
         function filterByGender(gender) {
-            document.getElementById('brandFilter').value = '';
-            document.getElementById('genderFilter').value = gender;
-            showPage('watches');
-            setTimeout(() => {
-                loadWatches();
-            }, 100);
+            resetFilters(false);
+            setWatchFilter('gender', gender);
+            currentPage = 1;
+            showPage('watches', false, true);
+        }
+
+        // Swap the accessories page between the category picker and the product
+        // list. The whole section is toggled, not just the grid, so its padding
+        // does not leave a blank band above the products.
+        function setAccessoryCategoriesVisible(visible) {
+            const grid = document.getElementById('categoriesGrid');
+            const products = document.getElementById('accessoryProducts');
+            if (grid) {
+                grid.style.display = visible ? 'grid' : 'none';
+                const section = grid.closest('.categories-section');
+                if (section) section.style.display = visible ? '' : 'none';
+            }
+            if (products) products.style.display = visible ? 'none' : 'block';
         }
 
         // Show accessory category
@@ -1682,10 +1745,10 @@
             currentAccessoryCategory = category;
             currentAccessoryPage = 1;
 
-            showPage('accessories', true);
-
-            document.getElementById('categoriesGrid').style.display = 'none';
-            document.getElementById('accessoryProducts').style.display = 'block';
+            // skipReset, so the reset below is the only one and we load exactly once.
+            resetAccessoryFilters(false);
+            showPage('accessories', true, true);
+            setAccessoryCategoriesVisible(false);
 
             loadAccessories();
             document.getElementById('accessoryProducts').scrollIntoView({ behavior: 'smooth' });
@@ -1700,10 +1763,9 @@
             currentAccessoryCategory = null; // Clear category filter
             currentAccessoryPage = 1;
 
-            showPage('accessories', true);
-
-            document.getElementById('categoriesGrid').style.display = 'none';
-            document.getElementById('accessoryProducts').style.display = 'block';
+            resetAccessoryFilters(false);
+            showPage('accessories', true, true);
+            setAccessoryCategoriesVisible(false);
 
             loadAccessories();
 
@@ -1715,8 +1777,7 @@
         // Back to accessory categories
         function backToAccessoryCategories() {
             currentAccessoryCategory = null;
-            document.getElementById('categoriesGrid').style.display = 'grid';
-            document.getElementById('accessoryProducts').style.display = 'none';
+            setAccessoryCategoriesVisible(true);
             document.getElementById('categoriesGrid').scrollIntoView({ behavior: 'smooth' });
 
             history.pushState({ page: 'accessories' }, '', `?page=accessories`);
@@ -1731,7 +1792,6 @@
                 const searchTerm = document.getElementById('accessorySearchInput')?.value || '';
                 const sortBy = document.getElementById('accessorySortFilter')?.value || 'newest';
                 const statusFilter = document.getElementById('accessoryStatusFilter')?.value || '';
-                const thirtyDaysAgo = getThirtyDaysAgoISO();
 
                 const createAccessoryQuery = (columns = '*', options) => {
                     let query = supabaseClient
@@ -1745,10 +1805,11 @@
 
                     if (statusFilter === 'available') {
                         query = query.eq('status', 'available');
-                    } else if (statusFilter === 'sold') {
-                        query = query.eq('status', 'sold').gte('updated_at', thirtyDaysAgo);
                     } else if (statusFilter === 'reserved') {
                         query = query.eq('status', 'reserved');
+                    } else {
+                        // No status filter selected — still never show sold/archived products.
+                        query = excludeUnavailableProducts(query);
                     }
 
                     if (searchTerm) {
@@ -1762,7 +1823,7 @@
                     if (sortBy === 'price-high') return query.order('price', { ascending: false });
                     return query.order('id', { ascending: false });
                 };
-                const { data, count } = await fetchProductsWithSoldLast(
+                const { data, count } = await fetchProductsPage(
                     createAccessoryQuery,
                     sortAccessories,
                     currentAccessoryPage
@@ -2363,11 +2424,11 @@
                 const year = currentProduct.watch_year || currentProduct.year;
 
                 // 1. Try to get products from the same category first
-                const { data: sameCategoryProducts, error: categoryError } = await supabaseClient
+                const { data: sameCategoryProducts, error: categoryError } = await excludeUnavailableProducts(supabaseClient
                     .from('mainspring_products')
                     .select('*')
                     .eq('category', category)
-                    .neq('id', currentProductId)
+                    .neq('id', currentProductId))
                     .limit(4);
 
                 if (!categoryError && sameCategoryProducts && sameCategoryProducts.length > 0) {
@@ -2376,11 +2437,11 @@
 
                 // 2. If not enough, try to get products from the same subcategory
                 if (recommendations.length < 4 && subcategory) {
-                    const { data: sameSubcategoryProducts, error: subcategoryError } = await supabaseClient
+                    const { data: sameSubcategoryProducts, error: subcategoryError } = await excludeUnavailableProducts(supabaseClient
                         .from('mainspring_products')
                         .select('*')
                         .eq('subcategory', subcategory)
-                        .neq('id', currentProductId)
+                        .neq('id', currentProductId))
                         .limit(4 - recommendations.length);
 
                     if (!subcategoryError && sameSubcategoryProducts) {
@@ -2394,10 +2455,10 @@
                 // 3. If still not enough, get products by similar factors (brand, price range, year)
                 if (recommendations.length < 4) {
                     const recommendedIds = new Set(recommendations.map(p => p.id));
-                    let additionalQuery = supabaseClient
+                    let additionalQuery = excludeUnavailableProducts(supabaseClient
                         .from('mainspring_products')
                         .select('*')
-                        .neq('id', currentProductId);
+                        .neq('id', currentProductId));
 
                     // Prefer same brand
                     if (brand) {
@@ -2416,10 +2477,10 @@
                 // 4. If still not enough, just get any other products
                 if (recommendations.length < 4) {
                     const recommendedIds = new Set(recommendations.map(p => p.id));
-                    const { data: anyProducts, error: anyError } = await supabaseClient
+                    const { data: anyProducts, error: anyError } = await excludeUnavailableProducts(supabaseClient
                         .from('mainspring_products')
                         .select('*')
-                        .neq('id', currentProductId)
+                        .neq('id', currentProductId))
                         .limit(4 - recommendations.length);
 
                     if (!anyError && anyProducts) {
@@ -2792,9 +2853,9 @@
                 if (cat && cat !== 'all') {
                     showAccessoryCategory(cat, true);
                 } else if (cat === 'all') {
+                    currentAccessoryCategory = null;
                     showPage('accessories', true, true);
-                    document.getElementById('categoriesGrid').style.display = 'none';
-                    document.getElementById('accessoryProducts').style.display = 'block';
+                    setAccessoryCategoriesVisible(false);
                     loadAccessories();
                 } else {
                     showPage('accessories', true);
