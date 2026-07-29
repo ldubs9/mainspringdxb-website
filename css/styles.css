@@ -1377,6 +1377,19 @@
             opacity: 1;
             visibility: visible;
             transform: scale(1);
+            pointer-events: auto;
+        }
+
+        /* Belt and braces for the same class of bug: opacity 0 does not stop hit
+           testing, and any descendant can opt back into visibility. A closed
+           overlay must never receive a tap, so kill pointer events outright. */
+        .nav-overlay:not(.active),
+        .nav-overlay:not(.active) * {
+            pointer-events: none;
+        }
+
+        .nav-overlay-backdrop:not(.active) {
+            pointer-events: none;
         }
 
         /* Escape hatch applied by app.js when the open/close transition stalls
@@ -1572,7 +1585,11 @@
             box-shadow: none;
             border-radius: 0;
             opacity: 1;
-            visibility: visible;
+            /* Must NOT be `visible`. `visibility` is inherited, and an explicit
+               `visible` on a descendant overrides a hidden ancestor — that left
+               the submenu hit-testable over the page while the nav was closed,
+               so taps on product cards fired accessory-category links instead. */
+            visibility: inherit;
             transform: none;
             transition: max-height 0.3s ease;
             z-index: 1000;
@@ -4468,7 +4485,9 @@
                     background: transparent;
                     max-height: 0;
                     opacity: 1;
-                    visibility: visible;
+                    /* See the base rule: an explicit `visible` here would beat the
+                       closed overlay's `hidden` and keep the submenu tappable. */
+                    visibility: inherit;
                     transform: none;
                     transition: max-height 0.3s ease-out;
                     padding: 0 !important;

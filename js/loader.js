@@ -35,8 +35,14 @@
         'components/page-order-tracking.html',
     ];
 
+    // Component HTML was previously fetched with no cache key, so a returning
+    // visitor could keep running last week's markup (with last week's inline
+    // handlers) against freshly deployed JS. Bump this whenever any file in
+    // components/ changes.
+    const COMPONENTS_VERSION = '2';
+
     async function fetchHTML(url) {
-        const res = await fetch(url);
+        const res = await fetch(`${url}?v=${COMPONENTS_VERSION}`);
         if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status}`);
         return res.text();
     }
@@ -65,7 +71,7 @@
     const script = document.createElement('script');
     // Versioned to bust the browser cache when app.js changes (matches the
     // ?v= convention used for other scripts in index.html).
-    script.src = 'js/app.js?v=9';
+    script.src = 'js/app.js?v=11';
     script.onload = () => {
         // Dispatch a custom event that app.js can listen for
         window.dispatchEvent(new CustomEvent('componentsLoaded'));

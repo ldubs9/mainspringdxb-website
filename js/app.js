@@ -1000,6 +1000,14 @@
             navOverlay.classList.toggle('active', open);
             document.getElementById('navBackdrop').classList.toggle('active', open);
 
+            // Collapse any expanded submenu on close. Leaving it expanded kept a
+            // 300px+ block of category links laid over the page, and the menu
+            // also reopened with a submenu the user never asked for.
+            if (!open) {
+                navOverlay.querySelectorAll('.nav-item-wrapper.mobile-expanded')
+                    .forEach(wrapper => wrapper.classList.remove('mobile-expanded'));
+            }
+
             // Let the transition run normally first; only intervene if it stalls.
             navOverlay.classList.remove('nav-settled');
             // Longest path is the 0.68s stagger delay plus the 0.4s transition.
@@ -1156,6 +1164,23 @@
             document.getElementById('filterDrawer').classList.remove('active');
             document.getElementById('filterDrawerOverlay').classList.remove('active');
             document.body.style.overflow = '';
+        }
+
+        // Expand/collapse a nav submenu that has no page of its own (MORE).
+        // Without this it only opened on :hover, which touch devices do not
+        // reliably deliver, leaving Warranty / Sourcing / Sell unreachable
+        // from the mobile menu.
+        function toggleNavSubmenu(event, element) {
+            if (event) event.preventDefault();
+            const wrapper = element.closest('.nav-item-wrapper');
+            if (!wrapper) return;
+
+            const willExpand = !wrapper.classList.contains('mobile-expanded');
+            document.querySelectorAll('.nav-item-wrapper.mobile-expanded').forEach(w => w.classList.remove('mobile-expanded'));
+            if (willExpand) {
+                wrapper.classList.add('mobile-expanded');
+                scheduleNavSettle(500);
+            }
         }
 
         // Page navigation

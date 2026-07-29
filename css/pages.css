@@ -889,7 +889,8 @@
 
 .detail-info .detail-brand {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.74rem;
+    /* 90% of the model text size, which uses clamp(2rem, 3.6vw, 3.2rem) */
+    font-size: clamp(1.8rem, 3.24vw, 2.88rem);
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--ms-gold);
