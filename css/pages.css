@@ -605,7 +605,7 @@
     color: var(--ms-gold); font-size: 2rem; opacity: 0.5;
 }
 .product-card .product-info {
-    --product-model-font-size: 1.05rem;
+    --product-model-font-size: 0.8925rem;
     padding: 20px 20px 22px;
     display: flex;
     flex-direction: column;
@@ -614,7 +614,8 @@
 .product-card .product-brand {
     order: -1;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: calc(var(--product-model-font-size) * 0.9);
+    font-size: calc(var(--product-model-font-size) * 1.15);
+    font-weight: 700;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--ms-gold);
@@ -889,8 +890,8 @@
 
 .detail-info .detail-brand {
     font-family: 'Space Grotesk', sans-serif;
-    /* 90% of the model text size, which uses clamp(2rem, 3.6vw, 3.2rem) */
-    font-size: clamp(1.8rem, 3.24vw, 2.88rem);
+    font-size: clamp(1.84rem, 3.312vw, 2.944rem);
+    font-weight: 700;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--ms-gold);
@@ -899,7 +900,7 @@
 .detail-info .detail-name {
     font-family: 'Fraunces', serif;
     font-weight: 400;
-    font-size: clamp(2rem, 3.6vw, 3.2rem) !important;
+    font-size: clamp(1.6rem, 2.88vw, 2.56rem) !important;
     line-height: 1.02;
     letter-spacing: -0.025em;
     color: var(--ms-ink);
@@ -1141,7 +1142,7 @@
     .policy-section, .about-section, .contact-section, .faq-section {
         border-radius: 18px 18px 0 0;
     }
-    .product-card .product-info { --product-model-font-size: 0.95rem; }
+    .product-card .product-info { --product-model-font-size: 0.8075rem; }
 }
 @media (max-width: 480px) {
     .products-grid, .recommendations-grid { grid-template-columns: 1fr 1fr; }
@@ -1196,7 +1197,8 @@
 }
 .search-card-brand {
     font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.62rem;
+    font-size: 0.682rem;
+    font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--ms-gold);
@@ -1211,13 +1213,13 @@
     overflow: hidden;
     font-family: 'Fraunces', serif;
     font-weight: 500;
-    font-size: 0.82rem;
+    font-size: 0.697rem;
     line-height: 1.25;
     color: var(--ms-ink);
 }
 @media (max-width: 768px) {
     .search-card { gap: 7px; }
     .search-card-image { border-radius: 10px; }
-    .search-card-brand { font-size: 0.58rem; letter-spacing: 0.14em; }
-    .search-card-model { font-size: 0.76rem; }
+    .search-card-brand { font-size: 0.638rem; letter-spacing: 0.14em; }
+    .search-card-model { font-size: 0.646rem; }
 }
