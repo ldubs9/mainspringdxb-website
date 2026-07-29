@@ -264,9 +264,9 @@
 @keyframes msCue { 0%{ transform: translateY(-100%);} 60%,100%{ transform: translateY(300%);} }
 
 /* split-text helpers */
-.ms-line-wrap { display: block; overflow: hidden; }
+.ms-line-wrap { display: block; overflow: hidden; padding-bottom: 0.22em; margin-bottom: -0.22em; }
 .ms-line { display: block; }
-.ms-word { display: inline-block; overflow: hidden; vertical-align: top; }
+.ms-word { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.22em; margin-bottom: -0.22em; }
 .ms-word-inner { display: inline-block; }
 
 /* ============================================================================
