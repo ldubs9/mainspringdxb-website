@@ -452,7 +452,7 @@
 ============================================================================ */
 .ms-stats {
     background: var(--ms-cream);
-    display: grid; grid-template-columns: repeat(4, 1fr);
+    display: grid; grid-template-columns: repeat(2, 1fr);
     border-top: 1px solid var(--ms-line);
 }
 .ms-stat { padding: clamp(48px, 8vh, 90px) clamp(20px, 3vw, 44px); text-align: center; border-right: 1px solid var(--ms-line); }
@@ -491,9 +491,6 @@
     .ms-standard-row p { grid-area: desc; }
     .ms-row-num { grid-area: num; }
     .ms-row-icon { display: none; }
-    .ms-stats { grid-template-columns: repeat(2, 1fr); }
-    .ms-stat:nth-child(2) { border-right: 0; }
-    .ms-stat:nth-child(1), .ms-stat:nth-child(2) { border-bottom: 1px solid var(--ms-line); }
 }
 
 @media (max-width: 768px) {
