@@ -68,7 +68,7 @@
                         </div>
 
                         <div class="search-box">
-                            <input type="text" id="searchInput" placeholder="Search watches..." oninput="applyFilters()">
+                            <input type="text" id="searchInput" placeholder="Search watches..." oninput="queueWatchSearch(this.value)">
                             <i class="fas fa-search"></i>
                         </div>
                     </div>
@@ -119,7 +119,6 @@
                                 <div class="custom-dropdown-item selected" data-value="newest" onclick="selectFilter('sort', 'newest', this)">Newest Arrivals</div>
                                 <div class="custom-dropdown-item" data-value="price-low" onclick="selectFilter('sort', 'price-low', this)">Price: Low to High</div>
                                 <div class="custom-dropdown-item" data-value="price-high" onclick="selectFilter('sort', 'price-high', this)">Price: High to Low</div>
-                                <div class="custom-dropdown-item" data-value="popular" onclick="selectFilter('sort', 'popular', this)">Most Popular</div>
                             </div>
                         </div>
                     </div>

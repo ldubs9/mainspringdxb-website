@@ -25,22 +25,31 @@
 
         // Handle browser back/forward buttons
         window.addEventListener('popstate', function (event) {
-            if (event.state) {
-                if (event.state.page === 'detail' && event.state.productId) {
-                    showProductDetail(event.state.productId, true);
-                } else if (event.state.page === 'watches') {
-                    currentPage = event.state.pg || 1;
-                    showPage('watches', true, true);
-                } else if (event.state.page === 'accessories' && event.state.category) {
-                    currentAccessoryPage = event.state.pg || 1;
-                    showAccessoryCategory(event.state.category, true);
-                } else if (event.state.page === 'blog-detail' && event.state.blogId) {
-                    showBlogDetail(event.state.blogId, true);
-                } else if (event.state.page) {
-                    showPage(event.state.page, true);
-                }
-            } else {
+            const state = event.state;
+            if (!state || !state.page) {
                 showPage('home', true);
+                return;
+            }
+
+            if (state.page === 'detail' && state.productId) {
+                showProductDetail(state.productId, true);
+            } else if (state.page === 'watches') {
+                currentPage = state.pg || 1;
+                restoreWatchFilters(state.filters || {});
+                showPage('watches', true, true);
+            } else if (state.page === 'accessories' && state.category) {
+                // 'all' is the "no subcategory" sentinel used in the URL. Passing
+                // it through as a real subcategory matches nothing.
+                currentAccessoryPage = state.pg || 1;
+                restoreAccessoryFilters(state.filters || {});
+                showAccessoryCategory(state.category === 'all' ? null : state.category, true, state.pg || 1);
+            } else if (state.page === 'blog-detail' && state.blogId) {
+                showBlogDetail(state.blogId, true);
+            } else if (state.page === 'blog') {
+                currentBlogPage = state.pg || 1;
+                showPage('blog', true, true);
+            } else {
+                showPage(state.page, true);
             }
         });
 
@@ -949,11 +958,90 @@
             }
         }
 
-        // Close nav function
+        // ---- Navigation overlay -------------------------------------------
+        // The overlay's visibility is driven by CSS transitions (including
+        // per-item stagger delays). If the document's animation timeline is
+        // stalled — a restored/backgrounded tab, a throttled renderer, bfcache —
+        // those transitions never advance and the menu is left either invisible
+        // but "open", or stuck as an opaque black panel that swallows every tap
+        // until the page is reloaded. `nav-settled` is the escape hatch: it drops
+        // the transitions so the overlay snaps to whatever state it should be in.
+        let navSettleTimer = null;
+
+        function navIsOpen() {
+            return navOverlay.classList.contains('active');
+        }
+
+        // Snap the overlay to its end state if the transition has not got there.
+        function settleNav() {
+            const open = navIsOpen();
+            const opacity = parseFloat(getComputedStyle(navOverlay).opacity) || 0;
+            const lastItem = navOverlay.querySelector('.nav-links > li:last-child');
+            const lastOpacity = lastItem ? (parseFloat(getComputedStyle(lastItem).opacity) || 0) : 1;
+            // An expanded submenu animates its max-height and stalls the same way.
+            const expanded = navOverlay.querySelector('.nav-item-wrapper.mobile-expanded .nav-dropdown');
+            const submenuStuck = !!expanded && expanded.getBoundingClientRect().height < 1;
+
+            const settled = open
+                ? (opacity > 0.95 && lastOpacity > 0.95 && !submenuStuck)
+                : opacity < 0.05;
+            if (!settled) navOverlay.classList.add('nav-settled');
+        }
+
+        // Re-check after a submenu expands, so a stalled max-height transition
+        // does not leave the accessory categories collapsed and unreachable.
+        function scheduleNavSettle(delay = 500) {
+            clearTimeout(navSettleTimer);
+            navSettleTimer = setTimeout(settleNav, delay);
+        }
+
+        function setNavOpen(open) {
+            burgerMenu.classList.toggle('active', open);
+            navOverlay.classList.toggle('active', open);
+            document.getElementById('navBackdrop').classList.toggle('active', open);
+
+            // Let the transition run normally first; only intervene if it stalls.
+            navOverlay.classList.remove('nav-settled');
+            // Longest path is the 0.68s stagger delay plus the 0.4s transition.
+            scheduleNavSettle(1200);
+        }
+
         function closeNav() {
-            burgerMenu.classList.remove('active');
-            navOverlay.classList.remove('active');
-            document.getElementById('navBackdrop').classList.remove('active');
+            setNavOpen(false);
+        }
+
+        function toggleNav() {
+            setNavOpen(!navIsOpen());
+        }
+
+        // A tab that comes back to the foreground (or out of bfcache) may have
+        // left transitions frozen mid-flight. Re-settle rather than leave the
+        // menu in a half-drawn, unusable state.
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                clearTimeout(navSettleTimer);
+                navSettleTimer = setTimeout(settleNav, 60);
+            }
+        });
+        window.addEventListener('pageshow', function () {
+            clearTimeout(navSettleTimer);
+            navSettleTimer = setTimeout(settleNav, 60);
+        });
+
+        // Overlays that cover the page or lock body scrolling. Any navigation has
+        // to leave them closed — a leftover overlay (or its scroll lock) reads to
+        // the user as a blank, frozen page.
+        function closeTransientOverlays() {
+            closeNav();
+            closeGlobalSearch();
+            closeFilterDrawer();
+            closeImageZoom();
+            closeCart();
+            closeWishlist();
+            document.querySelectorAll('.custom-dropdown.open').forEach(d => d.classList.remove('open'));
+            const currencyMenu = document.getElementById('currencyDropdownMenu');
+            if (currencyMenu) currencyMenu.classList.remove('active');
+            document.body.style.overflow = '';
         }
 
         // Toggle Search - Focus on search input
@@ -1047,11 +1135,7 @@
         updateHeader();
 
         // Burger menu toggle
-        burgerMenu.addEventListener('click', () => {
-            burgerMenu.classList.toggle('active');
-            navOverlay.classList.toggle('active');
-            document.getElementById('navBackdrop').classList.toggle('active');
-        });
+        burgerMenu.addEventListener('click', toggleNav);
 
         // FAQ accordion
         function toggleFaq(btn) {
@@ -1074,18 +1158,19 @@
             document.body.style.overflow = '';
         }
 
-        function syncAndFilter(val) {
-            document.getElementById('searchInput').value = val;
-            applyFilters();
-        }
-
         // Page navigation
         function handleNavClick(event, element, pageId) {
             if (window.innerWidth <= 992) {
                 const wrapper = element.closest('.nav-item-wrapper');
+                if (!wrapper) {
+                    showPage(pageId);
+                    closeNav();
+                    return;
+                }
                 if (!wrapper.classList.contains('mobile-expanded')) {
                     document.querySelectorAll('.nav-item-wrapper.mobile-expanded').forEach(w => w.classList.remove('mobile-expanded'));
                     wrapper.classList.add('mobile-expanded');
+                    scheduleNavSettle(500);
                 } else {
                     wrapper.classList.remove('mobile-expanded');
                     showPage(pageId);
@@ -1099,18 +1184,36 @@
 
         // Navigation logic
         function showPage(pageName, skipPushState = false, skipReset = false) {
+            const target = document.getElementById('page-' + pageName);
+            if (!target) {
+                // Unknown page: a stale bookmark, a typo, or a legacy link.
+                // Falling back to home keeps the site usable — throwing here used
+                // to abort the caller (including initApp) and leave a blank page.
+                console.warn('Unknown page "' + pageName + '" — falling back to home.');
+                if (pageName !== 'home') showPage('home', skipPushState);
+                return;
+            }
+
+            closeTransientOverlays();
+
+            // Reset filter state without querying; the load below is the only one.
             if (!skipReset) {
                 if (pageName === 'watches') {
-                    resetFilters();
+                    resetFilters(false);
+                    currentPage = 1;
                 } else if (pageName === 'accessories') {
-                    resetAccessoryFilters();
+                    resetAccessoryFilters(false);
+                    currentAccessoryCategory = '';
+                    currentAccessoryPage = 1;
+                } else if (pageName === 'blog') {
+                    currentBlogPage = 1;
                 }
             }
 
             document.querySelectorAll('.page-section').forEach(section => {
                 section.classList.remove('active');
             });
-            document.getElementById('page-' + pageName).classList.add('active');
+            target.classList.add('active');
             window.scrollTo(0, 0);
 
             // Load data if needed
@@ -1187,8 +1290,15 @@
             return query.or('status.not.in.(sold,archived),status.is.null');
         }
 
+        // Listing queries are fired from typing and from rapid filter changes.
+        // Without a guard the slowest response wins and the grid ends up showing
+        // results for a filter the user has already moved on from.
+        const watchListRequestGuard = createLatestRequestGuard();
+        const accessoryListRequestGuard = createLatestRequestGuard();
+
         async function loadWatches() {
             const grid = document.getElementById('watchesGrid');
+            const requestId = watchListRequestGuard.next();
             grid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
 
             try {
@@ -1254,11 +1364,14 @@
                     data = result.data;
                     count = result.count;
                 }
+                if (!watchListRequestGuard.isCurrent(requestId)) return;
                 totalProducts = count;
 
                 renderProducts(data, grid);
                 updatePagination();
+                syncWatchUrl();
             } catch (error) {
+                if (!watchListRequestGuard.isCurrent(requestId)) return;
                 console.error('Error loading watches:', error);
 
                 // No demo fallback — show no products found
@@ -1403,9 +1516,9 @@
 
         function goToWatchPage(page) {
             currentPage = page;
-            const params = new URLSearchParams(window.location.search);
-            params.set('pg', page);
-            history.pushState({ page: 'watches', pg: page }, '', '?' + params.toString());
+            // A placeholder entry; loadWatches() replaces it with the full state
+            // (page plus every active filter) once the grid has rendered.
+            history.pushState({ page: 'watches', pg: page, filters: readWatchFilters() }, '', window.location.search);
             loadWatches();
             window.scrollTo(0, 300);
         }
@@ -1464,15 +1577,87 @@
             return html;
         }
 
+        // ---- Watch filter state ------------------------------------------
+        // Filters are kept in the CURRENT history entry, never in a new one.
+        // Pushing an entry per filter change used to leave the stack full of
+        // identical "?page=watches" steps, so pressing Back looked like it did
+        // nothing. Keeping them in the entry also means a filtered view can be
+        // reloaded, shared, and restored when returning from a product page.
+        const WATCH_FILTER_KEYS = ['brand', 'price', 'sort', 'status', 'gender', 'movement', 'country'];
+
+        function readWatchFilters() {
+            const filters = {};
+            WATCH_FILTER_KEYS.forEach(key => {
+                const input = document.getElementById(key + 'Filter');
+                if (input && input.value && input.value !== 'newest') filters[key] = input.value;
+            });
+            const search = document.getElementById('searchInput');
+            if (search && search.value.trim()) filters.q = search.value.trim();
+            return filters;
+        }
+
+        function syncWatchUrl() {
+            const section = document.getElementById('page-watches');
+            if (!section || !section.classList.contains('active')) return;
+            const filters = readWatchFilters();
+            const params = new URLSearchParams({ page: 'watches' });
+            Object.entries(filters).forEach(([key, value]) => params.set(key, value));
+            if (currentPage > 1) params.set('pg', currentPage);
+            history.replaceState({ page: 'watches', pg: currentPage, filters }, '', '?' + params.toString());
+        }
+
+        // Put the hidden inputs and every visible control back in agreement with
+        // a saved filter set, without firing a query.
+        function restoreWatchFilters(filters) {
+            resetFilters(false);
+            WATCH_FILTER_KEYS.forEach(key => {
+                if (!filters[key]) return;
+                if (key === 'price') {
+                    document.getElementById('priceFilter').value = filters.price;
+                } else {
+                    setWatchFilter(key, filters[key]);
+                }
+            });
+            const search = document.getElementById('searchInput');
+            if (search) search.value = filters.q || '';
+            const searchMobile = document.getElementById('searchInputMobile');
+            if (searchMobile) searchMobile.value = filters.q || '';
+            syncPriceControls();
+        }
+
+        // Keep the price slider and its dropdown label in step with priceFilter.
+        function syncPriceControls() {
+            const value = document.getElementById('priceFilter').value;
+            const slider = document.querySelector('.luxury-slider');
+            if (slider) {
+                const max = value && value.startsWith('0-') ? parseInt(value.split('-')[1]) : 150000;
+                slider.value = isNaN(max) ? 150000 : max;
+                updateSliderDisplay(slider.value);
+            }
+            updatePriceDropdownLabels();
+        }
+
         // Apply filters
         function applyFilters() {
             currentPage = 1;
             loadWatches();
         }
 
+        // Typing runs a full search across every matching record, so it is
+        // debounced rather than fired on each keystroke.
+        let watchSearchDebounceTimer = null;
+
+        function queueWatchSearch(val) {
+            const desktop = document.getElementById('searchInput');
+            const mobile = document.getElementById('searchInputMobile');
+            if (desktop && desktop.value !== val) desktop.value = val;
+            if (mobile && mobile.value !== val) mobile.value = val;
+            clearTimeout(watchSearchDebounceTimer);
+            watchSearchDebounceTimer = setTimeout(applyFilters, 250);
+        }
+
         function syncSearchAndFilter(val) {
-            document.getElementById('searchInput').value = val;
-            applyFilters();
+            queueWatchSearch(val);
         }
 
         function updateSliderDisplay(val) {
@@ -1563,19 +1748,22 @@
         // Reset all filters. Pass applyAfter = false to reset without querying,
         // e.g. when a caller is about to set its own filter and load once.
         function resetFilters(applyAfter = true) {
+            clearTimeout(watchSearchDebounceTimer);
+
             document.getElementById('brandFilter').value = '';
             document.getElementById('priceFilter').value = '';
             document.getElementById('sortFilter').value = 'newest';
             document.getElementById('statusFilter').value = '';
             document.getElementById('genderFilter').value = '';
             document.getElementById('movementFilter').value = '';
+            document.getElementById('countryFilter').value = '';
             document.getElementById('searchInput').value = '';
             if (document.getElementById('searchInputMobile')) document.getElementById('searchInputMobile').value = '';
 
             // Reset UI Dropdowns
             document.getElementById('brandDropdown').querySelector('.custom-dropdown-trigger').textContent = 'All Brands';
             document.getElementById('priceDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Price';
-            
+
             // Reset Drawer Dropdowns if they exist
             if (document.getElementById('drawerSortDropdown')) document.getElementById('drawerSortDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Newest Arrivals';
             if (document.getElementById('drawerStatusDropdown')) document.getElementById('drawerStatusDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Condition';
@@ -1583,9 +1771,22 @@
             if (document.getElementById('drawerGenderDropdown')) document.getElementById('drawerGenderDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Gender';
             if (document.getElementById('drawerMovementDropdown')) document.getElementById('drawerMovementDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Movement';
 
-            document.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
-            document.querySelectorAll('.custom-dropdown-item[data-value=""]').forEach(item => item.classList.add('selected'));
-            document.querySelectorAll('.custom-dropdown-item[data-value="newest"]').forEach(item => item.classList.add('selected'));
+            // Scoped to the watches page: a global querySelectorAll here also wiped
+            // the selected state out of the accessories dropdowns.
+            const watchesPage = document.getElementById('page-watches');
+            if (watchesPage) {
+                watchesPage.querySelectorAll('.custom-dropdown-item').forEach(item => item.classList.remove('selected'));
+                watchesPage.querySelectorAll('.custom-dropdown-item[data-value=""]').forEach(item => item.classList.add('selected'));
+                watchesPage.querySelectorAll('.custom-dropdown-item[data-value="newest"]').forEach(item => item.classList.add('selected'));
+            }
+
+            // The slider is a real control — leaving it parked at the old value
+            // contradicted the "Any Price" label it sits under.
+            const slider = document.querySelector('.luxury-slider');
+            if (slider) {
+                slider.value = 150000;
+                updateSliderDisplay(150000);
+            }
 
             if (applyAfter) applyFilters();
         }
@@ -1614,6 +1815,7 @@
         }
 
         function resetAccessoryFilters(applyAfter = true) {
+            clearTimeout(accessorySearchDebounceTimer);
             const searchInput = document.getElementById('accessorySearchInput');
             if (searchInput) searchInput.value = '';
             setAccessoryFilter('sort', 'newest');
@@ -1621,8 +1823,29 @@
             if (applyAfter) applyAccessoryFilters();
         }
 
+        // Put the accessory controls back in agreement with a saved filter set,
+        // without running a query — used when restoring a history entry.
+        function restoreAccessoryFilters(filters) {
+            resetAccessoryFilters(false);
+            if (filters.sort) setAccessoryFilter('sort', filters.sort);
+            if (filters.status) setAccessoryFilter('status', filters.status);
+            const searchInput = document.getElementById('accessorySearchInput');
+            if (searchInput) searchInput.value = filters.q || '';
+        }
+
+        // Same reasoning as the watches search: one full query per keystroke is
+        // both slow and prone to rendering a stale response last.
+        let accessorySearchDebounceTimer = null;
+
+        function queueAccessorySearch(val) {
+            const input = document.getElementById('accessorySearchInput');
+            if (input && input.value !== val) input.value = val;
+            clearTimeout(accessorySearchDebounceTimer);
+            accessorySearchDebounceTimer = setTimeout(applyAccessoryFilters, 250);
+        }
+
         function selectAccessoryFilter(type, value, element) {
-            event.stopPropagation();
+            if (event) event.stopPropagation();
 
             const dropdown = element.closest('.custom-dropdown');
             const trigger = dropdown.querySelector('.custom-dropdown-trigger');
@@ -1685,6 +1908,7 @@
             gender: ['genderDropdown', 'drawerGenderDropdown'],
             status: ['drawerStatusDropdown'],
             movement: ['drawerMovementDropdown'],
+            sort: ['drawerSortDropdown'],
         };
 
         // Set a watch filter and its dropdown UI without running a query.
@@ -1740,13 +1964,14 @@
             if (products) products.style.display = visible ? 'none' : 'block';
         }
 
-        // Show accessory category
-        function showAccessoryCategory(category, skipPushState = false) {
-            currentAccessoryCategory = category;
-            currentAccessoryPage = 1;
+        // Show accessory category. `category` is null/'' for "All Accessories";
+        // 'all' is only ever a URL sentinel and must not reach the query.
+        // `page` restores a paginated view when returning through history.
+        function showAccessoryCategory(category, skipPushState = false, page = 1) {
+            currentAccessoryCategory = (!category || category === 'all') ? null : category;
+            currentAccessoryPage = page;
 
-            // skipReset, so the reset below is the only one and we load exactly once.
-            resetAccessoryFilters(false);
+            // skipReset, so the caller's filter state survives and we load once.
             showPage('accessories', true, true);
             setAccessoryCategoriesVisible(false);
 
@@ -1754,42 +1979,76 @@
             document.getElementById('accessoryProducts').scrollIntoView({ behavior: 'smooth' });
 
             if (!skipPushState) {
-                history.pushState({ page: 'accessories', category: category }, '', `?page=accessories&category=${encodeURIComponent(category)}`);
+                const slug = currentAccessoryCategory || 'all';
+                history.pushState(
+                    { page: 'accessories', category: slug, pg: currentAccessoryPage, filters: readAccessoryFilters() },
+                    '',
+                    `?page=accessories&category=${encodeURIComponent(slug)}`
+                );
             }
         }
 
         // Show all accessories (no category filter)
         function showAllAccessories() {
-            currentAccessoryCategory = null; // Clear category filter
-            currentAccessoryPage = 1;
-
             resetAccessoryFilters(false);
-            showPage('accessories', true, true);
-            setAccessoryCategoriesVisible(false);
-
-            loadAccessories();
-
-            document.getElementById('accessoryProducts').scrollIntoView({ behavior: 'smooth' });
-
-            history.pushState({ page: 'accessories', category: 'all' }, '', `?page=accessories&category=all`);
+            showAccessoryCategory(null);
         }
 
         // Back to accessory categories
         function backToAccessoryCategories() {
             currentAccessoryCategory = null;
+            currentAccessoryPage = 1;
+            resetAccessoryFilters(false);
             setAccessoryCategoriesVisible(true);
             document.getElementById('categoriesGrid').scrollIntoView({ behavior: 'smooth' });
 
             history.pushState({ page: 'accessories' }, '', `?page=accessories`);
         }
 
+        function readAccessoryFilters() {
+            const filters = {};
+            const sort = document.getElementById('accessorySortFilter');
+            const status = document.getElementById('accessoryStatusFilter');
+            const search = document.getElementById('accessorySearchInput');
+            if (sort && sort.value && sort.value !== 'newest') filters.sort = sort.value;
+            if (status && status.value) filters.status = status.value;
+            if (search && search.value.trim()) filters.q = search.value.trim();
+            return filters;
+        }
+
+        // Keep the current history entry in step with the accessory view, so a
+        // reload or a return from a product page lands back on the same list.
+        function syncAccessoryUrl() {
+            const section = document.getElementById('page-accessories');
+            const products = document.getElementById('accessoryProducts');
+            if (!section || !section.classList.contains('active')) return;
+            if (!products || products.style.display === 'none') return;
+
+            const slug = currentAccessoryCategory || 'all';
+            const filters = readAccessoryFilters();
+            const params = new URLSearchParams({ page: 'accessories', category: slug });
+            Object.entries(filters).forEach(([key, value]) => params.set(key, value));
+            if (currentAccessoryPage > 1) params.set('pg', currentAccessoryPage);
+            history.replaceState(
+                { page: 'accessories', category: slug, pg: currentAccessoryPage, filters },
+                '',
+                '?' + params.toString()
+            );
+        }
+
         // Load accessories
         async function loadAccessories() {
             const grid = document.getElementById('accessoryGrid');
+            const requestId = accessoryListRequestGuard.next();
             grid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
 
             try {
                 const searchTerm = document.getElementById('accessorySearchInput')?.value || '';
+                // Same normalizer as the navbar and collection searches. Raw
+                // interpolation let commas, brackets and '*' break out of the
+                // PostgREST filter, so "strap,box" returned nothing and "a*b"
+                // matched everything. It also searches reference codes now.
+                const searchFilter = buildProductSearchFilter(searchTerm);
                 const sortBy = document.getElementById('accessorySortFilter')?.value || 'newest';
                 const statusFilter = document.getElementById('accessoryStatusFilter')?.value || '';
 
@@ -1812,8 +2071,8 @@
                         query = excludeUnavailableProducts(query);
                     }
 
-                    if (searchTerm) {
-                        query = query.or(`name.ilike.*${searchTerm}*,brand.ilike.*${searchTerm}*,model.ilike.*${searchTerm}*`);
+                    if (searchFilter) {
+                        query = query.or(searchFilter);
                     }
 
                     return query;
@@ -1828,6 +2087,7 @@
                     sortAccessories,
                     currentAccessoryPage
                 );
+                if (!accessoryListRequestGuard.isCurrent(requestId)) return;
                 totalAccessoryProducts = count;
 
                 if (!data || data.length === 0) {
@@ -1837,7 +2097,9 @@
                 }
 
                 updateAccessoryPagination();
+                syncAccessoryUrl();
             } catch (error) {
+                if (!accessoryListRequestGuard.isCurrent(requestId)) return;
                 console.error('Error loading accessories:', error);
                 grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--gray); font-size: 1.1rem;">No products found.</div>';
                 totalAccessoryProducts = 0;
@@ -1853,9 +2115,13 @@
 
         function goToAccessoryPage(page) {
             currentAccessoryPage = page;
-            const params = new URLSearchParams(window.location.search);
-            params.set('pg', page);
-            history.pushState({ page: 'accessories', category: currentAccessoryCategory, pg: page }, '', '?' + params.toString());
+            // A placeholder entry; loadAccessories() replaces it with the full
+            // state (category, page, filters) once the list has rendered.
+            history.pushState(
+                { page: 'accessories', category: currentAccessoryCategory || 'all', pg: page, filters: readAccessoryFilters() },
+                '',
+                window.location.search
+            );
             loadAccessories();
             window.scrollTo(0, 300);
         }
@@ -2423,32 +2689,34 @@
                 const brand = currentProduct.brand;
                 const year = currentProduct.watch_year || currentProduct.year;
 
-                // 1. Try to get products from the same category first
-                const { data: sameCategoryProducts, error: categoryError } = await excludeUnavailableProducts(supabaseClient
-                    .from('mainspring_products')
-                    .select('*')
-                    .eq('category', category)
-                    .neq('id', currentProductId))
-                    .limit(4);
-
-                if (!categoryError && sameCategoryProducts && sameCategoryProducts.length > 0) {
-                    recommendations = sameCategoryProducts;
-                }
-
-                // 2. If not enough, try to get products from the same subcategory
-                if (recommendations.length < 4 && subcategory) {
+                // 1. Closest match first: same subcategory (a strap suggests other
+                //    straps, not books). Category-wide comes after, as a filler.
+                if (subcategory) {
                     const { data: sameSubcategoryProducts, error: subcategoryError } = await excludeUnavailableProducts(supabaseClient
                         .from('mainspring_products')
                         .select('*')
                         .eq('subcategory', subcategory)
                         .neq('id', currentProductId))
-                        .limit(4 - recommendations.length);
+                        .limit(4);
 
                     if (!subcategoryError && sameSubcategoryProducts) {
-                        // Add only products not already in recommendations
-                        const recommendedIds = new Set(recommendations.map(p => p.id));
-                        const newProducts = sameSubcategoryProducts.filter(p => !recommendedIds.has(p.id));
-                        recommendations = [...recommendations, ...newProducts];
+                        recommendations = sameSubcategoryProducts;
+                    }
+                }
+
+                // 2. If not enough, widen to the same category
+                if (recommendations.length < 4) {
+                    const recommendedIds = new Set(recommendations.map(p => p.id));
+                    const { data: sameCategoryProducts, error: categoryError } = await excludeUnavailableProducts(supabaseClient
+                        .from('mainspring_products')
+                        .select('*')
+                        .eq('category', category)
+                        .neq('id', currentProductId))
+                        .limit(4);
+
+                    if (!categoryError && sameCategoryProducts) {
+                        const newProducts = sameCategoryProducts.filter(p => !recommendedIds.has(p.id));
+                        recommendations = [...recommendations, ...newProducts].slice(0, 4);
                     }
                 }
 
@@ -2837,6 +3105,22 @@
             const blogPostId = urlParams.get('post');
             const urlPageNum = parseInt(urlParams.get('pg')) || 1;
 
+            // Filters travel in the query string, so a filtered listing can be
+            // reloaded, bookmarked or shared and come back the same.
+            const urlWatchFilters = {};
+            WATCH_FILTER_KEYS.forEach(key => {
+                const value = urlParams.get(key);
+                if (value) urlWatchFilters[key] = value;
+            });
+            if (urlParams.get('q')) urlWatchFilters.q = urlParams.get('q');
+
+            const urlAccessoryFilters = {};
+            ['sort', 'status'].forEach(key => {
+                const value = urlParams.get(key);
+                if (value) urlAccessoryFilters[key] = value;
+            });
+            if (urlParams.get('q')) urlAccessoryFilters.q = urlParams.get('q');
+
             if (pageName === 'detail' && productId) {
                 showProductDetail(decodeURIComponent(productId), true);
                 history.replaceState({ page: 'detail', productId: decodeURIComponent(productId) }, '', window.location.search);
@@ -2845,25 +3129,32 @@
                 history.replaceState({ page: 'blog-detail', blogId: decodeURIComponent(blogPostId) }, '', window.location.search);
             } else if (pageName === 'watches') {
                 currentPage = urlPageNum;
+                restoreWatchFilters(urlWatchFilters);
+                history.replaceState({ page: 'watches', pg: urlPageNum, filters: urlWatchFilters }, '', window.location.search);
                 showPage('watches', true, true);
-                history.replaceState({ page: 'watches', pg: urlPageNum }, '', window.location.search);
             } else if (pageName === 'accessories') {
-                currentAccessoryPage = urlPageNum;
                 const cat = urlParams.get('category');
-                if (cat && cat !== 'all') {
-                    showAccessoryCategory(cat, true);
-                } else if (cat === 'all') {
-                    currentAccessoryCategory = null;
-                    showPage('accessories', true, true);
-                    setAccessoryCategoriesVisible(false);
-                    loadAccessories();
+                restoreAccessoryFilters(urlAccessoryFilters);
+                if (cat) {
+                    history.replaceState({ page: 'accessories', category: cat, pg: urlPageNum, filters: urlAccessoryFilters }, '', window.location.search);
+                    showAccessoryCategory(cat, true, urlPageNum);
                 } else {
+                    history.replaceState({ page: 'accessories' }, '', window.location.search);
                     showPage('accessories', true);
                 }
-                history.replaceState({ page: 'accessories', category: cat, pg: urlPageNum }, '', window.location.search);
+            } else if (pageName === 'blog') {
+                currentBlogPage = urlPageNum;
+                history.replaceState({ page: 'blog', pg: urlPageNum }, '', window.location.search);
+                showPage('blog', true, true);
+            } else if (pageName === 'detail' || pageName === 'blog-detail') {
+                // A detail URL with no product/post would sit on a spinner forever.
+                showPage('home', true);
+                history.replaceState({ page: 'home' }, '', window.location.pathname);
             } else if (pageName) {
+                // showPage falls back to home for anything unrecognised.
                 showPage(pageName, true);
-                history.replaceState({ page: pageName }, '', window.location.search);
+                const resolved = document.getElementById('page-' + pageName) ? pageName : 'home';
+                history.replaceState({ page: resolved }, '', resolved === pageName ? window.location.search : window.location.pathname);
             } else {
                 showPage('home', true);
                 history.replaceState({ page: 'home' }, '', window.location.pathname);
@@ -3197,8 +3488,18 @@
             }
 
             // Load reviews from Supabase and render into carousel
+            // Hide the whole reviews band rather than leaving a permanent error
+            // strip on the home page when there is nothing to show.
+            function hideReviewsSection() {
+                const track = document.getElementById('reviewsTrack');
+                const section = track && track.closest('.ms-reviews, .reviews-section, section');
+                if (section) section.style.display = 'none';
+                else if (track) track.innerHTML = '';
+            }
+
             async function loadReviews() {
                 const track = document.getElementById('reviewsTrack');
+                if (!track) return;
                 try {
                     const { data: reviews, error } = await supabaseClient
                         .from('mainspring_reviews')
@@ -3207,7 +3508,7 @@
                     if (error) throw error;
 
                     if (!reviews || reviews.length === 0) {
-                        track.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray);">No reviews yet.</div>';
+                        hideReviewsSection();
                         return;
                     }
 
@@ -3239,8 +3540,8 @@
                     // Duplicate for infinite scroll
                     track.innerHTML = cardsHtml + cardsHtml;
                 } catch (err) {
-                    console.error('Error loading reviews:', err);
-                    track.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--gray);">Unable to load reviews.</div>';
+                    console.warn('Reviews unavailable:', err && err.message ? err.message : err);
+                    hideReviewsSection();
                 }
             }
 

@@ -1379,6 +1379,29 @@
             transform: scale(1);
         }
 
+        /* Escape hatch applied by app.js when the open/close transition stalls
+           (backgrounded or restored tab, throttled renderer). Dropping the
+           transitions makes the overlay snap to its correct end state instead of
+           freezing as an invisible-but-open menu or an opaque black panel. */
+        .nav-overlay.nav-settled,
+        .nav-overlay.nav-settled .nav-links li,
+        .nav-overlay.nav-settled .nav-dropdown {
+            transition: none !important;
+            transition-delay: 0s !important;
+        }
+
+        .nav-overlay.nav-settled.active,
+        .nav-overlay.nav-settled.active .nav-links li {
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+        }
+
+        .nav-overlay.nav-settled:not(.active) {
+            opacity: 0;
+            visibility: hidden;
+        }
+
         .nav-overlay-backdrop {
             position: fixed;
             top: 0;
@@ -1539,6 +1562,9 @@
             top: auto;
             left: auto;
             width: auto;
+            /* Nested <ul>: .nav-links only clears markers on its own children, so
+               without this the submenu shows list bullets above 480px. */
+            list-style: none;
             max-height: 0;
             background: transparent;
             margin-left: 0;
@@ -1557,6 +1583,13 @@
         }
 
         .nav-item-wrapper:hover .nav-dropdown {
+            max-height: 500px;
+        }
+
+        /* Tap-to-expand submenu. app.js sets `mobile-expanded` on every viewport
+           at or below 992px, so this must not be scoped to a narrower media
+           query — otherwise tablets get a submenu that never opens. */
+        .nav-item-wrapper.mobile-expanded .nav-dropdown {
             max-height: 500px;
         }
 
@@ -4340,19 +4373,33 @@
             }
 
             @media (max-width: 768px) {
+                /* Same reason as the 480px block: once a submenu expands the menu
+                   is taller than the viewport, and justify-content: center clips
+                   the top of an overflowing flex container instead of scrolling. */
                 .nav-overlay {
                     width: 60%;
                     max-width: 500px;
+                    justify-content: flex-start;
+                    overflow-y: auto;
+                    -webkit-overflow-scrolling: touch;
+                    overscroll-behavior: contain;
                 }
 
+                .nav-overlay .nav-links {
+                    width: 100%;
+                    margin: auto 0;
+                }
+
+                /* The dropdown is in normal flow under its parent link. The old
+                   `left: 220px` offset was left over from an absolutely
+                   positioned menu and pushed the submenu off the overlay. */
                 .nav-dropdown {
-                    width: 280px;
-                    left: 220px;
+                    width: 100%;
+                    left: auto;
                 }
 
                 .nav-dropdown::before {
-                    left: -220px;
-                    width: 220px;
+                    display: none;
                 }
             }
 

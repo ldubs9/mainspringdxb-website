@@ -99,7 +99,7 @@
                     <div class="filter-container">
                         <div class="search-box" style="max-width: 100%;">
                             <input type="text" id="accessorySearchInput" placeholder="Search accessories..."
-                                oninput="applyAccessoryFilters()">
+                                oninput="queueAccessorySearch(this.value)">
                             <i class="fas fa-search"></i>
                         </div>
                         <input type="hidden" id="accessorySortFilter" value="newest">
