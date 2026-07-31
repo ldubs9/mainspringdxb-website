@@ -113,12 +113,12 @@ test('database migration queues each event once and remains independent of disco
     assert.doesNotMatch(sql, /mainspring_discount|discount_code|discount_aed/i);
 });
 
-test('payments service requires customer email and runs the durable email worker', () => {
+test('payments service requires customer email and delivery address and runs the durable email worker', () => {
     const payments = fs.readFileSync(paymentsPath, 'utf8');
     const app = fs.readFileSync(appPath, 'utf8');
 
     assert.match(payments, /normalizeEmail\(customer_email\)/);
-    assert.match(payments, /Missing required fields:[^']*customer_email/);
+    assert.match(payments, /Missing required fields:[^']*customer_email[^']*customer_address/);
     assert.match(payments, /claim_mainspring_order_email_events/);
     assert.match(payments, /processEmailOutbox/);
     assert.match(payments, /BUSINESS_EMAIL/);
@@ -131,4 +131,20 @@ test('payments service requires customer email and runs the durable email worker
     assert.match(app, /<label>Email \*<\/label>/);
     assert.match(app, /id="checkoutEmail"[^>]*required/);
     assert.match(app, /emailInput\.checkValidity\(\)/);
+    assert.match(app, /<label>Delivery Address \*<\/label>/);
+    assert.match(app, /id="checkoutAddress"[^>]*required/);
+    assert.match(app, /if \(!address\)/);
+    assert.match(app, /id="addressError"/);
+});
+
+test('checkout can access the HTML escaping helper before rendering customer fields', () => {
+    const app = fs.readFileSync(appPath, 'utf8');
+    const helperIndex = app.indexOf('function escapeHtml');
+    const checkoutIndex = app.indexOf('function renderCheckoutStep1');
+    const helperDefinitions = app.match(/function escapeHtml\s*\(/g) || [];
+
+    assert.ok(helperIndex >= 0, 'HTML escaping helper exists');
+    assert.ok(checkoutIndex >= 0, 'checkout renderer exists');
+    assert.ok(helperIndex < checkoutIndex, 'HTML escaping helper is in checkout scope');
+    assert.equal(helperDefinitions.length, 1, 'one shared HTML escaping helper is defined');
 });

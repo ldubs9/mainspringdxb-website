@@ -23,6 +23,18 @@
         const globalSearchRequestGuard = createLatestRequestGuard();
         let globalSearchDebounceTimer = null;
 
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>"']/g, function (character) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                }[character];
+            });
+        }
+
         // Handle browser back/forward buttons
         window.addEventListener('popstate', function (event) {
             const state = event.state;
@@ -209,8 +221,9 @@
                         <p class="field-error" id="emailError">Please enter a valid email address</p>
                     </div>
                     <div class="checkout-field">
-                        <label>Delivery Address</label>
-                        <textarea id="checkoutAddress" placeholder="Street, Building, Area, City">${escapeHtml(saved.address || '')}</textarea>
+                        <label>Delivery Address *</label>
+                        <textarea id="checkoutAddress" placeholder="Street, Building, Area, City" required>${escapeHtml(saved.address || '')}</textarea>
+                        <p class="field-error" id="addressError">Please enter your delivery address</p>
                     </div>
                 </div>
 
@@ -251,6 +264,10 @@
             }
             if (!email || !emailInput.checkValidity()) {
                 document.getElementById('emailError').style.display = 'block';
+                valid = false;
+            }
+            if (!address) {
+                document.getElementById('addressError').style.display = 'block';
                 valid = false;
             }
             if (!valid) return;
@@ -3476,12 +3493,6 @@
             }
 
             // Load Instagram posts into carousel
-            function escapeHtml(str) {
-                return String(str || '').replace(/[&<>"']/g, function (c) {
-                    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-                });
-            }
-
             async function loadInstagramReels() {
                 const track = document.getElementById('instagramTrack');
 
