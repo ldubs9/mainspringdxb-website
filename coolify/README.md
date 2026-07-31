@@ -1,4 +1,8 @@
-# Coolify services — Ziina checkout & webhook
+# Coolify services
+
+The live storefront uses the consolidated `mainspring-payments` application for order creation, Ziina checkout, verified payment webhooks, printable-order data, and transactional email delivery.
+
+For the Resend variables, database migration, deployment order, and verification steps, see `../EMAIL_SETUP.md`.
 
 This folder contains two small services prepared for deployment with Coolify:
 
@@ -11,6 +15,9 @@ Environment variables (set these in Coolify before deploying):
 - `SUPABASE_URL` — your Supabase REST URL (e.g. `https://xyz.supabase.co`).
 - `SUPABASE_SERVICE_ROLE_KEY` — Supabase `service_role` key (server-side only).
 - `SITE_URL` — your site URL (used for success/cancel return links). Optional but recommended.
+- `RESEND_API_KEY` — Resend transactional email API key for `mainspring-payments`.
+- `TRANSACTIONAL_EMAIL_FROM` — verified sender address.
+- `BUSINESS_EMAIL` — order recipient and reply-to address.
 
 Deployment notes
 
