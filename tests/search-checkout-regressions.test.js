@@ -124,8 +124,8 @@ test('final stylesheet keeps navbar search typography compact on desktop and met
     assert.match(pageStyles, /\.search-results \.product-card \.product-price\s*\{[^}]*font-size:\s*0\.8925rem/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card\s*\{[^}]*height:\s*auto/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card \.product-info\s*\{[^}]*display:\s*flex[^}]*min-height:/s);
-    assert.match(index, /css\/pages\.css\?v=8/);
-    assert.match(loader, /js\/app\.js\?v=6/);
+    assert.match(index, /css\/pages\.css\?v=9/);
+    assert.match(loader, /js\/app\.js\?v=12/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -142,7 +142,8 @@ test('checkout offers only card, bank transfer, and cash payment in store', () =
     assert.match(step, /Card Payment/);
     assert.match(step, /Bank Transfer/);
     assert.match(step, /Cash Payment in Store/);
-    assert.match(step, /available within 48 hours/i);
+    assert.match(step, /does not reserve the watch/i);
+    assert.doesNotMatch(step, /available within 48 hours|Confirm the reservation/i);
     assert.doesNotMatch(step, /Tabby/i);
     assert.doesNotMatch(step, /Tamara/i);
     assert.doesNotMatch(step, /Cash on Delivery/i);
@@ -159,19 +160,32 @@ test('cart stores and renders the product thumbnail, including legacy cart hydra
     assert.match(app, /function hydrateCartProductDetails/);
     assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
+    assert.match(index, /css\/styles\.css\?v=8/);
+    assert.match(index, /js\/loader\.js\?v=6/);
+    assert.match(loader, /js\/app\.js\?v=12/);
 });
 
 test('cash checkout opens a product-specific WhatsApp inquiry without creating or reserving an order', () => {
     const confirmStart = app.indexOf('async function confirmCheckout');
     const fetchStart = app.indexOf("fetch(PAYMENTS_BASE + '/create-order'", confirmStart);
     const beforeOrderCreation = app.slice(confirmStart, fetchStart);
+    const messageStart = app.indexOf('function buildCashInquiryMessage');
+    const messageEnd = app.indexOf('function startCashInquiryWhatsApp', messageStart);
+    const buildCashInquiryMessage = new Function(`${app.slice(messageStart, messageEnd)}; return buildCashInquiryMessage;`)();
+    const message = buildCashInquiryMessage([
+        { brand: 'Dugena', name: 'Poseidon', reference_code: 'MS-250', qty: 1 }
+    ], { name: 'Luca', phone: '+971500000000' });
 
     assert.match(beforeOrderCreation, /selectedPaymentMethod\s*===\s*'cash_in_store'[\s\S]*?startCashInquiryWhatsApp\(\)[\s\S]*?return/);
+    assert.doesNotMatch(beforeOrderCreation, /saveCart\(\)|\/create-order/);
     assert.match(app, /function buildCashInquiryMessage/);
     assert.match(app, /item\.reference_code/);
     assert.match(app, /item\.brand/);
     assert.match(app, /item\.name/);
     assert.match(app, /has not been reserved/i);
+    assert.match(message, /Dugena Poseidon \(Ref: MS-250\) x1/);
+    assert.match(message, /Luca/);
+    assert.match(message, /has not been reserved yet/i);
     assert.doesNotMatch(app, /function showCashInStoreConfirmation/);
     assert.doesNotMatch(payments, /validMethods\s*=\s*\[[^\]]*cash_in_store/);
 });

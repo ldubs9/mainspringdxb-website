@@ -740,6 +740,13 @@
             color: var(--cream-dark);
         }
 
+        .cart-item-thumbnail {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .cart-item-details {
             flex: 1;
         }

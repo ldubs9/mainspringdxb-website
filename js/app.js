@@ -81,6 +81,28 @@
             document.getElementById('cartBadgeMobile').style.display = totalItems > 0 ? 'flex' : 'none';
         }
 
+        function getProductThumbnail(product) {
+            if (product.image_url) return product.image_url;
+            return Array.isArray(product.image_urls) && product.image_urls.length > 0
+                ? product.image_urls[0]
+                : '';
+        }
+
+        function encodeProductForCart(product) {
+            return encodeURIComponent(JSON.stringify({
+                id: product.id,
+                name: product.model || product.name,
+                brand: product.brand,
+                price: product.price,
+                image_url: getProductThumbnail(product),
+                reference_code: product.reference_code || product.reference_number || ''
+            })).replace(/'/g, '%27');
+        }
+
+        function addEncodedProductToCart(encodedProduct) {
+            addToCart(JSON.parse(decodeURIComponent(encodedProduct)));
+        }
+
         function addToCart(product) {
             const existing = cart.find(item => item.id === product.id);
             if (existing) {
@@ -91,6 +113,8 @@
                     name: product.name,
                     brand: product.brand,
                     price: product.price,
+                    image_url: getProductThumbnail(product),
+                    reference_code: product.reference_code || product.reference_number || '',
                     qty: 1
                 });
             }
@@ -122,10 +146,49 @@
         function openCart() {
             document.getElementById('cartSidebar').classList.add('active');
             renderCart();
+            hydrateCartProductDetails();
         }
 
         function closeCart() {
             document.getElementById('cartSidebar').classList.remove('active');
+        }
+
+        async function hydrateCartProductDetails() {
+            const missingIds = cart
+                .filter(item => !item.image_url || !item.reference_code)
+                .map(item => item.id);
+            if (missingIds.length === 0) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('mainspring_products')
+                    .select('id,image_urls,reference_code,reference_number')
+                    .in('id', missingIds);
+                if (error) throw error;
+
+                let changed = false;
+                (data || []).forEach(product => {
+                    const item = cart.find(cartItem => String(cartItem.id) === String(product.id));
+                    if (!item) return;
+                    const imageUrl = getProductThumbnail(product);
+                    const referenceCode = product.reference_code || product.reference_number || '';
+                    if (imageUrl && item.image_url !== imageUrl) {
+                        item.image_url = imageUrl;
+                        changed = true;
+                    }
+                    if (referenceCode && item.reference_code !== referenceCode) {
+                        item.reference_code = referenceCode;
+                        changed = true;
+                    }
+                });
+
+                if (changed) {
+                    saveCart();
+                    renderCart();
+                }
+            } catch (error) {
+                console.error('Unable to load cart product thumbnails:', error);
+            }
         }
 
         function renderCart() {
@@ -146,7 +209,9 @@
             cartItemsEl.innerHTML = cart.map(item => `
                 <div class="cart-item">
                     <div class="cart-item-image">
-                        <i class="fas fa-clock"></i>
+                        ${item.image_url
+                            ? `<img class="cart-item-thumbnail" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(`${item.brand || ''} ${item.name || ''}`.trim())}">`
+                            : '<i class="fas fa-clock"></i>'}
                     </div>
                     <div class="cart-item-details">
                         <p class="cart-item-name">${item.brand} ${item.name}</p>
@@ -311,7 +376,7 @@
                         <div class="payment-method-icon"><i class="fas fa-store"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Cash Payment in Store</div>
-                            <div class="payment-method-desc">Your watches will be available within 48 hours at the store. Confirm the reservation with us on WhatsApp.</div>
+                            <div class="payment-method-desc">Start a WhatsApp chat to discuss cash payment and availability. This does not reserve the watch.</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
                     </div>
@@ -327,12 +392,17 @@
             el.classList.add('selected');
             const btn = document.getElementById('confirmCheckoutBtn');
             btn.disabled = false;
-            btn.textContent = 'PLACE ORDER';
+            btn.textContent = method === 'cash_in_store' ? 'CHAT ON WHATSAPP' : 'PLACE ORDER';
         }
 
         // Step 3: Create order + process payment
         async function confirmCheckout() {
             if (!selectedPaymentMethod) return;
+
+            if (selectedPaymentMethod === 'cash_in_store') {
+                startCashInquiryWhatsApp();
+                return;
+            }
 
             const btn = document.getElementById('confirmCheckoutBtn');
             btn.disabled = true;
@@ -381,8 +451,6 @@
                     await handleZiinaPayment(orderRef);
                 } else if (selectedPaymentMethod === 'bank_transfer') {
                     showBankTransferConfirmation(orderRef, orderTotal);
-                } else if (selectedPaymentMethod === 'cash_in_store') {
-                    showCashInStoreConfirmation(orderRef, orderTotal);
                 }
 
             } catch (err) {
@@ -469,19 +537,33 @@
             `;
         }
 
-        // Cash payment in store confirmation
-        function showCashInStoreConfirmation(orderRef, total) {
+        function buildCashInquiryMessage(items, customer) {
+            const itemLines = items.map(item => {
+                const name = `${item.brand || ''} ${item.name || ''}`.trim();
+                const reference = item.reference_code ? ` (Ref: ${item.reference_code})` : '';
+                return `- ${name}${reference} x${item.qty || 1}`;
+            }).join('\n');
+
+            return `Hello Mainspring, I would like to discuss paying cash for:\n\n${itemLines}\n\nName: ${customer.name || ''}\nPhone: ${customer.phone || ''}\n\nI understand the watch has not been reserved yet. Please confirm availability and the cash payment arrangements.`;
+        }
+
+        function startCashInquiryWhatsApp() {
+            const customer = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
+            const message = buildCashInquiryMessage(cart, customer);
+            const whatsappUrl = `https://wa.me/971585625042?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank', 'noopener');
+            trackClick('checkout_cash_inquiry', cart.map(item => item.reference_code || item.id).join(','));
+
             const body = document.getElementById('checkoutBody');
             body.innerHTML = `
-                ${renderStepIndicator(3)}
+                ${renderStepIndicator(2)}
                 <div class="checkout-confirmation">
-                    <i class="fas fa-check-circle" style="color: #27ae60;"></i>
-                    <h4>Reserved — Cash Payment in Store</h4>
-                    <p>Your order <strong>${orderRef}</strong> is reserved for one hour.</p>
-                    <p style="margin-top: 5px;">Total: <strong>${formatPrice(total)}</strong>, payable in cash at the store.</p>
-                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">Your watches will be available within 48 hours at the store. Start a WhatsApp conversation now so we can confirm the reservation and collection details.</p>
-                    <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash_in_store', '${orderRef}')"><i class="fab fa-whatsapp"></i> Confirm on WhatsApp</button>
-                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Done</button>
+                    <i class="fab fa-whatsapp" style="color: #25D366;"></i>
+                    <h4>Continue on WhatsApp</h4>
+                    <p>We opened a chat with the watches in your cart.</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">No order has been created and the watch has not been reserved. We will confirm availability and agree the cash payment details with you directly.</p>
+                    <button class="checkout-confirm-btn" onclick="startCashInquiryWhatsApp()"><i class="fab fa-whatsapp"></i> Open WhatsApp Again</button>
+                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Keep Browsing</button>
                 </div>
             `;
         }
@@ -1579,6 +1661,7 @@
                 const statusClass = isSold ? ' sold' : isReserved ? ' reserved' : '';
                 const productIdentifier = product.reference_code || product.id;
                 const openProductCall = `showProductDetail(event, '${productIdentifier}')`;
+                const encodedCartProduct = encodeProductForCart(product);
 
                 return `
                 <div class="product-card${statusClass}">
@@ -1599,7 +1682,7 @@
                                 <i class="fas fa-ban"></i> ${isSold ? 'Sold' : 'Reserved'}
                             </button>
                             ` : `
-                            <button onclick="event.stopPropagation(); addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
+                            <button onclick="event.stopPropagation(); addEncodedProductToCart('${encodedCartProduct}')" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
                                 <i class="fas fa-shopping-bag"></i> Add to Cart
                             </button>
                             <button onclick="event.stopPropagation(); addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="padding: 10px 12px; background: none; border: 1px solid var(--cream-dark); cursor: pointer; font-size: 0.8rem; color: var(--primary-green); border-radius: 0;">
@@ -2391,7 +2474,7 @@
                 <div class="detail-actions">
                     <button class="btn-primary btn-whatsapp-action" style="background: #25D366;" onclick="inquireViaWhatsApp({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}, reference_number: '${refNumber}'})"><i class="fab fa-whatsapp"></i> WhatsApp Us</button>
                     <div class="detail-actions-row">
-                        <button class="btn-primary btn-cart-action" onclick="addToCart({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
+                        <button class="btn-primary btn-cart-action" onclick="addToCart(currentProduct)"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
                         <button class="btn-secondary btn-wishlist-action" onclick="addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="far fa-heart"></i></button>
                     </div>
                 </div>

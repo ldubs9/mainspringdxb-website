@@ -338,7 +338,7 @@ app.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: customer_name, customer_email, customer_phone, customer_address, items, payment_method' });
     }
 
-    const validMethods = ['bank_transfer', 'ziina', 'cash_in_store'];
+    const validMethods = ['bank_transfer', 'ziina'];
     if (!validMethods.includes(payment_method)) {
       return res.status(400).json({ error: 'Invalid payment method' });
     }
