@@ -559,7 +559,12 @@
             const customer = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
             const message = buildCashInquiryMessage(cart, customer);
             const whatsappUrl = `https://wa.me/971585625042?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank', 'noopener');
+            const chatWindow = window.open(whatsappUrl, '_blank');
+            if (!chatWindow) {
+                window.location.assign(whatsappUrl);
+                return;
+            }
+            chatWindow.opener = null;
             trackClick('checkout_cash_inquiry', cart.map(item => item.reference_code || item.id).join(','));
 
             const body = document.getElementById('checkoutBody');
