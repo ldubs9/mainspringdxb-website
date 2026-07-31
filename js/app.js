@@ -498,13 +498,44 @@
             window.open(whatsappUrl, '_blank');
         }
 
-        // Handle the Ziina card-payment return redirect
-        function handlePaymentReturn() {
+        function renderZiinaVerificationPending(body, orderRef, detail) {
+            body.innerHTML = `
+                ${renderStepIndicator(3)}
+                <div class="checkout-confirmation">
+                    <i class="fas fa-clock" style="color: var(--gray); font-size: 3.5rem;"></i>
+                    <h4>Payment Verification in Progress</h4>
+                    <p>Ziina returned order <strong>${escapeHtml(orderRef)}</strong> to the website.</p>
+                    <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">${escapeHtml(detail)} We will email you as soon as the payment is verified.</p>
+                    <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('ziina', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
+                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Close</button>
+                </div>
+            `;
+        }
+
+        function renderVerifiedZiinaSuccess(body, orderRef) {
+            body.innerHTML = `
+                ${renderStepIndicator(3)}
+                <div class="checkout-confirmation">
+                    <i class="fas fa-check-circle" style="color: #27ae60; font-size: 3.5rem;"></i>
+                    <h4>Payment Verified!</h4>
+                    <p>Your order <strong>${escapeHtml(orderRef)}</strong> has been confirmed.</p>
+                    <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">A payment confirmation will be sent by email.</p>
+                    <button class="checkout-confirm-btn" onclick="closeCheckout(); showPage('home');">CONTINUE SHOPPING</button>
+                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="viewReceipt('${orderRef}');">VIEW RECEIPT</button>
+                </div>
+            `;
+        }
+
+        // Handle the Ziina card-payment return redirect. The browser redirect is
+        // not payment proof, so ask the server to re-fetch the intent from Ziina.
+        async function handlePaymentReturn() {
             const params = new URLSearchParams(window.location.search);
             const orderRef = params.get('order');
             const status = params.get('status');
+            const paymentIntentId = params.get('payment_intent');
 
             if (!orderRef || !status) return;
+            if (!/^MS-[A-Z0-9-]{1,80}$/i.test(orderRef)) return;
 
             // Clean the URL
             window.history.replaceState({}, '', window.location.pathname);
@@ -515,22 +546,55 @@
             if (status.includes('success') || status === 'ziina_success') {
                 body.innerHTML = `
                     ${renderStepIndicator(3)}
-                    <div class="checkout-confirmation">
-                        <i class="fas fa-check-circle" style="color: #27ae60; font-size: 3.5rem;"></i>
-                        <h4>Payment Successful!</h4>
-                        <p>Your order <strong>${orderRef}</strong> has been confirmed.</p>
-                        <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">We will contact you via WhatsApp with updates on your order.</p>
-                        <button class="checkout-confirm-btn" onclick="closeCheckout(); showPage('home');">CONTINUE SHOPPING</button>
-                        <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="viewReceipt('${orderRef}');">VIEW RECEIPT</button>
+                    <div class="checkout-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p style="margin-top: 15px; color: var(--gray);">Verifying your payment with Ziina...</p>
                     </div>
                 `;
+
+                if (!paymentIntentId || !/^[A-Z0-9-]{1,100}$/i.test(paymentIntentId)) {
+                    renderZiinaVerificationPending(body, orderRef, 'Automatic verification is still running.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(PAYMENTS_BASE + '/ziina-reconcile', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            order_ref: orderRef,
+                            payment_intent_id: paymentIntentId,
+                        }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok || !result.success) throw new Error(result.error || 'Unable to verify payment');
+
+                    if (result.payment_status === 'paid') {
+                        renderVerifiedZiinaSuccess(body, orderRef);
+                    } else if (result.payment_status === 'failed') {
+                        body.innerHTML = `
+                            ${renderStepIndicator(3)}
+                            <div class="checkout-confirmation">
+                                <i class="fas fa-exclamation-circle" style="color: #c0392b; font-size: 3.5rem;"></i>
+                                <h4>Payment Failed</h4>
+                                <p>Ziina could not complete payment for order <strong>${escapeHtml(orderRef)}</strong>.</p>
+                                <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('failed', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
+                            </div>
+                        `;
+                    } else {
+                        renderZiinaVerificationPending(body, orderRef, 'Ziina is still processing the payment.');
+                    }
+                } catch (error) {
+                    console.error('Ziina return verification error:', error);
+                    renderZiinaVerificationPending(body, orderRef, 'Automatic verification is temporarily unavailable.');
+                }
             } else if (status.includes('cancel')) {
                 body.innerHTML = `
                     ${renderStepIndicator(3)}
                     <div class="checkout-confirmation">
                         <i class="fas fa-times-circle" style="color: var(--gray); font-size: 3.5rem;"></i>
                         <h4>Payment Cancelled</h4>
-                        <p>Your order <strong>${orderRef}</strong> payment was cancelled.</p>
+                        <p>Your order <strong>${escapeHtml(orderRef)}</strong> payment was cancelled.</p>
                         <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">You can contact us to retry or choose a different payment method.</p>
                         <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cancelled', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
                         <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Close</button>
@@ -542,7 +606,7 @@
                     <div class="checkout-confirmation">
                         <i class="fas fa-exclamation-circle" style="color: #c0392b; font-size: 3.5rem;"></i>
                         <h4>Payment Failed</h4>
-                        <p>Your payment for order <strong>${orderRef}</strong> could not be processed.</p>
+                        <p>Your payment for order <strong>${escapeHtml(orderRef)}</strong> could not be processed.</p>
                         <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Please try again or contact us for assistance.</p>
                         <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('failed', '${orderRef}')"><i class="fab fa-whatsapp"></i> Contact Us</button>
                         <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Close</button>

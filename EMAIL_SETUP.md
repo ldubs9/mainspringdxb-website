@@ -6,7 +6,7 @@ The website sends three transactional emails:
 2. The first verified change of an order to `paid` sends a payment confirmation to `info@mainspringdubai.com`.
 3. The same verified payment sends a confirmation to the customer email entered at checkout.
 
-The database payment status drives the confirmation. A browser return page cannot trigger a paid email. Card payments send only after the Ziina webhook verifies payment. Bank-transfer and in-store orders send when their payment status is changed to `paid`.
+The database payment status drives the confirmation. An unverified browser return page cannot trigger a paid email. Card payments send only after the payment service re-fetches the Payment Intent from Ziina and updates the order to `paid`. The webhook is the primary path; the browser return and background reconciliation worker provide verified fallbacks. Bank-transfer and in-store orders send when their payment status is changed to `paid`.
 
 ## Email services
 
@@ -31,7 +31,7 @@ The API key must remain in Coolify. Never put it in browser JavaScript or the re
 
 1. Apply `supabase/migrations/20260731_order_email_outbox.sql`.
 2. Deploy the `coolify/mainspring-payments` application.
-3. Confirm its `/health` response reports `email_configured: true`.
+3. Confirm its `/health` response reports `email_configured: true` and `payment_reconciliation_enabled: true`.
 4. Deploy the website to Vercel.
 5. Submit a controlled test order with an email address you own.
 6. Confirm the new-order email reaches `info@mainspringdubai.com`.

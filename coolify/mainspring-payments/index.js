@@ -6,6 +6,7 @@
 //   POST /create-order    -> creates the order row server-side (secrets safe here)
 //   POST /ziina-checkout   -> creates a Ziina payment intent, returns payment_url
 //   POST /ziina-webhook    -> receives Ziina events, verifies, updates order status
+//   POST /ziina-reconcile  -> verifies a returned payment when a webhook is delayed
 //   GET  /health           -> healthcheck for Coolify
 //
 // Required environment variables (set these in Coolify -> app -> Environment):
@@ -18,6 +19,7 @@
 //   RESEND_API_KEY             transactional email API key
 //   TRANSACTIONAL_EMAIL_FROM   verified sender, e.g. Mainspring Dubai <orders@updates.mainspringdubai.com>
 //   BUSINESS_EMAIL             order recipient and reply-to address
+//   PAYMENT_RECONCILE_INTERVAL_MS optional stuck-payment polling interval (default 60000)
 
 const express = require('express');
 const cors = require('cors');
@@ -44,6 +46,10 @@ const BUSINESS_EMAIL = normalizeEmail(process.env.BUSINESS_EMAIL || 'info@mainsp
 const EMAIL_POLL_INTERVAL_MS = Math.min(
   300000,
   Math.max(5000, Number(process.env.EMAIL_POLL_INTERVAL_MS) || 15000)
+);
+const PAYMENT_RECONCILE_INTERVAL_MS = Math.min(
+  600000,
+  Math.max(30000, Number(process.env.PAYMENT_RECONCILE_INTERVAL_MS) || 60000)
 );
 const EMAIL_CONFIGURED = !!(RESEND_API_KEY && TRANSACTIONAL_EMAIL_FROM && BUSINESS_EMAIL);
 
@@ -199,6 +205,128 @@ async function runEmailWorker() {
   }
 }
 
+function paymentStatusFromZiina(status) {
+  switch (status) {
+    case 'completed': return 'paid';
+    case 'failed': return 'failed';
+    case 'canceled': return 'cancelled';
+    case 'requires_payment_instrument':
+    case 'requires_user_action':
+    case 'pending':
+    default:
+      return 'processing';
+  }
+}
+
+function paymentIntentIdFromWebhook(payload) {
+  const data = payload && payload.data;
+  if (typeof data === 'string') return data;
+  return (data && (data.id || data.payment_intent_id || (data.payment_intent && data.payment_intent.id)))
+    || (payload && (payload.id || payload.payment_intent_id))
+    || null;
+}
+
+async function findZiinaOrder(paymentIntentId, expectedOrderRef) {
+  let filters = 'payment_gateway_ref=eq.' + encodeURIComponent(paymentIntentId);
+  if (expectedOrderRef) filters += '&order_ref=eq.' + encodeURIComponent(expectedOrderRef);
+  const response = await fetch(
+    sbUrl('mainspring_orders?' + filters + '&select=order_ref,payment_method,payment_status'),
+    { headers: sbHeaders }
+  );
+  if (!response.ok) {
+    throw new Error('Unable to find Ziina order (' + response.status + '): ' + String(await response.text()).substring(0, 300));
+  }
+  const orders = await response.json();
+  return (orders && orders[0]) || null;
+}
+
+async function reconcileZiinaPaymentIntent(paymentIntentId, expectedOrderRef) {
+  if (!ZIINA_API_KEY) throw new Error('Ziina is not configured');
+
+  const order = await findZiinaOrder(paymentIntentId, expectedOrderRef);
+  if (!order || order.payment_method !== 'ziina') return { found: false };
+  if (order.payment_status === 'paid') {
+    return { found: true, orderRef: order.order_ref, paymentStatus: 'paid', intentStatus: 'completed', changed: false };
+  }
+
+  const verifyResponse = await fetch(
+    'https://api-v2.ziina.com/api/payment_intent/' + encodeURIComponent(paymentIntentId),
+    { headers: { Authorization: 'Bearer ' + ZIINA_API_KEY, Accept: 'application/json' } }
+  );
+  if (!verifyResponse.ok) {
+    throw new Error('Unable to verify Ziina payment (' + verifyResponse.status + '): ' + String(await verifyResponse.text()).substring(0, 300));
+  }
+
+  const intent = await verifyResponse.json();
+  const paymentStatus = paymentStatusFromZiina(intent.status);
+  const changed = paymentStatus !== order.payment_status;
+
+  if (changed) {
+    const updateResponse = await fetch(
+      sbUrl(
+        'mainspring_orders?payment_gateway_ref=eq.' + encodeURIComponent(paymentIntentId)
+          + '&order_ref=eq.' + encodeURIComponent(order.order_ref)
+      ),
+      {
+        method: 'PATCH',
+        headers: { ...sbHeaders, Prefer: 'return=minimal' },
+        body: JSON.stringify({ payment_status: paymentStatus }),
+      }
+    );
+    if (!updateResponse.ok) {
+      throw new Error('Unable to update reconciled payment (' + updateResponse.status + '): ' + String(await updateResponse.text()).substring(0, 300));
+    }
+  }
+
+  return {
+    found: true,
+    orderRef: order.order_ref,
+    paymentStatus,
+    intentStatus: intent.status,
+    changed,
+  };
+}
+
+let paymentReconcilerRunning = false;
+async function runPaymentReconciler() {
+  if (paymentReconcilerRunning || !ZIINA_API_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return;
+  paymentReconcilerRunning = true;
+  try {
+    const response = await fetch(
+      sbUrl(
+        'mainspring_orders?payment_method=eq.ziina'
+          + '&payment_status=in.(processing,pending)'
+          + '&payment_gateway_ref=not.is.null'
+          + '&select=order_ref,payment_gateway_ref'
+          + '&order=created_at.asc&limit=20'
+      ),
+      { headers: sbHeaders }
+    );
+    if (!response.ok) {
+      throw new Error('Unable to load processing Ziina orders (' + response.status + '): ' + String(await response.text()).substring(0, 300));
+    }
+
+    const orders = await response.json();
+    for (const order of Array.isArray(orders) ? orders : []) {
+      try {
+        const result = await reconcileZiinaPaymentIntent(order.payment_gateway_ref, order.order_ref);
+        if (result.changed) {
+          console.log(
+            'Ziina reconciliation: order ' + result.orderRef + ' -> ' + result.paymentStatus
+              + ' (intent ' + order.payment_gateway_ref + ')'
+          );
+        }
+      } catch (error) {
+        console.error('Ziina reconciliation failed for order ' + order.order_ref + ':', error);
+      }
+    }
+  } catch (error) {
+    console.error('Ziina reconciliation worker error:', error);
+  } finally {
+    paymentReconcilerRunning = false;
+  }
+}
+
 // ----------------------------------------------------------------------------
 // POST /create-order
 // ----------------------------------------------------------------------------
@@ -339,7 +467,7 @@ app.post('/ziina-checkout', async (req, res) => {
         currency_code: 'AED',
         message: `Mainspring Dubai — Order ${order_ref}`,
         test: ZIINA_TEST_MODE,
-        success_url: `${SITE_URL}?order=${order_ref}&status=ziina_success`,
+        success_url: `${SITE_URL}?order=${encodeURIComponent(order_ref)}&status=ziina_success&payment_intent={PAYMENT_INTENT_ID}`,
         cancel_url: `${SITE_URL}?order=${order_ref}&status=ziina_cancel`,
         failure_url: `${SITE_URL}?order=${order_ref}&status=ziina_failed`,
       }),
@@ -365,6 +493,56 @@ app.post('/ziina-checkout', async (req, res) => {
 });
 
 // ----------------------------------------------------------------------------
+// POST /ziina-reconcile
+// ----------------------------------------------------------------------------
+app.post('/ziina-reconcile', async (req, res) => {
+  try {
+    const orderRef = String((req.body && req.body.order_ref) || '').trim();
+    const paymentIntentId = String((req.body && req.body.payment_intent_id) || '').trim();
+    if (!orderRef || orderRef.length > 100 || !paymentIntentId || paymentIntentId.length > 100) {
+      return res.status(400).json({ error: 'Missing or invalid payment reference' });
+    }
+
+    const limiterKey = 'ziina-reconcile:' + crypto
+      .createHash('sha256')
+      .update(String(req.ip || (req.socket && req.socket.remoteAddress) || 'unknown'))
+      .digest('hex');
+    const limitResponse = await fetch(sbUrl('rpc/consume_mainspring_order_submission_limit'), {
+      method: 'POST',
+      headers: sbHeaders,
+      body: JSON.stringify({
+        p_limiter_key: limiterKey,
+        p_limit: 30,
+        p_window_seconds: 900,
+      }),
+    });
+    if (!limitResponse.ok) {
+      console.error('Ziina reconciliation limiter failed:', limitResponse.status, await limitResponse.text());
+      return res.status(502).json({ error: 'Unable to verify payment right now' });
+    }
+    if ((await limitResponse.json()) !== true) {
+      return res.status(429).json({ error: 'Too many verification attempts. Please try again later.' });
+    }
+
+    const result = await reconcileZiinaPaymentIntent(paymentIntentId, orderRef);
+    if (!result.found) return res.status(404).json({ error: 'Payment order not found' });
+
+    console.log(
+      'Ziina return reconciliation: order ' + result.orderRef + ' -> ' + result.paymentStatus
+        + ' (intent ' + paymentIntentId + ')'
+    );
+    return res.json({
+      success: true,
+      order_ref: result.orderRef,
+      payment_status: result.paymentStatus,
+    });
+  } catch (error) {
+    console.error('ziina-reconcile error:', error);
+    return res.status(502).json({ error: 'Unable to verify payment right now' });
+  }
+});
+
+// ----------------------------------------------------------------------------
 // POST /ziina-webhook
 // ----------------------------------------------------------------------------
 app.post('/ziina-webhook', async (req, res) => {
@@ -383,53 +561,18 @@ app.post('/ziina-webhook', async (req, res) => {
     }
 
     const payload = req.body || {};
-    // Ziina delivers an event envelope: { event: "...", data: { id, status, ... } }
-    const paymentIntentId = payload?.data?.id || payload.id || payload.payment_intent_id;
+    const paymentIntentId = paymentIntentIdFromWebhook(payload);
     if (!paymentIntentId) return res.status(400).send('Missing payment_intent_id');
-    if (!ZIINA_API_KEY) return res.status(500).send('Server config error');
 
-    // Never trust the webhook status alone; re-fetch the intent from Ziina.
-    const verifyResp = await fetch(`https://api-v2.ziina.com/api/payment_intent/${encodeURIComponent(paymentIntentId)}`, {
-      headers: { Authorization: `Bearer ${ZIINA_API_KEY}` },
-    });
-    if (!verifyResp.ok) {
-      console.error('Failed to verify Ziina payment intent', await verifyResp.text());
-      return res.status(502).send('Verification failed');
-    }
-    const intent = await verifyResp.json();
+    // Never trust the webhook status alone. The shared reconciler re-fetches
+    // the Payment Intent from Ziina before changing the order.
+    const result = await reconcileZiinaPaymentIntent(paymentIntentId);
+    if (!result.found) return res.status(404).send('Order not found');
 
-    let paymentStatus;
-    switch (intent.status) {
-      case 'completed': paymentStatus = 'paid'; break;
-      case 'failed': paymentStatus = 'failed'; break;
-      case 'canceled': paymentStatus = 'cancelled'; break;
-      case 'pending':
-      case 'requires_user_action': paymentStatus = 'processing'; break;
-      default: paymentStatus = 'pending';
-    }
-
-    const orderResp = await fetch(
-      sbUrl(`mainspring_orders?payment_gateway_ref=eq.${encodeURIComponent(paymentIntentId)}&select=order_ref`),
-      { headers: sbHeaders }
+    console.log(
+      'Ziina webhook: order ' + result.orderRef + ' -> ' + result.paymentStatus
+        + ' (intent ' + paymentIntentId + ')'
     );
-    if (!orderResp.ok) {
-      console.error('Supabase fetch error', await orderResp.text());
-      return res.status(404).send('Order not found');
-    }
-    const orders = await orderResp.json();
-    const order = orders && orders[0];
-    if (!order) return res.status(404).send('Order not found');
-
-    const updateResp = await fetch(
-      sbUrl(`mainspring_orders?payment_gateway_ref=eq.${encodeURIComponent(paymentIntentId)}`),
-      { method: 'PATCH', headers: sbHeaders, body: JSON.stringify({ payment_status: paymentStatus }) }
-    );
-    if (!updateResp.ok) {
-      console.error('Failed to update order', await updateResp.text());
-      return res.status(500).send('DB update failed');
-    }
-
-    console.log(`Ziina webhook: order ${order.order_ref} -> ${paymentStatus} (intent ${paymentIntentId})`);
     return res.status(200).send('OK');
   } catch (err) {
     console.error('ziina-webhook error:', err);
@@ -474,6 +617,7 @@ app.get('/health', (_req, res) => res.json({
   ziina_key_present: !!ZIINA_API_KEY,
   webhook_secret_set: !!ZIINA_WEBHOOK_SECRET,
   email_configured: EMAIL_CONFIGURED,
+  payment_reconciliation_enabled: !!(ZIINA_API_KEY && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY),
 }));
 app.get('/', (_req, res) => res.send('Mainspring payments service'));
 
@@ -483,4 +627,9 @@ app.listen(port, () => console.log(`mainspring-payments running on ${port} (ziin
 if (EMAIL_CONFIGURED) {
   setTimeout(runEmailWorker, 1000);
   setInterval(runEmailWorker, EMAIL_POLL_INTERVAL_MS);
+}
+
+if (ZIINA_API_KEY && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+  setTimeout(runPaymentReconciler, 2000);
+  setInterval(runPaymentReconciler, PAYMENT_RECONCILE_INTERVAL_MS);
 }
