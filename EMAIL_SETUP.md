@@ -4,7 +4,7 @@ The website sends three transactional emails:
 
 1. Every successfully submitted order sends the customer and order details to `info@mainspringdubai.com`.
 2. The first verified change of an order to `paid` sends a payment confirmation to `info@mainspringdubai.com`.
-3. The same verified payment sends a confirmation to the customer email entered at checkout.
+3. The same verified payment sends a branded, itemized payment receipt to the customer email entered at checkout. Receipts are not exposed through a public website page or order lookup endpoint.
 
 The database payment status drives the confirmation. An unverified browser return page cannot trigger a paid email. Card payments send only after the payment service re-fetches the Payment Intent from Ziina and updates the order to `paid`. The webhook is the primary path; the browser return and background reconciliation worker provide verified fallbacks. Bank-transfer and in-store orders send when their payment status is changed to `paid`.
 

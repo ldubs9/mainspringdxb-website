@@ -519,9 +519,8 @@
                     <i class="fas fa-check-circle" style="color: #27ae60; font-size: 3.5rem;"></i>
                     <h4>Payment Verified!</h4>
                     <p>Your order <strong>${escapeHtml(orderRef)}</strong> has been confirmed.</p>
-                    <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">A payment confirmation will be sent by email.</p>
+                    <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">Your payment receipt will be sent by email.</p>
                     <button class="checkout-confirm-btn" onclick="closeCheckout(); showPage('home');">CONTINUE SHOPPING</button>
-                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="viewReceipt('${orderRef}');">VIEW RECEIPT</button>
                 </div>
             `;
         }
@@ -613,11 +612,6 @@
                     </div>
                 `;
             }
-        }
-
-        // Receipt — opens a printable, branded invoice for the order in a new tab
-        function viewReceipt(orderRef) {
-            window.open('receipt.html?order=' + encodeURIComponent(orderRef), '_blank');
         }
 
         // Order tracking page (currently hidden from navigation)

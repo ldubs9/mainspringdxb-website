@@ -55,9 +55,13 @@ test('transactional email templates escape customer data and contain order detai
     assert.match(businessPayment.text, /AED 15,450/);
 
     const customerPayment = buildCustomerPaymentEmail(order);
-    assert.match(customerPayment.subject, /Payment confirmation/);
+    assert.match(customerPayment.subject, /Payment receipt/);
     assert.match(customerPayment.text, /MS-EMAIL-1/);
     assert.match(customerPayment.text, /info@mainspringdubai\.com/);
+    assert.match(customerPayment.html, /MAINSPRING DUBAI/);
+    assert.match(customerPayment.html, /#f0ece4/i);
+    assert.match(customerPayment.html, /#c4a265/i);
+    assert.match(customerPayment.html, /#141414/i);
 });
 
 test('Resend transport sends one idempotent API request', async () => {
@@ -149,6 +153,15 @@ test('checkout can access the HTML escaping helper before rendering customer fie
     assert.ok(checkoutIndex >= 0, 'checkout renderer exists');
     assert.ok(helperIndex < checkoutIndex, 'HTML escaping helper is in checkout scope');
     assert.equal(helperDefinitions.length, 1, 'one shared HTML escaping helper is defined');
+});
+
+test('paid customers receive their receipt only by email', () => {
+    const payments = fs.readFileSync(paymentsPath, 'utf8');
+    const app = fs.readFileSync(appPath, 'utf8');
+
+    assert.doesNotMatch(app, /VIEW RECEIPT|viewReceipt\(|receipt\.html/i);
+    assert.doesNotMatch(payments, /app\.get\('\/order\/:order_ref'/);
+    assert.equal(fs.existsSync('receipt.html'), false);
 });
 
 test('Ziina returns are verified server-side and processing payments are reconciled', () => {

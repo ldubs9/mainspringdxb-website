@@ -68,9 +68,9 @@ function buildItemsHtml(order) {
     const qty = Number(item && item.qty) || 1;
     const price = Number(item && item.price) || 0;
     return '<tr>'
-      + '<td style="padding:10px 0;border-bottom:1px solid #e8e3d8;color:#172d21;">' + escapeHtml(itemLabel(item)) + '</td>'
-      + '<td style="padding:10px 0;border-bottom:1px solid #e8e3d8;text-align:center;color:#5c625e;">' + qty + '</td>'
-      + '<td style="padding:10px 0;border-bottom:1px solid #e8e3d8;text-align:right;color:#172d21;">' + escapeHtml(formatAED(price * qty)) + '</td>'
+      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;color:#141414;">' + escapeHtml(itemLabel(item)) + '</td>'
+      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;text-align:center;color:#6b6b6b;">' + qty + '</td>'
+      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;text-align:right;color:#141414;">' + escapeHtml(formatAED(price * qty)) + '</td>'
       + '</tr>';
   }).join('');
 }
@@ -85,10 +85,10 @@ function buildItemsText(order) {
 
 function totalsHtml(order) {
   return '<table role="presentation" style="width:100%;margin-top:18px;border-collapse:collapse;">'
-    + '<tr><td style="padding:4px 0;color:#5c625e;">Subtotal</td><td style="padding:4px 0;text-align:right;">'
+    + '<tr><td style="padding:5px 0;color:#6b6b6b;">Subtotal</td><td style="padding:5px 0;text-align:right;color:#141414;">'
     + escapeHtml(formatAED(order && order.subtotal_aed)) + '</td></tr>'
-    + '<tr><td style="padding:10px 0 4px;font-weight:700;border-top:1px solid #cfc7b7;">Total</td>'
-    + '<td style="padding:10px 0 4px;text-align:right;font-weight:700;border-top:1px solid #cfc7b7;">'
+    + '<tr><td style="padding:13px 0 4px;font-family:Georgia,serif;font-size:18px;font-weight:700;border-top:2px solid #c4a265;">Total</td>'
+    + '<td style="padding:13px 0 4px;text-align:right;font-family:Georgia,serif;font-size:18px;font-weight:700;border-top:2px solid #c4a265;">'
     + escapeHtml(formatAED(order && order.total_aed)) + '</td></tr></table>';
 }
 
@@ -98,21 +98,28 @@ function totalsText(order) {
 }
 
 function emailShell(title, intro, content) {
-  return '<!doctype html><html><body style="margin:0;background:#f4f1ea;font-family:Arial,sans-serif;color:#172d21;">'
-    + '<div style="max-width:640px;margin:0 auto;padding:28px 16px;">'
-    + '<div style="background:#173d2c;color:#fff;padding:24px 28px;font-size:20px;letter-spacing:1.5px;">MAINSPRING DUBAI</div>'
-    + '<div style="background:#fff;padding:28px;border:1px solid #e4ded1;">'
-    + '<h1 style="font-size:24px;margin:0 0 12px;">' + escapeHtml(title) + '</h1>'
-    + '<p style="line-height:1.6;color:#4f5853;">' + escapeHtml(intro) + '</p>'
-    + content + '</div>'
-    + '<p style="font-size:12px;line-height:1.5;color:#747b77;text-align:center;">Mainspring Dubai<br>'
-    + 'The B1 Mall, Gate 11, Al Barsha, Dubai, UAE<br>' + CONTACT_EMAIL + '</p>'
-    + '</div></body></html>';
+  return '<!doctype html><html><body style="margin:0;background:#f0ece4;font-family:Arial,Helvetica,sans-serif;color:#141414;">'
+    + '<div style="display:none;max-height:0;overflow:hidden;opacity:0;">' + escapeHtml(intro) + '</div>'
+    + '<table role="presentation" style="width:100%;border-collapse:collapse;background:#f0ece4;"><tr><td style="padding:32px 14px;">'
+    + '<table role="presentation" style="width:100%;max-width:640px;margin:0 auto;border-collapse:collapse;background:#ffffff;border:1px solid #d9d3c7;">'
+    + '<tr><td style="background:#141414;padding:28px 32px;border-bottom:4px solid #c4a265;">'
+    + '<div style="font-family:Georgia,Times New Roman,serif;color:#ffffff;font-size:24px;letter-spacing:3px;line-height:1.2;">MAINSPRING DUBAI</div>'
+    + '<div style="margin-top:7px;color:#c4a265;font-size:10px;letter-spacing:2px;text-transform:uppercase;">Vintage and pre-owned timepieces</div>'
+    + '</td></tr>'
+    + '<tr><td style="padding:34px 32px 38px;">'
+    + '<div style="width:42px;height:3px;background:#c4a265;margin-bottom:18px;"></div>'
+    + '<h1 style="font-family:Georgia,Times New Roman,serif;color:#141414;font-size:28px;font-weight:400;line-height:1.25;margin:0 0 14px;">' + escapeHtml(title) + '</h1>'
+    + '<p style="margin:0 0 24px;line-height:1.7;color:#6b6b6b;font-size:15px;">' + escapeHtml(intro) + '</p>'
+    + content + '</td></tr>'
+    + '<tr><td style="background:#141414;padding:24px 32px;text-align:center;color:#d9d3c7;font-size:12px;line-height:1.7;">'
+    + '<div style="font-family:Georgia,Times New Roman,serif;color:#ffffff;letter-spacing:2px;margin-bottom:7px;">MAINSPRING DUBAI</div>'
+    + 'The B1 Mall, Gate 11, Al Barsha, Dubai, UAE<br>' + CONTACT_EMAIL + '</td></tr>'
+    + '</table></td></tr></table></body></html>';
 }
 
 function orderSummaryHtml(order, includeCustomer) {
   const customer = includeCustomer
-    ? '<div style="background:#f7f5ef;padding:16px;margin:18px 0;line-height:1.6;">'
+    ? '<div style="background:#f0ece4;border-left:3px solid #c4a265;padding:16px;margin:18px 0;line-height:1.6;">'
       + '<strong>Customer details</strong><br>'
       + escapeHtml(order && order.customer_name) + '<br>'
       + escapeHtml(order && order.customer_email) + '<br>'
@@ -125,9 +132,9 @@ function orderSummaryHtml(order, includeCustomer) {
     + '<p style="margin:18px 0 8px;"><strong>Order:</strong> ' + escapeHtml(order && order.order_ref)
     + '<br><strong>Payment method:</strong> ' + escapeHtml(paymentMethodLabel(order && order.payment_method)) + '</p>'
     + '<table role="presentation" style="width:100%;border-collapse:collapse;">'
-    + '<thead><tr><th style="padding:8px 0;text-align:left;border-bottom:2px solid #173d2c;">Item</th>'
-    + '<th style="padding:8px 0;text-align:center;border-bottom:2px solid #173d2c;">Qty</th>'
-    + '<th style="padding:8px 0;text-align:right;border-bottom:2px solid #173d2c;">Amount</th></tr></thead>'
+    + '<thead><tr><th style="padding:9px 0;text-align:left;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Item</th>'
+    + '<th style="padding:9px 0;text-align:center;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Qty</th>'
+    + '<th style="padding:9px 0;text-align:right;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Amount</th></tr></thead>'
     + '<tbody>' + buildItemsHtml(order) + '</tbody></table>' + totalsHtml(order);
 }
 
@@ -178,15 +185,16 @@ function buildCustomerPaymentEmail(order) {
     + 'Your payment has been received and verified for order ' + order.order_ref + '.';
 
   return {
-    subject: 'Payment confirmation for ' + order.order_ref,
+    subject: 'Payment receipt for ' + order.order_ref,
     html: emailShell(
-      'Payment confirmed',
+      'Payment receipt',
       intro,
-      orderSummaryHtml(order, false)
+      '<div style="display:inline-block;background:#f0ece4;border:1px solid #c4a265;color:#141414;padding:6px 12px;margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:1.5px;">PAID</div>'
+        + orderSummaryHtml(order, false)
         + '<p style="margin-top:22px;line-height:1.6;color:#4f5853;">We will contact you with updates on your order. '
         + 'If you need help, reply to this email or contact ' + CONTACT_EMAIL + '.</p>'
     ),
-    text: 'Payment confirmed\n\n' + intro + '\n\n' + orderSummaryText(order, false)
+    text: 'Payment receipt\n\n' + intro + '\n\n' + orderSummaryText(order, false)
       + '\n\nWe will contact you with updates on your order. If you need help, reply to this email or contact '
       + CONTACT_EMAIL + '.',
   };
