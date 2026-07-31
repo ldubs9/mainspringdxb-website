@@ -292,6 +292,17 @@ BEGIN
     END IF;
 
     IF NEW.payment_status = 'paid' THEN
+        -- Lock the individual inventory rows before counting them. PostgreSQL
+        -- does not allow FOR UPDATE on an aggregate query such as COUNT(*).
+        PERFORM p.id
+        FROM public.mainspring_products AS p
+        WHERE p.id IN (
+            SELECT (item->>'id')::BIGINT
+            FROM jsonb_array_elements(NEW.items) AS item
+        )
+        ORDER BY p.id
+        FOR UPDATE;
+
         SELECT jsonb_array_length(NEW.items), COUNT(*)
         INTO v_expected, v_reserved
         FROM public.mainspring_products AS p
@@ -300,8 +311,7 @@ BEGIN
             FROM jsonb_array_elements(NEW.items) AS item
         )
           AND p.reserved_by_order_id = NEW.id
-          AND p.status = 'reserved'
-        FOR UPDATE;
+          AND p.status = 'reserved';
 
         IF v_reserved <> v_expected THEN
             RAISE EXCEPTION USING ERRCODE = '55000', MESSAGE = 'Inventory is no longer reserved for this order; manual payment review required';

@@ -6,6 +6,7 @@ const path = require('node:path');
 const emailUtilsPath = path.resolve('coolify/mainspring-payments/email-utils.js');
 const paymentsPath = 'coolify/mainspring-payments/index.js';
 const migrationPath = 'supabase/migrations/20260731_order_email_outbox.sql';
+const checkoutMigrationPath = 'supabase/migrations/20260723_atomic_checkout_inventory.sql';
 const appPath = 'js/app.js';
 
 test('transactional email templates escape customer data and contain order details', () => {
@@ -147,4 +148,32 @@ test('checkout can access the HTML escaping helper before rendering customer fie
     assert.ok(checkoutIndex >= 0, 'checkout renderer exists');
     assert.ok(helperIndex < checkoutIndex, 'HTML escaping helper is in checkout scope');
     assert.equal(helperDefinitions.length, 1, 'one shared HTML escaping helper is defined');
+});
+
+test('Ziina returns are verified server-side and processing payments are reconciled', () => {
+    const payments = fs.readFileSync(paymentsPath, 'utf8');
+    const app = fs.readFileSync(appPath, 'utf8');
+
+    assert.match(payments, /payment_intent=\{PAYMENT_INTENT_ID\}/);
+    assert.match(payments, /app\.post\('\/ziina-reconcile'/);
+    assert.match(payments, /reconcileZiinaPaymentIntent\(paymentIntentId, orderRef\)/);
+    assert.match(payments, /const limiterKey = 'ziina-reconcile:'/);
+    assert.match(payments, /app\.post\('\/ziina-reconcile'[\s\S]*consume_mainspring_order_submission_limit/);
+    assert.match(payments, /status\(429\).*Too many verification attempts/s);
+    assert.match(payments, /payment_status=in\.\(processing,pending\)/);
+    assert.match(payments, /setInterval\(runPaymentReconciler, PAYMENT_RECONCILE_INTERVAL_MS\)/);
+    assert.match(payments, /payment_reconciliation_enabled/);
+    assert.match(app, /async function handlePaymentReturn\(\)/);
+    assert.match(app, /PAYMENTS_BASE \+ '\/ziina-reconcile'/);
+    assert.match(app, /result\.payment_status === 'paid'/);
+    assert.match(app, /Payment Verification in Progress/);
+    assert.doesNotMatch(app, /<h4>Payment Successful!<\/h4>/);
+});
+
+test('paid inventory rows are locked separately from the aggregate count', () => {
+    const sql = fs.readFileSync(checkoutMigrationPath, 'utf8');
+    const paidBranch = sql.slice(sql.indexOf("IF NEW.payment_status = 'paid' THEN"));
+
+    assert.match(paidBranch, /PERFORM p\.id[\s\S]*ORDER BY p\.id[\s\S]*FOR UPDATE;[\s\S]*SELECT jsonb_array_length\(NEW\.items\), COUNT\(\*\)/);
+    assert.doesNotMatch(paidBranch, /SELECT jsonb_array_length\(NEW\.items\), COUNT\(\*\)[\s\S]*?FOR UPDATE;/);
 });
