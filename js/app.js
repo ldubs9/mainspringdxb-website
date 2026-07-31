@@ -110,7 +110,7 @@
             } else {
                 cart.push({
                     id: product.id,
-                    name: product.name,
+                    name: product.model || product.name,
                     brand: product.brand,
                     price: product.price,
                     image_url: getProductThumbnail(product),
@@ -162,7 +162,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('mainspring_products')
-                    .select('id,image_urls,reference_code,reference_number')
+                    .select('id,image_urls,reference_code,reference_number,model,name,brand')
                     .in('id', missingIds);
                 if (error) throw error;
 
@@ -178,6 +178,14 @@
                     }
                     if (referenceCode && item.reference_code !== referenceCode) {
                         item.reference_code = referenceCode;
+                        changed = true;
+                    }
+                    if (!item.name && (product.model || product.name)) {
+                        item.name = product.model || product.name;
+                        changed = true;
+                    }
+                    if (!item.brand && product.brand) {
+                        item.brand = product.brand;
                         changed = true;
                     }
                 });

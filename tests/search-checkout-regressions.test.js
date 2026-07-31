@@ -156,6 +156,7 @@ test('cart stores and renders the product thumbnail, including legacy cart hydra
     const renderEnd = app.indexOf('function getCartTotal', renderStart);
 
     assert.match(app.slice(addStart, addEnd), /image_url:\s*getProductThumbnail\(product\)/);
+    assert.match(app.slice(addStart, addEnd), /name:\s*product\.model\s*\|\|\s*product\.name/);
     assert.match(app.slice(renderStart, renderEnd), /<img[^>]+cart-item-thumbnail[^>]+src="\$\{escapeHtml\(item\.image_url\)\}"/);
     assert.match(app, /function hydrateCartProductDetails/);
     assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
