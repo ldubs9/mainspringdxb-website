@@ -99,7 +99,7 @@
             })).replace(/'/g, '%27');
         }
 
-        function addEncodedProductToCart(encodedProduct) {
+        function addToCartEncodedProduct(encodedProduct) {
             addToCart(JSON.parse(decodeURIComponent(encodedProduct)));
         }
 
@@ -1682,7 +1682,7 @@
                                 <i class="fas fa-ban"></i> ${isSold ? 'Sold' : 'Reserved'}
                             </button>
                             ` : `
-                            <button onclick="event.stopPropagation(); addEncodedProductToCart('${encodedCartProduct}')" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
+                            <button onclick="event.stopPropagation(); addToCartEncodedProduct('${encodedCartProduct}')" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
                                 <i class="fas fa-shopping-bag"></i> Add to Cart
                             </button>
                             <button onclick="event.stopPropagation(); addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="padding: 10px 12px; background: none; border: 1px solid var(--cream-dark); cursor: pointer; font-size: 0.8rem; color: var(--primary-green); border-radius: 0;">
