@@ -206,8 +206,8 @@ app.post('/create-order', async (req, res) => {
   try {
     const { customer_name, customer_email, customer_phone, customer_address, items, payment_method } = req.body || {};
 
-    if (!customer_name || !customer_email || !customer_phone || !items?.length || !payment_method) {
-      return res.status(400).json({ error: 'Missing required fields: customer_name, customer_email, customer_phone, items, payment_method' });
+    if (!customer_name || !customer_email || !customer_phone || !String(customer_address || '').trim() || !items?.length || !payment_method) {
+      return res.status(400).json({ error: 'Missing required fields: customer_name, customer_email, customer_phone, customer_address, items, payment_method' });
     }
 
     const validMethods = ['bank_transfer', 'ziina', 'cash_in_store'];
@@ -262,7 +262,7 @@ app.post('/create-order', async (req, res) => {
         p_customer_name: String(customer_name).substring(0, 200),
         p_customer_email: cleanEmail,
         p_customer_phone: cleanPhone.substring(0, 20),
-        p_customer_address: customer_address ? String(customer_address).substring(0, 500) : null,
+        p_customer_address: String(customer_address).trim().substring(0, 500),
         p_items: cleanItems,
         p_payment_method: payment_method,
         p_device_type: (req.headers['user-agent'] || '').includes('Mobile') ? 'mobile' : 'desktop',
