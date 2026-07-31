@@ -184,6 +184,9 @@ test('cash checkout opens a product-specific WhatsApp inquiry without creating o
     assert.match(app, /item\.brand/);
     assert.match(app, /item\.name/);
     assert.match(app, /has not been reserved/i);
+    assert.match(app, /const chatWindow = window\.open\(whatsappUrl, '_blank'\)/);
+    assert.match(app, /if \(!chatWindow\)[\s\S]*?window\.location\.assign\(whatsappUrl\)[\s\S]*?return/);
+    assert.match(app, /chatWindow\.opener = null/);
     assert.match(message, /Dugena Poseidon \(Ref: MS-250\) x1/);
     assert.match(message, /Luca/);
     assert.match(message, /has not been reserved yet/i);
