@@ -148,11 +148,32 @@ test('checkout offers only card, bank transfer, and cash payment in store', () =
     assert.doesNotMatch(step, /Cash on Delivery/i);
 });
 
-test('cash in-store confirmation explains the one-hour reservation and provides WhatsApp confirmation', () => {
-    assert.match(app, /function showCashInStoreConfirmation/);
-    assert.match(app, /reserved for one hour/i);
-    assert.match(app, /available within 48 hours/i);
-    assert.match(app, /sendOrderWhatsApp\('cash_in_store'/);
+test('cart stores and renders the product thumbnail, including legacy cart hydration', () => {
+    const addStart = app.indexOf('function addToCart');
+    const addEnd = app.indexOf('function removeFromCart', addStart);
+    const renderStart = app.indexOf('function renderCart');
+    const renderEnd = app.indexOf('function getCartTotal', renderStart);
+
+    assert.match(app.slice(addStart, addEnd), /image_url:\s*getProductThumbnail\(product\)/);
+    assert.match(app.slice(renderStart, renderEnd), /<img[^>]+cart-item-thumbnail[^>]+src="\$\{escapeHtml\(item\.image_url\)\}"/);
+    assert.match(app, /function hydrateCartProductDetails/);
+    assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
+    assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
+});
+
+test('cash checkout opens a product-specific WhatsApp inquiry without creating or reserving an order', () => {
+    const confirmStart = app.indexOf('async function confirmCheckout');
+    const fetchStart = app.indexOf("fetch(PAYMENTS_BASE + '/create-order'", confirmStart);
+    const beforeOrderCreation = app.slice(confirmStart, fetchStart);
+
+    assert.match(beforeOrderCreation, /selectedPaymentMethod\s*===\s*'cash_in_store'[\s\S]*?startCashInquiryWhatsApp\(\)[\s\S]*?return/);
+    assert.match(app, /function buildCashInquiryMessage/);
+    assert.match(app, /item\.reference_code/);
+    assert.match(app, /item\.brand/);
+    assert.match(app, /item\.name/);
+    assert.match(app, /has not been reserved/i);
+    assert.doesNotMatch(app, /function showCashInStoreConfirmation/);
+    assert.doesNotMatch(payments, /validMethods\s*=\s*\[[^\]]*cash_in_store/);
 });
 
 test('bank transfer confirmation uses the supplied account holder, IBAN, and BIC', () => {
@@ -163,7 +184,7 @@ test('bank transfer confirmation uses the supplied account holder, IBAN, and BIC
 });
 
 test('order creation delegates price validation and reservation to one database transaction', () => {
-    assert.match(payments, /validMethods\s*=\s*\['bank_transfer',\s*'ziina',\s*'cash_in_store'\]/);
+    assert.match(payments, /validMethods\s*=\s*\['bank_transfer',\s*'ziina'\]/);
     assert.match(payments, /rpc\/create_mainspring_order_with_reservation/);
     assert.doesNotMatch(payments, /Number\(item\.price\)/);
     assert.doesNotMatch(payments, /'tabby'|"tabby"|'tamara'|"tamara"/);
