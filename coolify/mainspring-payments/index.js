@@ -15,10 +15,21 @@
 //   SITE_URL                   storefront URL for post-payment redirects
 //   ZIINA_TEST_MODE            "true" to create Ziina test payments (no real charge)
 //   ZIINA_WEBHOOK_SECRET       (optional) secret used to verify webhook HMAC signature
+//   RESEND_API_KEY             transactional email API key
+//   TRANSACTIONAL_EMAIL_FROM   verified sender, e.g. Mainspring Dubai <orders@updates.mainspringdubai.com>
+//   BUSINESS_EMAIL             order recipient and reply-to address
 
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const {
+  buildBusinessOrderEmail,
+  buildBusinessPaymentEmail,
+  buildCustomerPaymentEmail,
+  normalizeEmail,
+  normalizeSender,
+  sendResendEmail,
+} = require('./email-utils');
 
 const ZIINA_API_KEY = process.env.MAINSPRING_ZIINA_API_KEY;
 // Accept the common self-hosted / Coolify variable names too.
@@ -27,11 +38,21 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || proce
 const SITE_URL = process.env.SITE_URL || 'https://mainspringdxb.com';
 const ZIINA_TEST_MODE = process.env.ZIINA_TEST_MODE === 'true';
 const ZIINA_WEBHOOK_SECRET = process.env.ZIINA_WEBHOOK_SECRET;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const TRANSACTIONAL_EMAIL_FROM = normalizeSender(process.env.TRANSACTIONAL_EMAIL_FROM);
+const BUSINESS_EMAIL = normalizeEmail(process.env.BUSINESS_EMAIL || 'info@mainspringdubai.com');
+const EMAIL_POLL_INTERVAL_MS = Math.min(
+  300000,
+  Math.max(5000, Number(process.env.EMAIL_POLL_INTERVAL_MS) || 15000)
+);
+const EMAIL_CONFIGURED = !!(RESEND_API_KEY && TRANSACTIONAL_EMAIL_FROM && BUSINESS_EMAIL);
 
 if (!ZIINA_API_KEY) console.error('WARN: MAINSPRING_ZIINA_API_KEY not set');
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) console.error('WARN: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY not set');
+if (!EMAIL_CONFIGURED) console.error('WARN: transactional email is disabled until RESEND_API_KEY, TRANSACTIONAL_EMAIL_FROM, and BUSINESS_EMAIL are valid');
 
 const app = express();
+app.set('trust proxy', 1);
 app.use(cors());
 // Capture the raw body so the webhook route can verify the HMAC signature over
 // the exact bytes Ziina signed.
@@ -59,6 +80,125 @@ function jwtRole(token) {
   }
 }
 
+function emailEventMessage(event) {
+  const order = event && event.order_data;
+  if (!order || !order.order_ref) throw new Error('Email event has no order snapshot');
+
+  switch (event.event_type) {
+    case 'order_created_business':
+      return {
+        recipient: BUSINESS_EMAIL,
+        idempotencyKey: 'mainspring/order-created-business/' + order.order_ref,
+        ...buildBusinessOrderEmail(order),
+      };
+    case 'payment_confirmed_business':
+      return {
+        recipient: BUSINESS_EMAIL,
+        idempotencyKey: 'mainspring/payment-confirmed-business/' + order.order_ref,
+        ...buildBusinessPaymentEmail(order),
+      };
+    case 'payment_confirmed_customer': {
+      const customerEmail = normalizeEmail(order.customer_email);
+      if (!customerEmail) throw new Error('Paid order has no valid customer email');
+      return {
+        recipient: customerEmail,
+        idempotencyKey: 'mainspring/payment-confirmed-customer/' + order.order_ref,
+        ...buildCustomerPaymentEmail(order),
+      };
+    }
+    default:
+      throw new Error('Unsupported email event type: ' + ((event && event.event_type) || 'missing'));
+  }
+}
+
+async function updateEmailEvent(eventId, values) {
+  const response = await fetch(
+    sbUrl('mainspring_order_email_events?id=eq.' + encodeURIComponent(eventId)),
+    {
+      method: 'PATCH',
+      headers: { ...sbHeaders, Prefer: 'return=minimal' },
+      body: JSON.stringify({ ...values, updated_at: new Date().toISOString() }),
+    }
+  );
+  if (!response.ok) {
+    const detail = String(await response.text()).substring(0, 300);
+    throw new Error('Unable to update email event (' + response.status + '): ' + detail);
+  }
+}
+
+async function processEmailOutbox() {
+  if (!EMAIL_CONFIGURED || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return 0;
+
+  const claimResponse = await fetch(sbUrl('rpc/claim_mainspring_order_email_events'), {
+    method: 'POST',
+    headers: sbHeaders,
+    body: JSON.stringify({ p_limit: 10 }),
+  });
+  if (!claimResponse.ok) {
+    const detail = String(await claimResponse.text()).substring(0, 300);
+    throw new Error('Unable to claim email events (' + claimResponse.status + '): ' + detail);
+  }
+
+  const events = await claimResponse.json();
+  for (const event of Array.isArray(events) ? events : []) {
+    try {
+      const message = emailEventMessage(event);
+      const result = await sendResendEmail({
+        apiKey: RESEND_API_KEY,
+        from: TRANSACTIONAL_EMAIL_FROM,
+        to: message.recipient,
+        replyTo: BUSINESS_EMAIL,
+        subject: message.subject,
+        html: message.html,
+        text: message.text,
+        idempotencyKey: message.idempotencyKey,
+      });
+      await updateEmailEvent(event.event_id, {
+        status: 'sent',
+        provider_message_id: result.id,
+        last_error: null,
+        locked_at: null,
+        sent_at: new Date().toISOString(),
+      });
+      console.log('Transactional email sent: ' + event.event_type + ' for ' + event.order_data.order_ref);
+    } catch (error) {
+      const attempts = Number(event.attempts) || 1;
+      const retryDelaySeconds = Math.min(3600, 30 * (2 ** Math.min(attempts - 1, 7)));
+      const nextAttemptAt = new Date(Date.now() + retryDelaySeconds * 1000).toISOString();
+      const failure = String((error && error.message) || error).substring(0, 500);
+      try {
+        await updateEmailEvent(event.event_id, {
+          status: 'failed',
+          last_error: failure,
+          next_attempt_at: nextAttemptAt,
+          locked_at: null,
+        });
+      } catch (updateError) {
+        console.error('Failed to persist transactional email error:', updateError);
+      }
+      console.error(
+        'Transactional email failed: ' + event.event_type + ' for '
+          + ((event.order_data && event.order_data.order_ref) || 'unknown order') + ':',
+        failure
+      );
+    }
+  }
+  return Array.isArray(events) ? events.length : 0;
+}
+
+let emailWorkerRunning = false;
+async function runEmailWorker() {
+  if (emailWorkerRunning) return;
+  emailWorkerRunning = true;
+  try {
+    await processEmailOutbox();
+  } catch (error) {
+    console.error('Transactional email worker error:', error);
+  } finally {
+    emailWorkerRunning = false;
+  }
+}
+
 // ----------------------------------------------------------------------------
 // POST /create-order
 // ----------------------------------------------------------------------------
@@ -66,8 +206,8 @@ app.post('/create-order', async (req, res) => {
   try {
     const { customer_name, customer_email, customer_phone, customer_address, items, payment_method } = req.body || {};
 
-    if (!customer_name || !customer_phone || !items?.length || !payment_method) {
-      return res.status(400).json({ error: 'Missing required fields: customer_name, customer_phone, items, payment_method' });
+    if (!customer_name || !customer_email || !customer_phone || !items?.length || !payment_method) {
+      return res.status(400).json({ error: 'Missing required fields: customer_name, customer_email, customer_phone, items, payment_method' });
     }
 
     const validMethods = ['bank_transfer', 'ziina', 'cash_in_store'];
@@ -79,6 +219,10 @@ app.post('/create-order', async (req, res) => {
     if (cleanPhone.length < 8) {
       return res.status(400).json({ error: 'Invalid phone number' });
     }
+    const cleanEmail = normalizeEmail(customer_email);
+    if (!cleanEmail) {
+      return res.status(400).json({ error: 'Invalid customer email' });
+    }
 
     const cleanItems = items.map((item) => ({
       id: Number(item?.id),
@@ -88,6 +232,27 @@ app.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Each cart item must identify one valid inventory record' });
     }
 
+    const orderLimiterKey = 'order:' + crypto
+      .createHash('sha256')
+      .update(String(req.ip || (req.socket && req.socket.remoteAddress) || 'unknown'))
+      .digest('hex');
+    const orderLimitResponse = await fetch(sbUrl('rpc/consume_mainspring_order_submission_limit'), {
+      method: 'POST',
+      headers: sbHeaders,
+      body: JSON.stringify({
+        p_limiter_key: orderLimiterKey,
+        p_limit: 10,
+        p_window_seconds: 3600,
+      }),
+    });
+    if (!orderLimitResponse.ok) {
+      console.error('Order submission limiter failed:', orderLimitResponse.status, await orderLimitResponse.text());
+      return res.status(502).json({ error: 'Unable to create this order right now.' });
+    }
+    if ((await orderLimitResponse.json()) !== true) {
+      return res.status(429).json({ error: 'Too many order attempts. Please try again later.' });
+    }
+
     const orderRef = 'MS-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(3).toString('hex').toUpperCase();
     const rpcResp = await fetch(sbUrl('rpc/create_mainspring_order_with_reservation'), {
       method: 'POST',
@@ -95,7 +260,7 @@ app.post('/create-order', async (req, res) => {
       body: JSON.stringify({
         p_order_ref: orderRef,
         p_customer_name: String(customer_name).substring(0, 200),
-        p_customer_email: customer_email ? String(customer_email).substring(0, 200) : null,
+        p_customer_email: cleanEmail,
         p_customer_phone: cleanPhone.substring(0, 20),
         p_customer_address: customer_address ? String(customer_address).substring(0, 500) : null,
         p_items: cleanItems,
@@ -308,8 +473,14 @@ app.get('/health', (_req, res) => res.json({
   service_key_role: SUPABASE_SERVICE_ROLE_KEY ? jwtRole(SUPABASE_SERVICE_ROLE_KEY) : null,
   ziina_key_present: !!ZIINA_API_KEY,
   webhook_secret_set: !!ZIINA_WEBHOOK_SECRET,
+  email_configured: EMAIL_CONFIGURED,
 }));
 app.get('/', (_req, res) => res.send('Mainspring payments service'));
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`mainspring-payments running on ${port} (ziina test_mode=${ZIINA_TEST_MODE})`));
+
+if (EMAIL_CONFIGURED) {
+  setTimeout(runEmailWorker, 1000);
+  setInterval(runEmailWorker, EMAIL_POLL_INTERVAL_MS);
+}

@@ -195,21 +195,22 @@
                     <p class="checkout-form-title">Your Details</p>
                     <div class="checkout-field">
                         <label>Full Name *</label>
-                        <input type="text" id="checkoutName" value="${saved.name || ''}" placeholder="e.g. Ahmed Al Maktoum" required />
+                        <input type="text" id="checkoutName" value="${escapeHtml(saved.name || '')}" placeholder="e.g. Ahmed Al Maktoum" required />
                         <p class="field-error" id="nameError">Please enter your name</p>
                     </div>
                     <div class="checkout-field">
                         <label>Phone Number *</label>
-                        <input type="tel" id="checkoutPhone" value="${saved.phone || ''}" placeholder="+971 5X XXX XXXX" required />
+                        <input type="tel" id="checkoutPhone" value="${escapeHtml(saved.phone || '')}" placeholder="+971 5X XXX XXXX" required />
                         <p class="field-error" id="phoneError">Please enter a valid phone number</p>
                     </div>
                     <div class="checkout-field">
-                        <label>Email</label>
-                        <input type="email" id="checkoutEmail" value="${saved.email || ''}" placeholder="your@email.com" />
+                        <label>Email *</label>
+                        <input type="email" id="checkoutEmail" value="${escapeHtml(saved.email || '')}" placeholder="your@email.com" required />
+                        <p class="field-error" id="emailError">Please enter a valid email address</p>
                     </div>
                     <div class="checkout-field">
                         <label>Delivery Address</label>
-                        <textarea id="checkoutAddress" placeholder="Street, Building, Area, City">${saved.address || ''}</textarea>
+                        <textarea id="checkoutAddress" placeholder="Street, Building, Area, City">${escapeHtml(saved.address || '')}</textarea>
                     </div>
                 </div>
 
@@ -234,7 +235,8 @@
         function goToStep2() {
             const name = document.getElementById('checkoutName').value.trim();
             const phone = document.getElementById('checkoutPhone').value.trim();
-            const email = document.getElementById('checkoutEmail').value.trim();
+            const emailInput = document.getElementById('checkoutEmail');
+            const email = emailInput.value.trim();
             const address = document.getElementById('checkoutAddress').value.trim();
 
             // Validate
@@ -245,6 +247,10 @@
             }
             if (!phone || phone.replace(/[^\d]/g, '').length < 8) {
                 document.getElementById('phoneError').style.display = 'block';
+                valid = false;
+            }
+            if (!email || !emailInput.checkValidity()) {
+                document.getElementById('emailError').style.display = 'block';
                 valid = false;
             }
             if (!valid) return;

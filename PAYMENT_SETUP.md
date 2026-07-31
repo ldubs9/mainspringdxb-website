@@ -1,5 +1,7 @@
 # Mainspring Dubai — Payment System Setup Guide
 
+For the transactional order and payment email setup, see `EMAIL_SETUP.md`.
+
 ## Architecture
 
 ```
