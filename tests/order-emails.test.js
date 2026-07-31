@@ -7,6 +7,7 @@ const emailUtilsPath = path.resolve('coolify/mainspring-payments/email-utils.js'
 const paymentsPath = 'coolify/mainspring-payments/index.js';
 const migrationPath = 'supabase/migrations/20260731_order_email_outbox.sql';
 const checkoutMigrationPath = 'supabase/migrations/20260723_atomic_checkout_inventory.sql';
+const statusTriggerRepairPath = 'supabase/migrations/20260731_repair_order_status_trigger.sql';
 const appPath = 'js/app.js';
 
 test('transactional email templates escape customer data and contain order details', () => {
@@ -176,4 +177,14 @@ test('paid inventory rows are locked separately from the aggregate count', () =>
 
     assert.match(paidBranch, /PERFORM p\.id[\s\S]*ORDER BY p\.id[\s\S]*FOR UPDATE;[\s\S]*SELECT jsonb_array_length\(NEW\.items\), COUNT\(\*\)/);
     assert.doesNotMatch(paidBranch, /SELECT jsonb_array_length\(NEW\.items\), COUNT\(\*\)[\s\S]*?FOR UPDATE;/);
+});
+
+test('legacy Mainspring status trigger is replaced with the canonical history table', () => {
+    const sql = fs.readFileSync(statusTriggerRepairPath, 'utf8');
+
+    assert.match(sql, /DROP TRIGGER IF EXISTS orders_status_change_trigger\s+ON public\.mainspring_orders/i);
+    assert.match(sql, /INSERT INTO public\.mainspring_order_status_history/i);
+    assert.doesNotMatch(sql, /INSERT INTO public\.order_status_history/i);
+    assert.match(sql, /CREATE TRIGGER mainspring_orders_status_change_trigger/i);
+    assert.match(sql, /NOTIFY pgrst, 'reload schema'/i);
 });
