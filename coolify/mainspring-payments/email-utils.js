@@ -84,17 +84,49 @@ function buildItemsText(order) {
 }
 
 function totalsHtml(order) {
+  const subtotal = Number(order && order.subtotal_aed) || 0;
+  const discount = Number(order && order.discount_aed) || 0;
+  const discountedSubtotal = order && order.discounted_subtotal_aed != null
+    ? Number(order.discounted_subtotal_aed)
+    : subtotal - discount;
+  const total = Number(order && order.total_aed) || 0;
+  const surchargePct = Number(order && order.surcharge_pct) || 0;
+  const surcharge = Math.max(0, total - discountedSubtotal);
+  const discountCode = String((order && order.discount_code) || '').trim();
+  const discountRow = discount > 0
+    ? '<tr><td style="padding:5px 0;color:#6b6b6b;">Discount (' + escapeHtml(discountCode) + ')</td>'
+      + '<td style="padding:5px 0;text-align:right;color:#4f5853;">-' + escapeHtml(formatAED(discount)) + '</td></tr>'
+    : '';
+  const surchargeRow = surchargePct > 0
+    ? '<tr><td style="padding:5px 0;color:#6b6b6b;">Card surcharge (' + escapeHtml(String(surchargePct)) + '%)</td>'
+      + '<td style="padding:5px 0;text-align:right;color:#141414;">' + escapeHtml(formatAED(surcharge)) + '</td></tr>'
+    : '';
+
   return '<table role="presentation" style="width:100%;margin-top:18px;border-collapse:collapse;">'
     + '<tr><td style="padding:5px 0;color:#6b6b6b;">Subtotal</td><td style="padding:5px 0;text-align:right;color:#141414;">'
-    + escapeHtml(formatAED(order && order.subtotal_aed)) + '</td></tr>'
+    + escapeHtml(formatAED(subtotal)) + '</td></tr>'
+    + discountRow
+    + surchargeRow
     + '<tr><td style="padding:13px 0 4px;font-family:Georgia,serif;font-size:18px;font-weight:700;border-top:2px solid #c4a265;">Total</td>'
     + '<td style="padding:13px 0 4px;text-align:right;font-family:Georgia,serif;font-size:18px;font-weight:700;border-top:2px solid #c4a265;">'
-    + escapeHtml(formatAED(order && order.total_aed)) + '</td></tr></table>';
+    + escapeHtml(formatAED(total)) + '</td></tr></table>';
 }
 
 function totalsText(order) {
-  return 'Subtotal: ' + formatAED(order && order.subtotal_aed)
-    + '\nTotal: ' + formatAED(order && order.total_aed);
+  const subtotal = Number(order && order.subtotal_aed) || 0;
+  const discount = Number(order && order.discount_aed) || 0;
+  const discountedSubtotal = order && order.discounted_subtotal_aed != null
+    ? Number(order.discounted_subtotal_aed)
+    : subtotal - discount;
+  const total = Number(order && order.total_aed) || 0;
+  const surchargePct = Number(order && order.surcharge_pct) || 0;
+  const surcharge = Math.max(0, total - discountedSubtotal);
+  const discountCode = String((order && order.discount_code) || '').trim();
+
+  return 'Subtotal: ' + formatAED(subtotal)
+    + (discount > 0 ? '\nDiscount (' + discountCode + '): -' + formatAED(discount) : '')
+    + (surchargePct > 0 ? '\nCard surcharge (' + surchargePct + '%): ' + formatAED(surcharge) : '')
+    + '\nTotal: ' + formatAED(total);
 }
 
 function emailShell(title, intro, content) {

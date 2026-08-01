@@ -936,6 +936,96 @@
             font-weight: 600;
         }
 
+        .checkout-summary-total.is-subtotal {
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .checkout-discount {
+            padding: 18px 0 4px;
+            border-bottom: 1px solid var(--cream);
+        }
+
+        .checkout-discount > label {
+            display: block;
+            margin-bottom: 7px;
+            color: var(--gray);
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .checkout-discount-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .checkout-discount-controls input {
+            min-width: 0;
+            flex: 1;
+            padding: 11px 12px;
+            border: 1px solid var(--cream-dark);
+            border-radius: 0;
+            background: var(--white);
+            color: var(--black);
+            font: inherit;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .checkout-discount-controls button {
+            padding: 0 18px;
+            border: 1px solid var(--primary-green);
+            border-radius: 0;
+            background: var(--primary-green);
+            color: var(--white);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .checkout-discount-controls button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .checkout-discount-feedback {
+            margin-top: 8px;
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .checkout-discount-feedback.success,
+        .checkout-summary-discount,
+        .checkout-discount-summary {
+            color: var(--primary-green);
+        }
+
+        .checkout-discount-feedback.error {
+            color: #a13b32;
+        }
+
+        .checkout-summary-discount,
+        .checkout-discount-summary {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 8px 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .checkout-discount-summary {
+            margin-bottom: 20px;
+            padding: 12px 14px;
+            border: 1px solid var(--cream-dark);
+            background: var(--light-gray);
+        }
+
         .payment-methods {
             display: flex;
             flex-direction: column;

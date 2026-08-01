@@ -32,6 +32,7 @@ const {
   normalizeSender,
   sendResendEmail,
 } = require('./email-utils');
+const { normalizeCartItems, normalizeDiscountCode } = require('./discount-utils');
 
 const ZIINA_API_KEY = process.env.MAINSPRING_ZIINA_API_KEY;
 // Accept the common self-hosted / Coolify variable names too.
@@ -328,11 +329,93 @@ async function runPaymentReconciler() {
 }
 
 // ----------------------------------------------------------------------------
+// POST /discounts/validate
+// Preview only. Order creation independently revalidates and reserves usage in
+// the same database transaction as inventory reservation.
+// ----------------------------------------------------------------------------
+app.post('/discounts/validate', async (req, res) => {
+  try {
+    const { discount_code, items, customer_phone } = req.body || {};
+    const cleanCode = normalizeDiscountCode(discount_code);
+    const cleanItems = normalizeCartItems(items);
+    if (!cleanCode) {
+      return res.status(400).json({ valid: false, message: 'Enter a valid discount code.' });
+    }
+    if (!cleanItems) {
+      return res.status(400).json({ valid: false, message: 'Your cart contains an invalid item.' });
+    }
+
+    const limiterKey = 'discount-validation:' + crypto
+      .createHash('sha256')
+      .update(String(req.ip || (req.socket && req.socket.remoteAddress) || 'unknown'))
+      .digest('hex');
+    const limitResponse = await fetch(sbUrl('rpc/consume_mainspring_order_submission_limit'), {
+      method: 'POST',
+      headers: sbHeaders,
+      body: JSON.stringify({
+        p_limiter_key: limiterKey,
+        p_limit: 20,
+        p_window_seconds: 900,
+      }),
+    });
+    if (!limitResponse.ok) {
+      console.error('Discount validation limiter failed:', limitResponse.status, await limitResponse.text());
+      return res.status(502).json({ valid: false, message: 'Unable to validate discounts right now.' });
+    }
+    if ((await limitResponse.json()) !== true) {
+      return res.status(429).json({ valid: false, message: 'Too many discount attempts. Please try again later.' });
+    }
+
+    const validationResponse = await fetch(sbUrl('rpc/validate_mainspring_discount'), {
+      method: 'POST',
+      headers: sbHeaders,
+      body: JSON.stringify({
+        p_code: cleanCode,
+        p_items: cleanItems,
+        p_customer_phone: String(customer_phone || '').substring(0, 20),
+      }),
+    });
+    if (!validationResponse.ok) {
+      console.error('Discount validation failed:', validationResponse.status, await validationResponse.text());
+      return res.status(502).json({ valid: false, message: 'Unable to validate discounts right now.' });
+    }
+
+    const rows = await validationResponse.json();
+    const result = Array.isArray(rows) ? rows[0] : rows;
+    if (!result) {
+      return res.status(502).json({ valid: false, message: 'Unable to validate discounts right now.' });
+    }
+    return res.json({
+      valid: result.valid === true,
+      message: String(result.message || ''),
+      discount_code: result.discount_code || cleanCode,
+      discount_type: result.discount_type || null,
+      discount_value: result.discount_value == null ? null : Number(result.discount_value),
+      subtotal_aed: result.subtotal_aed == null ? null : Number(result.subtotal_aed),
+      eligible_subtotal_aed: result.eligible_subtotal_aed == null ? null : Number(result.eligible_subtotal_aed),
+      discount_aed: result.discount_aed == null ? null : Number(result.discount_aed),
+      discounted_subtotal_aed: result.discounted_subtotal_aed == null ? null : Number(result.discounted_subtotal_aed),
+    });
+  } catch (error) {
+    console.error('discount validation error:', error);
+    return res.status(500).json({ valid: false, message: 'Unable to validate discounts right now.' });
+  }
+});
+
+// ----------------------------------------------------------------------------
 // POST /create-order
 // ----------------------------------------------------------------------------
 app.post('/create-order', async (req, res) => {
   try {
-    const { customer_name, customer_email, customer_phone, customer_address, items, payment_method } = req.body || {};
+    const {
+      customer_name,
+      customer_email,
+      customer_phone,
+      customer_address,
+      items,
+      payment_method,
+      discount_code,
+    } = req.body || {};
 
     if (!customer_name || !customer_email || !customer_phone || !String(customer_address || '').trim() || !items?.length || !payment_method) {
       return res.status(400).json({ error: 'Missing required fields: customer_name, customer_email, customer_phone, customer_address, items, payment_method' });
@@ -352,12 +435,14 @@ app.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Invalid customer email' });
     }
 
-    const cleanItems = items.map((item) => ({
-      id: Number(item?.id),
-      qty: Number(item?.qty || 1),
-    }));
-    if (cleanItems.some((item) => !Number.isSafeInteger(item.id) || item.id <= 0 || item.qty !== 1)) {
+    const cleanItems = normalizeCartItems(items);
+    if (!cleanItems) {
       return res.status(400).json({ error: 'Each cart item must identify one valid inventory record' });
+    }
+    const hasDiscountCode = String(discount_code || '').trim().length > 0;
+    const cleanDiscountCode = hasDiscountCode ? normalizeDiscountCode(discount_code) : null;
+    if (hasDiscountCode && !cleanDiscountCode) {
+      return res.status(400).json({ error: 'Enter a valid discount code.' });
     }
 
     const orderLimiterKey = 'order:' + crypto
@@ -395,17 +480,21 @@ app.post('/create-order', async (req, res) => {
         p_payment_method: payment_method,
         p_device_type: (req.headers['user-agent'] || '').includes('Mobile') ? 'mobile' : 'desktop',
         p_user_agent: (req.headers['user-agent'] || '').substring(0, 500),
+        p_discount_code: cleanDiscountCode,
       }),
     });
 
     if (!rpcResp.ok) {
       const detail = await rpcResp.text();
       const unavailable = /sold or reserved|no longer reserved/i.test(detail);
+      const discountRejected = /discount|usage limit|minimum subtotal|does not apply/i.test(detail);
       console.error('Atomic order reservation failed:', rpcResp.status, detail);
       return res.status(unavailable ? 409 : 400).json({
         error: unavailable
           ? 'One or more items were just reserved or sold. Please refresh your cart.'
-          : 'Unable to create this order. Please check your details and try again.',
+          : discountRejected
+            ? 'This discount code can no longer be applied. Please review it or remove it.'
+            : 'Unable to create this order. Please check your details and try again.',
       });
     }
 
@@ -419,6 +508,10 @@ app.post('/create-order', async (req, res) => {
     return res.status(201).json({
       success: true,
       order_ref: order.order_ref,
+      subtotal_aed: Number(order.subtotal_aed),
+      discount_code: order.discount_code || null,
+      discount_aed: Number(order.discount_aed || 0),
+      discounted_subtotal_aed: Number(order.discounted_subtotal_aed),
       total_aed: Number(order.total_aed),
       payment_method: order.payment_method,
       surcharge_pct: Number(order.surcharge_pct),
