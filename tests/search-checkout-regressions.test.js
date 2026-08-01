@@ -125,7 +125,7 @@ test('final stylesheet keeps navbar search typography compact on desktop and met
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card\s*\{[^}]*height:\s*auto/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card \.product-info\s*\{[^}]*display:\s*flex[^}]*min-height:/s);
     assert.match(index, /css\/pages\.css\?v=9/);
-    assert.match(loader, /js\/app\.js\?v=12/);
+    assert.match(loader, /js\/app\.js\?v=13/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -163,7 +163,37 @@ test('cart stores and renders the product thumbnail, including legacy cart hydra
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
     assert.match(index, /css\/styles\.css\?v=8/);
     assert.match(index, /js\/loader\.js\?v=6/);
-    assert.match(loader, /js\/app\.js\?v=12/);
+    assert.match(loader, /js\/app\.js\?v=13/);
+});
+
+test('cart enforces one unit per unique inventory item', () => {
+    const normalizeStart = app.indexOf('function normalizeCartItems');
+    const normalizeEnd = app.indexOf('let cart', normalizeStart);
+
+    assert.ok(normalizeStart >= 0, 'cart normalization helper is present');
+    const normalizeCartItems = new Function(
+        `${app.slice(normalizeStart, normalizeEnd)}; return normalizeCartItems;`
+    )();
+
+    assert.deepEqual(
+        normalizeCartItems([
+            { id: '5295', qty: 4, name: 'Existing item' },
+            { id: 5295, qty: 1, name: 'Duplicate item' },
+            { id: 5296, qty: 0, name: 'Second item' }
+        ]).map(item => ({ id: item.id, qty: item.qty })),
+        [
+            { id: 5295, qty: 1 },
+            { id: 5296, qty: 1 }
+        ]
+    );
+
+    const renderStart = app.indexOf('function renderCart');
+    const renderEnd = app.indexOf('function getCartTotal', renderStart);
+    assert.doesNotMatch(
+        app.slice(renderStart, renderEnd),
+        /updateCartQty\(\$\{item\.id\}, 1\)/,
+        'cart does not render an increase control'
+    );
 });
 
 test('cash checkout opens a product-specific WhatsApp inquiry without creating or reserving an order', () => {

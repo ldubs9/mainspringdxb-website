@@ -65,8 +65,21 @@
             }
         });
 
-        // Cart (localStorage)
-        let cart = JSON.parse(localStorage.getItem('mainspring_cart')) || [];
+        // Cart (localStorage). Each inventory record is unique, so a product
+        // can appear at most once and always has a quantity of one.
+        function normalizeCartItems(items) {
+            const seenIds = new Set();
+            return (Array.isArray(items) ? items : []).reduce((normalized, item) => {
+                if (!item || typeof item !== 'object') return normalized;
+                const id = Number(item.id);
+                if (!Number.isSafeInteger(id) || id <= 0 || seenIds.has(id)) return normalized;
+                seenIds.add(id);
+                normalized.push({ ...item, id, qty: 1 });
+                return normalized;
+            }, []);
+        }
+
+        let cart = normalizeCartItems(JSON.parse(localStorage.getItem('mainspring_cart')) || []);
 
         function saveCart() {
             appliedDiscount = null;
@@ -107,20 +120,21 @@
         }
 
         function addToCart(product) {
-            const existing = cart.find(item => item.id === product.id);
+            const productId = Number(product.id);
+            const existing = cart.find(item => item.id === productId);
             if (existing) {
-                existing.qty += 1;
-            } else {
-                cart.push({
-                    id: product.id,
-                    name: product.model || product.name,
-                    brand: product.brand,
-                    price: product.price,
-                    image_url: getProductThumbnail(product),
-                    reference_code: product.reference_code || product.reference_number || '',
-                    qty: 1
-                });
+                openCart();
+                return;
             }
+            cart.push({
+                id: productId,
+                name: product.model || product.name,
+                brand: product.brand,
+                price: product.price,
+                image_url: getProductThumbnail(product),
+                reference_code: product.reference_code || product.reference_number || '',
+                qty: 1
+            });
             saveCart();
             renderCart();
             openCart();
@@ -135,15 +149,8 @@
 
         function updateCartQty(productId, delta) {
             const item = cart.find(i => i.id === productId);
-            if (item) {
-                item.qty += delta;
-                if (item.qty <= 0) {
-                    removeFromCart(productId);
-                    return;
-                }
-                saveCart();
-                renderCart();
-            }
+            if (!item || delta > 0) return;
+            removeFromCart(productId);
         }
 
         function openCart() {
@@ -230,7 +237,6 @@
                         <div class="cart-item-qty">
                             <button onclick="updateCartQty(${item.id}, -1)">−</button>
                             <span>${item.qty}</span>
-                            <button onclick="updateCartQty(${item.id}, 1)">+</button>
                         </div>
                     </div>
                     <button class="cart-item-remove" onclick="removeFromCart(${item.id})">&times;</button>
