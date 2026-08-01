@@ -133,7 +133,6 @@ test('payments service requires customer email and delivery address and runs the
     assert.match(payments, /email_configured/);
     assert.match(payments, /consume_mainspring_order_submission_limit/);
     assert.match(payments, /status\(429\).*Too many order attempts/s);
-    assert.doesNotMatch(payments, /discount/i);
     assert.match(app, /<label>Email \*<\/label>/);
     assert.match(app, /id="checkoutEmail"[^>]*required/);
     assert.match(app, /emailInput\.checkValidity\(\)/);

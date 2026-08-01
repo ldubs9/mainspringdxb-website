@@ -1,0 +1,311 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const net = require('node:net');
+const os = require('node:os');
+const path = require('node:path');
+const { execFile, execFileSync } = require('node:child_process');
+
+const root = path.resolve(__dirname, '..');
+const migrationPath = path.join(root, 'supabase/migrations/20260801_discount_codes.sql');
+const prerequisiteMigrations = [
+    path.join(root, 'supabase/migrations/20260723_atomic_checkout_inventory.sql'),
+    path.join(root, 'supabase/migrations/20260731_order_email_outbox.sql'),
+    path.join(root, 'supabase/migrations/20260731_repair_order_status_trigger.sql'),
+];
+
+function freePort() {
+    return new Promise((resolve, reject) => {
+        const server = net.createServer();
+        server.unref();
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', () => {
+            const { port } = server.address();
+            server.close(() => resolve(port));
+        });
+    });
+}
+
+function commandAvailable(command) {
+    try {
+        execFileSync(command, ['--version'], { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+async function withPostgres(run) {
+    for (const command of ['initdb', 'pg_ctl', 'psql']) {
+        assert.equal(commandAvailable(command), true, `${command} is required for database behavior tests`);
+    }
+
+    const clusterDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mainspring-discounts-pg-'));
+    const dataDir = path.join(clusterDir, 'data');
+    const logPath = path.join(clusterDir, 'postgres.log');
+    const port = await freePort();
+    const socketDir = path.join('/tmp', `mainspring-pg-${process.pid}-${port}`);
+    fs.mkdirSync(socketDir);
+    const env = {
+        ...process.env,
+        LC_ALL: 'C',
+        PGHOST: socketDir,
+        PGPORT: String(port),
+        PGDATABASE: 'postgres',
+    };
+    let started = false;
+
+    try {
+        execFileSync('initdb', ['-D', dataDir, '-A', 'trust', '--no-locale', '-E', 'UTF8'], { env, stdio: 'pipe' });
+        try {
+            execFileSync(
+                'pg_ctl',
+                ['-D', dataDir, '-l', logPath, '-o', `-F -p ${port} -k ${socketDir}`, '-w', 'start'],
+                { env, stdio: 'pipe' }
+            );
+        } catch (error) {
+            const postgresLog = fs.existsSync(logPath) ? fs.readFileSync(logPath, 'utf8') : 'No PostgreSQL log was created.';
+            error.message += `\nPostgreSQL log:\n${postgresLog}`;
+            throw error;
+        }
+        started = true;
+
+        const psql = (...args) => execFileSync(
+            'psql',
+            ['-v', 'ON_ERROR_STOP=1', '-X', '-q', ...args],
+            { env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+        ).trim();
+        const psqlAsync = (...args) => new Promise((resolve) => {
+            execFile(
+                'psql',
+                ['-v', 'ON_ERROR_STOP=1', '-X', '-q', ...args],
+                { env, encoding: 'utf8' },
+                (error, stdout, stderr) => resolve({
+                    ok: !error,
+                    stdout: stdout.trim(),
+                    stderr: stderr.trim(),
+                })
+            );
+        });
+        const apply = (file) => psql('-f', file);
+
+        apply(path.join(root, 'tests/fixtures/mainspring-checkout-base.sql'));
+        prerequisiteMigrations.forEach(apply);
+        apply(migrationPath);
+        await run({ psql, psqlAsync });
+    } finally {
+        if (started) {
+            execFileSync('pg_ctl', ['-D', dataDir, '-m', 'fast', '-w', 'stop'], { env, stdio: 'pipe' });
+        }
+        fs.rmSync(clusterDir, { recursive: true, force: true });
+        fs.rmSync(socketDir, { recursive: true, force: true });
+    }
+}
+
+test('discounted order remains authoritative through email and payment lifecycle', async () => {
+    assert.equal(fs.existsSync(migrationPath), true, 'forward discount migration exists');
+
+    await withPostgres(async ({ psql }) => {
+        psql('-c', `
+            INSERT INTO public.mainspring_products
+                (id, brand, model, category, subcategory, price, status)
+            VALUES
+                (101, 'Rolex', 'Datejust', 'watches', 'automatic', 1000, 'available');
+
+            INSERT INTO public.mainspring_discount_codes
+                (code, discount_type, discount_value, usage_limit, per_customer_limit)
+            VALUES ('SAVE10', 'percentage', 10, 2, 1);
+        `);
+
+        const order = JSON.parse(psql('-At', '-c', `
+            SELECT row_to_json(result)
+            FROM public.create_mainspring_order_with_reservation(
+                'MS-DISCOUNT-1',
+                'Test Customer',
+                'customer@example.com',
+                '+971500000001',
+                'Dubai',
+                '[{"id":101,"qty":1}]'::jsonb,
+                'ziina',
+                'desktop',
+                'database-test',
+                ' save10 '
+            ) AS result;
+        `));
+
+        assert.equal(Number(order.subtotal_aed), 1000);
+        assert.equal(order.discount_code, 'SAVE10');
+        assert.equal(Number(order.discount_aed), 100);
+        assert.equal(Number(order.discounted_subtotal_aed), 900);
+        assert.equal(Number(order.surcharge_pct), 3);
+        assert.equal(Number(order.total_aed), 927);
+
+        const redemption = JSON.parse(psql('-At', '-c', `
+            SELECT row_to_json(r)
+            FROM (
+                SELECT status, discount_aed
+                FROM public.mainspring_discount_redemptions
+                WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-DISCOUNT-1')
+            ) AS r;
+        `));
+        assert.equal(redemption.status, 'reserved');
+        assert.equal(Number(redemption.discount_aed), 100);
+
+        const emailEvent = JSON.parse(psql('-At', '-c', `
+            SELECT order_data
+            FROM public.claim_mainspring_order_email_events(1)
+            WHERE event_type = 'order_created_business';
+        `));
+        assert.equal(emailEvent.discount_code, 'SAVE10');
+        assert.equal(Number(emailEvent.discount_aed), 100);
+        assert.equal(Number(emailEvent.discounted_subtotal_aed), 900);
+
+        psql('-c', `
+            UPDATE public.mainspring_orders
+            SET payment_status = 'processing'
+            WHERE order_ref = 'MS-DISCOUNT-1';
+            UPDATE public.mainspring_orders
+            SET payment_status = 'paid'
+            WHERE order_ref = 'MS-DISCOUNT-1';
+        `);
+
+        assert.equal(psql('-At', '-c', `
+            SELECT status
+            FROM public.mainspring_discount_redemptions
+            WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-DISCOUNT-1');
+        `), 'redeemed');
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 101;'), 'sold');
+    });
+});
+
+test('validation enforces dates, targeting, caps, minimums, and released usage', async () => {
+    await withPostgres(async ({ psql }) => {
+        assert.equal(psql('-At', '-c', `
+            INSERT INTO public.mainspring_orders (
+                order_ref, customer_name, customer_email, customer_phone,
+                customer_address, items, subtotal_aed, surcharge_pct,
+                total_aed, payment_method
+            ) VALUES (
+                'MS-LEGACY-INSERT', 'Legacy Caller', 'legacy@example.com', '+971500000009',
+                'Dubai', '[]'::jsonb, 500, 0, 500, 'bank_transfer'
+            )
+            RETURNING discounted_subtotal_aed;
+        `), '500.00');
+        psql('-c', "DELETE FROM public.mainspring_orders WHERE order_ref = 'MS-LEGACY-INSERT';");
+
+        psql('-c', `
+            INSERT INTO public.mainspring_products
+                (id, brand, model, category, subcategory, price, status)
+            VALUES
+                (201, 'Rolex', 'Explorer', 'watches', 'automatic', 1000, 'available'),
+                (202, 'Mainspring', 'Strap', 'accessories', 'straps', 500, 'available');
+
+            INSERT INTO public.mainspring_discount_codes
+                (code, discount_type, discount_value, maximum_discount_aed, minimum_subtotal_aed, starts_at, expires_at, status)
+            VALUES
+                ('CAPPED50', 'percentage', 50, 200, 0, NULL, NULL, 'active'),
+                ('EXPIRED10', 'percentage', 10, NULL, 0, NULL, NOW() - INTERVAL '1 minute', 'active'),
+                ('FUTURE10', 'percentage', 10, NULL, 0, NOW() + INTERVAL '1 hour', NULL, 'active'),
+                ('PAUSED10', 'percentage', 10, NULL, 0, NULL, NULL, 'paused'),
+                ('MINIMUM10', 'percentage', 10, NULL, 2000, NULL, NULL, 'active'),
+                ('WATCH100', 'fixed_aed', 100, NULL, 0, NULL, NULL, 'active'),
+                ('RELEASE10', 'percentage', 10, NULL, 0, NULL, NULL, 'active');
+
+            INSERT INTO public.mainspring_discount_targets
+                (discount_code_id, target_type, product_id)
+            SELECT id, 'product', 201
+            FROM public.mainspring_discount_codes
+            WHERE code = 'WATCH100';
+
+            UPDATE public.mainspring_discount_codes
+            SET usage_limit = 1
+            WHERE code = 'RELEASE10';
+        `);
+
+        const validate = (code, items, phone = '+971500000010') => JSON.parse(psql('-At', '-c', `
+            SELECT row_to_json(result)
+            FROM public.validate_mainspring_discount(
+                '${code}',
+                '${JSON.stringify(items)}'::jsonb,
+                '${phone}'
+            ) AS result;
+        `));
+
+        const capped = validate('CAPPED50', [{ id: 201, qty: 1 }]);
+        assert.equal(capped.valid, true);
+        assert.equal(Number(capped.discount_aed), 200);
+
+        assert.match(validate('EXPIRED10', [{ id: 201, qty: 1 }]).message, /expired/i);
+        assert.match(validate('FUTURE10', [{ id: 201, qty: 1 }]).message, /not active yet/i);
+        assert.match(validate('PAUSED10', [{ id: 201, qty: 1 }]).message, /not valid/i);
+        assert.match(validate('MINIMUM10', [{ id: 201, qty: 1 }]).message, /minimum subtotal/i);
+        assert.match(validate('WATCH100', [{ id: 202, qty: 1 }]).message, /does not apply/i);
+
+        const targeted = validate('WATCH100', [{ id: 201, qty: 1 }, { id: 202, qty: 1 }]);
+        assert.equal(targeted.valid, true);
+        assert.equal(Number(targeted.eligible_subtotal_aed), 1000);
+        assert.equal(Number(targeted.discount_aed), 100);
+        assert.equal(Number(targeted.discounted_subtotal_aed), 1400);
+
+        psql('-c', `
+            SELECT *
+            FROM public.create_mainspring_order_with_reservation(
+                'MS-RELEASE-1', 'Release Test', 'release@example.com', '+971500000011', 'Dubai',
+                '[{"id":201,"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, 'RELEASE10'
+            );
+        `);
+        assert.equal(validate('RELEASE10', [{ id: 202, qty: 1 }]).valid, false);
+
+        psql('-c', `
+            UPDATE public.mainspring_orders
+            SET payment_status = 'failed'
+            WHERE order_ref = 'MS-RELEASE-1';
+        `);
+        assert.equal(validate('RELEASE10', [{ id: 202, qty: 1 }]).valid, true);
+        assert.equal(psql('-At', '-c', `
+            SELECT status
+            FROM public.mainspring_discount_redemptions
+            WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-RELEASE-1');
+        `), 'released');
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 201;'), 'available');
+    });
+});
+
+test('concurrent orders cannot both consume the final discount use', async () => {
+    await withPostgres(async ({ psql, psqlAsync }) => {
+        psql('-c', `
+            INSERT INTO public.mainspring_products
+                (id, brand, model, category, price, status)
+            VALUES
+                (301, 'Rolex', 'One', 'watches', 1000, 'available'),
+                (302, 'Rolex', 'Two', 'watches', 1000, 'available');
+            INSERT INTO public.mainspring_discount_codes
+                (code, discount_type, discount_value, usage_limit)
+            VALUES ('LASTUSE', 'percentage', 10, 1);
+        `);
+
+        const call = (orderRef, productId, phone) => psqlAsync('-c', `
+            SELECT *
+            FROM public.create_mainspring_order_with_reservation(
+                '${orderRef}', 'Concurrency Test', 'concurrency@example.com', '${phone}', 'Dubai',
+                '[{"id":${productId},"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, 'LASTUSE'
+            );
+        `);
+        const results = await Promise.all([
+            call('MS-CONCURRENT-1', 301, '+971500000021'),
+            call('MS-CONCURRENT-2', 302, '+971500000022'),
+        ]);
+
+        assert.deepEqual(results.map(result => result.ok).sort(), [false, true]);
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_discount_redemptions
+            WHERE status IN ('reserved', 'redeemed');
+        `), '1');
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_orders
+            WHERE order_ref IN ('MS-CONCURRENT-1', 'MS-CONCURRENT-2');
+        `), '1');
+    });
+});

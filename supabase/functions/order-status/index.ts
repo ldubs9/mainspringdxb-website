@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
     // Lookup order — must match BOTH ref and phone
     const { data: order, error } = await supabaseAdmin
       .from("mainspring_orders")
-      .select("order_ref, items, subtotal_aed, total_aed, surcharge_pct, payment_method, payment_status, order_status, tracking_number, created_at")
+      .select("id, order_ref, items, subtotal_aed, discount_code, discount_type, discount_value, discount_aed, discounted_subtotal_aed, total_aed, surcharge_pct, payment_method, payment_status, order_status, tracking_number, created_at")
       .eq("order_ref", order_ref)
       .eq("customer_phone", cleanPhone)
       .single();
@@ -54,7 +54,7 @@ Deno.serve(async (req: Request) => {
     const { data: history } = await supabaseAdmin
       .from("mainspring_order_status_history")
       .select("new_status, note, created_at")
-      .eq("order_id", order_ref)  // This won't work — we need the UUID
+      .eq("order_id", order.id)
       .order("created_at", { ascending: true });
 
     // Return safe data only (no internal IDs, no gateway responses)
@@ -63,6 +63,11 @@ Deno.serve(async (req: Request) => {
         order_ref: order.order_ref,
         items: order.items,
         subtotal_aed: order.subtotal_aed,
+        discount_code: order.discount_code,
+        discount_type: order.discount_type,
+        discount_value: order.discount_value,
+        discount_aed: order.discount_aed,
+        discounted_subtotal_aed: order.discounted_subtotal_aed,
         total_aed: order.total_aed,
         surcharge_pct: order.surcharge_pct,
         payment_method: order.payment_method,

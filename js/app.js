@@ -69,6 +69,9 @@
         let cart = JSON.parse(localStorage.getItem('mainspring_cart')) || [];
 
         function saveCart() {
+            appliedDiscount = null;
+            discountDraft = '';
+            discountFeedback = null;
             localStorage.setItem('mainspring_cart', JSON.stringify(cart));
             updateCartBadge();
         }
@@ -249,6 +252,9 @@
 
         let selectedPaymentMethod = null;
         let checkoutStep = 1; // 1=details, 2=payment, 3=confirm
+        let appliedDiscount = null;
+        let discountDraft = '';
+        let discountFeedback = null;
 
         function openCheckout() {
             closeCart();
@@ -274,6 +280,11 @@
         function renderCheckoutStep1() {
             const body = document.getElementById('checkoutBody');
             const saved = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
+            const subtotal = getCartTotal();
+            const discountAmount = Number(appliedDiscount?.discount_aed || 0);
+            const discountedSubtotal = appliedDiscount
+                ? Number(appliedDiscount.discounted_subtotal_aed)
+                : subtotal;
             body.innerHTML = `
                 ${renderStepIndicator(1)}
                 <div class="checkout-form">
@@ -308,14 +319,113 @@
                             <span data-price-aed="${item.price * item.qty}">${formatPrice(item.price * item.qty)}</span>
                         </div>
                     `).join('')}
-                    <div class="checkout-summary-total">
-                        <span>Subtotal</span>
-                        <span data-price-aed="${getCartTotal()}">${formatPrice(getCartTotal())}</span>
+                    <div class="checkout-discount">
+                        <label for="checkoutDiscountCode">Discount code</label>
+                        <div class="checkout-discount-controls">
+                            <input
+                                type="text"
+                                id="checkoutDiscountCode"
+                                value="${escapeHtml(appliedDiscount?.discount_code || discountDraft)}"
+                                placeholder="Enter code"
+                                maxlength="32"
+                                autocomplete="off"
+                                ${appliedDiscount ? 'readonly' : ''}
+                            />
+                            ${appliedDiscount
+                                ? '<button type="button" onclick="clearDiscountCode()">Remove</button>'
+                                : '<button type="button" id="applyDiscountBtn" onclick="applyDiscountCode()">Apply</button>'}
+                        </div>
+                        ${discountFeedback
+                            ? `<p class="checkout-discount-feedback ${discountFeedback.type}">${escapeHtml(discountFeedback.message)}</p>`
+                            : ''}
                     </div>
+                    <div class="checkout-summary-total is-subtotal">
+                        <span>Subtotal</span>
+                        <span data-price-aed="${subtotal}">${formatPrice(subtotal)}</span>
+                    </div>
+                    ${appliedDiscount ? `
+                        <div class="checkout-summary-discount">
+                            <span>Discount (${escapeHtml(appliedDiscount.discount_code)})</span>
+                            <span>-${formatPrice(discountAmount)}</span>
+                        </div>
+                        <div class="checkout-summary-total">
+                            <span>Discounted subtotal</span>
+                            <span data-price-aed="${discountedSubtotal}">${formatPrice(discountedSubtotal)}</span>
+                        </div>
+                    ` : ''}
                 </div>
 
                 <button class="checkout-confirm-btn" onclick="goToStep2()">CONTINUE TO PAYMENT</button>
             `;
+        }
+
+        function captureCheckoutCustomerDraft() {
+            const existing = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
+            const draft = {
+                name: document.getElementById('checkoutName')?.value ?? existing.name ?? '',
+                phone: document.getElementById('checkoutPhone')?.value ?? existing.phone ?? '',
+                email: document.getElementById('checkoutEmail')?.value ?? existing.email ?? '',
+                address: document.getElementById('checkoutAddress')?.value ?? existing.address ?? ''
+            };
+            localStorage.setItem('mainspring_customer', JSON.stringify(draft));
+            return draft;
+        }
+
+        async function applyDiscountCode() {
+            const input = document.getElementById('checkoutDiscountCode');
+            const button = document.getElementById('applyDiscountBtn');
+            discountDraft = input?.value || '';
+            const customer = captureCheckoutCustomerDraft();
+            if (!discountDraft.trim()) {
+                discountFeedback = { type: 'error', message: 'Enter a discount code.' };
+                renderCheckoutStep1();
+                return;
+            }
+
+            if (button) {
+                button.disabled = true;
+                button.textContent = 'Checking...';
+            }
+
+            try {
+                const response = await fetch(PAYMENTS_BASE + '/discounts/validate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        discount_code: discountDraft,
+                        items: cart.map(item => ({ id: item.id, qty: item.qty })),
+                        customer_phone: customer.phone
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok || !result.valid) {
+                    appliedDiscount = null;
+                    discountFeedback = {
+                        type: 'error',
+                        message: result.message || 'This discount code could not be applied.'
+                    };
+                } else {
+                    appliedDiscount = result;
+                    discountDraft = result.discount_code;
+                    discountFeedback = { type: 'success', message: result.message || 'Discount applied.' };
+                }
+            } catch (error) {
+                console.error('Discount validation error:', error);
+                appliedDiscount = null;
+                discountFeedback = {
+                    type: 'error',
+                    message: 'Discount validation is temporarily unavailable.'
+                };
+            }
+            renderCheckoutStep1();
+        }
+
+        function clearDiscountCode() {
+            captureCheckoutCustomerDraft();
+            appliedDiscount = null;
+            discountDraft = '';
+            discountFeedback = null;
+            renderCheckoutStep1();
         }
 
         function goToStep2() {
@@ -354,12 +464,22 @@
 
         // Step 2: Payment method selection
         function renderCheckoutStep2() {
-            const total = getCartTotal();
+            const originalSubtotal = getCartTotal();
+            const total = appliedDiscount
+                ? Number(appliedDiscount.discounted_subtotal_aed)
+                : originalSubtotal;
             const cardTotal = Math.round(total * 1.03);
             const body = document.getElementById('checkoutBody');
 
             body.innerHTML = `
                 ${renderStepIndicator(2)}
+
+                ${appliedDiscount ? `
+                    <div class="checkout-discount-summary">
+                        <span>${escapeHtml(appliedDiscount.discount_code)} applied</span>
+                        <strong>-${formatPrice(Number(appliedDiscount.discount_aed))}</strong>
+                    </div>
+                ` : ''}
 
                 <p class="payment-method-label">Select Payment Method</p>
                 <div class="payment-methods">
@@ -384,9 +504,9 @@
                         <div class="payment-method-icon"><i class="fas fa-store"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Cash Payment in Store</div>
-                            <div class="payment-method-desc">Start a WhatsApp chat to discuss cash payment and availability. This does not reserve the watch.</div>
+                            <div class="payment-method-desc">Start a WhatsApp chat to discuss cash payment and availability. This does not reserve the watch. Discount codes are not applied to cash enquiries.</div>
                         </div>
-                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
+                        <div class="payment-method-price" data-price-aed="${originalSubtotal}">${formatPrice(originalSubtotal)}</div>
                     </div>
                 </div>
 
@@ -417,7 +537,6 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESSING...';
 
             const customer = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
-            const total = getCartTotal();
 
             try {
                 // Create order via secure Edge Function
@@ -434,6 +553,7 @@
                         customer_address: customer.address,
                         items: cart,
                         payment_method: selectedPaymentMethod,
+                        discount_code: appliedDiscount?.discount_code || null,
                     }),
                 });
 
@@ -463,13 +583,22 @@
 
             } catch (err) {
                 console.error('Checkout error:', err);
+                const discountRejected = /discount code/i.test(String(err.message || ''));
+                if (discountRejected) {
+                    appliedDiscount = null;
+                    discountDraft = '';
+                    discountFeedback = {
+                        type: 'error',
+                        message: 'The discount changed before checkout. Please review your order.'
+                    };
+                }
                 const body = document.getElementById('checkoutBody');
                 body.innerHTML = `
                     ${renderStepIndicator(2)}
                     <div class="checkout-error">
                         <strong>Something went wrong:</strong> ${err.message || 'Please try again.'}
                     </div>
-                    <button class="checkout-confirm-btn" onclick="renderCheckoutStep2()">TRY AGAIN</button>
+                    <button class="checkout-confirm-btn" onclick="${discountRejected ? 'renderCheckoutStep1()' : 'renderCheckoutStep2()'}">${discountRejected ? 'REVIEW ORDER' : 'TRY AGAIN'}</button>
                 `;
             }
         }
@@ -776,6 +905,9 @@
                             <div>
                                 <p style="font-size: 0.78rem; color: var(--gray); text-transform: uppercase;">Total</p>
                                 <p style="font-weight: 600;" data-price-aed="${data.total_aed}">${formatPrice(data.total_aed)}</p>
+                                ${data.discount_code && Number(data.discount_aed) > 0
+                                    ? `<p style="font-size: 0.78rem; color: var(--gray);">Discount ${escapeHtml(data.discount_code)}: -${formatPrice(Number(data.discount_aed))}</p>`
+                                    : ''}
                                 ${data.surcharge_pct > 0 ? `<p style="font-size: 0.78rem; color: var(--gray);">Includes ${data.surcharge_pct}% surcharge</p>` : ''}
                             </div>
                         </div>
