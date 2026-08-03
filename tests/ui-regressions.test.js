@@ -1,11 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const vm = require('node:vm');
 
 const app = fs.readFileSync('js/app.js', 'utf8');
 const accessories = fs.readFileSync('components/page-accessories.html', 'utf8');
 const navOverlay = fs.readFileSync('components/nav-overlay.html', 'utf8');
 const pagesCss = fs.readFileSync('css/pages.css', 'utf8');
+const stylesCss = fs.readFileSync('css/styles.css', 'utf8');
 const homeMotion = fs.readFileSync('js/home-motion.js', 'utf8');
 
 test('checkout WhatsApp icons inherit the light button foreground color', () => {
@@ -54,51 +56,92 @@ test('opening a specific accessory category scrolls the filtered products into v
     assert.match(fn, /accessoryProducts['"]\)\.scrollIntoView\(\{\s*behavior:\s*['"]smooth['"]\s*\}\)/);
 });
 
-test('product pagination fetches all non-sold products before the sold products', async () => {
-    const start = app.indexOf('async function fetchProductsWithSoldLast');
-    const end = app.indexOf('function renderProducts', start);
-    const fn = app.slice(start, end);
+test('product listing queries exclude sold and archived products by default', () => {
+    const helperStart = app.indexOf('function excludeUnavailableProducts');
+    const helperEnd = app.indexOf('// Listing queries are fired', helperStart);
+    const helper = app.slice(helperStart, helperEnd);
+    const watchesStart = app.indexOf('async function loadWatches');
+    const watchesEnd = app.indexOf('const PRODUCTS_PER_PAGE', watchesStart);
+    const watches = app.slice(watchesStart, watchesEnd);
 
-    assert.ok(start >= 0, 'sold-last pagination helper is present');
-    const fetchProductsWithSoldLast = new Function(`const PRODUCTS_PER_PAGE = 28; ${fn}; return fetchProductsWithSoldLast;`)();
-    const products = [
-        ...Array.from({ length: 30 }, (_, index) => ({ id: `available-${index}`, status: 'available' })),
-        ...Array.from({ length: 3 }, (_, index) => ({ id: `sold-${index}`, status: 'sold' }))
-    ];
+    assert.ok(helperStart >= 0, 'unavailable-product filter helper is present');
+    assert.match(helper, /query\.or\('status\.not\.in\.\(sold,archived\),status\.is\.null'\)/);
+    assert.match(watches, /q = excludeUnavailableProducts\(q\)/);
+});
 
-    function createQuery(columns, options) {
-        const filters = [];
-        let range;
-        return {
-            or(value) {
-                filters.push(['or', value]);
-                return this;
+test('recommendation card headings use the same left-aligned model treatment as collection cards', () => {
+    const recommendationsStart = app.indexOf('grid.innerHTML = recommendations.map');
+    const recommendationsEnd = app.indexOf('// Touch swipe support for gallery', recommendationsStart);
+    const recommendationsRenderer = app.slice(recommendationsStart, recommendationsEnd);
+
+    assert.ok(recommendationsStart >= 0, 'recommendation card renderer is present');
+    assert.match(recommendationsRenderer, /class="product-name"/);
+    assert.doesNotMatch(recommendationsRenderer, /class="product-name"\s+style=/);
+    assert.match(stylesCss, /\.recommendations\s*>\s*h3\s*\{/);
+    assert.match(pagesCss, /\.recommendations\s*>\s*h3\s*\{/);
+    assert.doesNotMatch(stylesCss, /\.recommendations\s+h3\s*\{/);
+    assert.doesNotMatch(pagesCss, /\.recommendations\s+h3\s*\{/);
+});
+
+test('gallery arrow keys update both the detail gallery and the active zoom image', () => {
+    const keyboardStart = app.indexOf('// Keyboard navigation: ESC closes zoom/search, arrow keys navigate gallery');
+    const keyboardEnd = app.indexOf('// Visible dropdowns mirroring each hidden watch filter input', keyboardStart);
+    const keyboardHandler = app.slice(keyboardStart, keyboardEnd);
+
+    assert.ok(keyboardStart >= 0, 'gallery keyboard handler is present');
+    assert.match(keyboardHandler, /zoomOverlay[\s\S]*classList\.contains\('active'\)/);
+    assert.match(keyboardHandler, /zoomPrevImage\(e\)/);
+    assert.match(keyboardHandler, /zoomNextImage\(e\)/);
+    assert.ok(
+        keyboardHandler.indexOf('const zoomOverlay') < keyboardHandler.indexOf('const activeEl'),
+        'the active zoom overlay takes priority over form-control focus'
+    );
+});
+
+test('active zoom navigation wins even when the background page retains input focus', () => {
+    const keyboardStart = app.indexOf('// Keyboard navigation: ESC closes zoom/search, arrow keys navigate gallery');
+    const keyboardEnd = app.indexOf('// Visible dropdowns mirroring each hidden watch filter input', keyboardStart);
+    const keyboardHandler = app.slice(keyboardStart, keyboardEnd);
+    const calls = [];
+    let keydownHandler;
+
+    vm.runInNewContext(keyboardHandler, {
+        closeGlobalSearch() {},
+        closeImageZoom() {},
+        document: {
+            activeElement: { tagName: 'INPUT' },
+            addEventListener(type, handler) {
+                if (type === 'keydown') keydownHandler = handler;
             },
-            eq(column, value) {
-                filters.push(['eq', column, value]);
-                return this;
+            getElementById(id) {
+                if (id === 'galleryZoomOverlay') {
+                    return { classList: { contains: (className) => className === 'active' } };
+                }
+                return { classList: { contains: () => true } };
             },
-            range(from, to) {
-                range = [from, to];
-                return this;
-            },
-            then(resolve, reject) {
-                const matchingProducts = products.filter((product) => filters.every(([type, column, value]) => {
-                    if (type === 'or') return product.status !== 'sold' || product.status == null;
-                    return product[column] === value;
-                }));
-                const result = options?.head
-                    ? { count: matchingProducts.length, error: null }
-                    : { data: matchingProducts.slice(range[0], range[1] + 1), error: null };
-                return Promise.resolve(result).then(resolve, reject);
-            }
-        };
-    }
+        },
+        zoomNextImage() {
+            calls.push('next');
+        },
+        zoomPrevImage() {
+            calls.push('previous');
+        },
+        nextImage() {
+            calls.push('detail-next');
+        },
+        prevImage() {
+            calls.push('detail-previous');
+        },
+    });
 
-    const firstPage = await fetchProductsWithSoldLast(createQuery, (query) => query, 1);
-    const secondPage = await fetchProductsWithSoldLast(createQuery, (query) => query, 2);
+    let prevented = false;
+    keydownHandler({
+        key: 'ArrowRight',
+        preventDefault() {
+            prevented = true;
+        },
+    });
 
-    assert.deepEqual(firstPage.data.map((product) => product.status), Array(28).fill('available'));
-    assert.deepEqual(secondPage.data.map((product) => product.status), ['available', 'available', 'sold', 'sold', 'sold']);
-    assert.equal(secondPage.count, 33);
+    assert.equal(prevented, true);
+    assert.deepEqual(calls, ['next']);
 });

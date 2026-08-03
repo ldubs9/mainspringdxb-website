@@ -2225,6 +2225,13 @@
                 }
             }
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                const zoomOverlay = document.getElementById('galleryZoomOverlay');
+                if (zoomOverlay && zoomOverlay.classList.contains('active')) {
+                    e.preventDefault();
+                    if (e.key === 'ArrowLeft') zoomPrevImage(e);
+                    else zoomNextImage(e);
+                    return;
+                }
                 const activeEl = document.activeElement;
                 if (activeEl && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName)) return;
                 const detailPage = document.getElementById('page-detail');
@@ -3118,7 +3125,7 @@
                     }
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name" style="font-size: 1rem;" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
+                        <h3 class="product-name" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
                         <p class="product-brand">${displayBrand}</p>
                         ${product.condition ? `<p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 8px;">${product.condition}</p>` : ''}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>

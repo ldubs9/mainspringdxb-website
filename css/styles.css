@@ -3824,7 +3824,7 @@
             border-top: 1px solid var(--cream-dark);
         }
 
-        .recommendations h3 {
+        .recommendations > h3 {
             font-family: 'Fraunces', serif;
             font-size: 1.8rem;
             font-weight: 400;

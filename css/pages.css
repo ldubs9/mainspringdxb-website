@@ -970,7 +970,7 @@
 }
 
 .recommendations { margin-top: clamp(60px, 9vw, 120px); }
-.recommendations h3 {
+.recommendations > h3 {
     font-family: 'Fraunces', serif;
     font-weight: 400;
     font-size: clamp(1.8rem, 3vw, 2.8rem);

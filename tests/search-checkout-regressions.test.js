@@ -124,8 +124,8 @@ test('final stylesheet keeps navbar search typography compact on desktop and met
     assert.match(pageStyles, /\.search-results \.product-card \.product-price\s*\{[^}]*font-size:\s*0\.8925rem/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card\s*\{[^}]*height:\s*auto/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card \.product-info\s*\{[^}]*display:\s*flex[^}]*min-height:/s);
-    assert.match(index, /css\/pages\.css\?v=9/);
-    assert.match(loader, /js\/app\.js\?v=12/);
+    assert.match(index, /css\/pages\.css\?v=10/);
+    assert.match(loader, /js\/app\.js\?v=13/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -161,9 +161,9 @@ test('cart stores and renders the product thumbnail, including legacy cart hydra
     assert.match(app, /function hydrateCartProductDetails/);
     assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
-    assert.match(index, /css\/styles\.css\?v=8/);
+    assert.match(index, /css\/styles\.css\?v=9/);
     assert.match(index, /js\/loader\.js\?v=6/);
-    assert.match(loader, /js\/app\.js\?v=12/);
+    assert.match(loader, /js\/app\.js\?v=13/);
 });
 
 test('cash checkout opens a product-specific WhatsApp inquiry without creating or reserving an order', () => {
