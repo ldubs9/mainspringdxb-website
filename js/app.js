@@ -504,7 +504,7 @@
                         <div class="payment-method-icon"><i class="fas fa-store"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Cash Payment in Store</div>
-                            <div class="payment-method-desc">Start a WhatsApp chat to discuss cash payment and availability. This does not reserve the watch. Discount codes are not applied to cash enquiries.</div>
+                            <div class="payment-method-desc">Start a WhatsApp chat to discuss cash payment and availability. Inventory is not held until payment is confirmed. Discount codes are not applied to cash enquiries.</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${originalSubtotal}">${formatPrice(originalSubtotal)}</div>
                     </div>
@@ -681,7 +681,7 @@
                 return `- ${name}${reference} x${item.qty || 1}`;
             }).join('\n');
 
-            return `Hello Mainspring, I would like to discuss paying cash for:\n\n${itemLines}\n\nName: ${customer.name || ''}\nPhone: ${customer.phone || ''}\n\nI understand the watch has not been reserved yet. Please confirm availability and the cash payment arrangements.`;
+            return `Hello Mainspring, I would like to discuss paying cash for:\n\n${itemLines}\n\nName: ${customer.name || ''}\nPhone: ${customer.phone || ''}\n\nI understand the watch is subject to availability until payment is confirmed. Please confirm availability and the cash payment arrangements.`;
         }
 
         function startCashInquiryWhatsApp() {
@@ -703,7 +703,7 @@
                     <i class="fab fa-whatsapp" style="color: #25D366;"></i>
                     <h4>Continue on WhatsApp</h4>
                     <p>We opened a chat with the watches in your cart.</p>
-                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">No order has been created and the watch has not been reserved. We will confirm availability and agree the cash payment details with you directly.</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">No order has been created and inventory is not held until payment is confirmed. We will confirm availability and agree the cash payment details with you directly.</p>
                     <button class="checkout-confirm-btn" onclick="startCashInquiryWhatsApp()"><i class="fab fa-whatsapp"></i> Open WhatsApp Again</button>
                     <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Keep Browsing</button>
                 </div>
@@ -1650,8 +1650,6 @@
                     q = q.eq('category', 'watch');
                     if (statusFilter === 'available') {
                         q = q.eq('status', 'available');
-                    } else if (statusFilter === 'reserved') {
-                        q = q.eq('status', 'reserved');
                     } else {
                         // No status filter selected — still never show sold/archived products.
                         q = excludeUnavailableProducts(q);
@@ -1786,8 +1784,7 @@
                 const safeDisplayName = (displayName || '').replace(/'/g, "\\'");
                 const safeBrand = (displayBrand || '').replace(/'/g, "\\'");
                 const isSold = product.status === 'sold';
-                const isReserved = product.status === 'reserved';
-                const isUnavailable = isSold || isReserved;
+                const isUnavailable = isSold;
 
                 let additionalInfo = '';
                 if (product.category === 'watch') {
@@ -1803,7 +1800,7 @@
                     }
                 }
 
-                const statusClass = isSold ? ' sold' : isReserved ? ' reserved' : '';
+                const statusClass = isSold ? ' sold' : '';
                 const productIdentifier = product.reference_code || product.id;
                 const openProductCall = `showProductDetail(event, '${productIdentifier}')`;
                 const encodedCartProduct = encodeProductForCart(product);
@@ -1824,7 +1821,7 @@
                         <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
                             ${isUnavailable ? `
                             <button disabled style="flex: 1; padding: 10px; background: var(--gray); color: white; border: none; cursor: default; font-size: 0.8rem; opacity: 0.7;">
-                                <i class="fas fa-ban"></i> ${isSold ? 'Sold' : 'Reserved'}
+                                <i class="fas fa-ban"></i> Sold
                             </button>
                             ` : `
                             <button onclick="event.stopPropagation(); addToCartEncodedProduct('${encodedCartProduct}')" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
@@ -1867,9 +1864,9 @@
                     .from('mainspring_products')
                     .select('*')
                     .eq('category', 'watch')
-                    // Live inventory uses status 'active' (the bulk), plus 'available'/'reserved'.
+                    // Live inventory uses status 'active' (the bulk) and 'available'.
                     // 'sold', 'archived' and 'draft' are intentionally excluded from the featured rail.
-                    .in('status', ['active', 'available', 'reserved'])
+                    .in('status', ['active', 'available'])
                     .order('reference_code', { ascending: false, nullsFirst: false })
                     .limit(12);
 
@@ -2405,8 +2402,6 @@
 
                     if (statusFilter === 'available') {
                         query = query.eq('status', 'available');
-                    } else if (statusFilter === 'reserved') {
-                        query = query.eq('status', 'reserved');
                     } else {
                         // No status filter selected — still never show sold/archived products.
                         query = excludeUnavailableProducts(query);
@@ -2581,9 +2576,8 @@
             const watchDetails = product.product_details || '';
 
             const isSoldProduct = product.status === 'sold';
-            const isReservedProduct = product.status === 'reserved';
-            const isUnavailableProduct = isSoldProduct || isReservedProduct;
-            const unavailableLabel = isSoldProduct ? 'SOLD' : 'RESERVED';
+            const isUnavailableProduct = isSoldProduct;
+            const unavailableLabel = 'SOLD';
 
             detailInfo.innerHTML = `
                 ${isUnavailableProduct ? `<div style="background: var(--gray); color: white; padding: 10px 20px; margin-bottom: 20px; text-align: center; font-family: 'Fraunces', serif; font-size: 0.9rem; letter-spacing: 3px;">${unavailableLabel}</div>` : ''}

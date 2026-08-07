@@ -6,7 +6,7 @@ const path = require('node:path');
 const emailUtilsPath = path.resolve('coolify/mainspring-payments/email-utils.js');
 const paymentsPath = 'coolify/mainspring-payments/index.js';
 const migrationPath = 'supabase/migrations/20260731_order_email_outbox.sql';
-const checkoutMigrationPath = 'supabase/migrations/20260723_atomic_checkout_inventory.sql';
+const checkoutMigrationPath = 'supabase/migrations/20260807_payment_finalizes_inventory.sql';
 const statusTriggerRepairPath = 'supabase/migrations/20260731_repair_order_status_trigger.sql';
 const appPath = 'js/app.js';
 
@@ -183,12 +183,19 @@ test('Ziina returns are verified server-side and processing payments are reconci
     assert.doesNotMatch(app, /<h4>Payment Successful!<\/h4>/);
 });
 
-test('paid inventory rows are locked separately from the aggregate count', () => {
+test('paid inventory rows are locked before availability is checked and marked sold', () => {
     const sql = fs.readFileSync(checkoutMigrationPath, 'utf8');
-    const paidBranch = sql.slice(sql.indexOf("IF NEW.payment_status = 'paid' THEN"));
+    const paidFunctionStart = sql.indexOf('CREATE OR REPLACE FUNCTION public.mark_mainspring_inventory_sold_on_payment');
+    const paidFunctionEnd = sql.indexOf('-- Backward-compatible RPC shapes');
+    const paidBranch = sql.slice(paidFunctionStart, paidFunctionEnd);
 
-    assert.match(paidBranch, /PERFORM p\.id[\s\S]*ORDER BY p\.id[\s\S]*FOR UPDATE;[\s\S]*SELECT jsonb_array_length\(NEW\.items\), COUNT\(\*\)/);
-    assert.doesNotMatch(paidBranch, /SELECT jsonb_array_length\(NEW\.items\), COUNT\(\*\)[\s\S]*?FOR UPDATE;/);
+    assert.match(paidBranch, /NEW\.payment_status\s*<>\s*'paid'/i);
+    assert.match(paidBranch, /SELECT\s+COUNT\(\*\),\s*COUNT\(DISTINCT/i);
+    assert.match(paidBranch, /PERFORM p\.id[\s\S]*ORDER BY p\.id[\s\S]*FOR UPDATE;/i);
+    assert.match(paidBranch, /FOR UPDATE;[\s\S]*SELECT\s+COUNT\(\*\),[\s\S]*COUNT\(\*\)\s+FILTER/i);
+    assert.match(paidBranch, /status\s+IN\s*\('available',\s*'active'\)/i);
+    assert.match(paidBranch, /SET status = 'sold'/i);
+    assert.doesNotMatch(paidBranch, /reserved_by_order_id|reservation_expires_at|reservation_previous_status/i);
 });
 
 test('legacy Mainspring status trigger is replaced with the canonical history table', () => {

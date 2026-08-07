@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 const app = fs.readFileSync('js/app.js', 'utf8');
+const watches = fs.readFileSync('components/page-watches.html', 'utf8');
 const accessories = fs.readFileSync('components/page-accessories.html', 'utf8');
 const navOverlay = fs.readFileSync('components/nav-overlay.html', 'utf8');
 const pagesCss = fs.readFileSync('css/pages.css', 'utf8');
@@ -67,6 +68,13 @@ test('product listing queries exclude sold and archived products by default', ()
     assert.ok(helperStart >= 0, 'unavailable-product filter helper is present');
     assert.match(helper, /query\.or\('status\.not\.in\.\(sold,archived\),status\.is\.null'\)/);
     assert.match(watches, /q = excludeUnavailableProducts\(q\)/);
+});
+
+test('inventory UI has no reservation status or reserve action', () => {
+    assert.doesNotMatch(app, /reserved/i);
+    assert.doesNotMatch(watches, /reserved/i);
+    assert.doesNotMatch(accessories, /reserved/i);
+    assert.doesNotMatch(stylesCss, /reserved/i);
 });
 
 test('recommendation card headings use the same left-aligned model treatment as collection cards', () => {

@@ -8,6 +8,7 @@ const { execFile, execFileSync } = require('node:child_process');
 
 const root = path.resolve(__dirname, '..');
 const migrationPath = path.join(root, 'supabase/migrations/20260801_discount_codes.sql');
+const inventoryFinalizationMigration = path.join(root, 'supabase/migrations/20260807_payment_finalizes_inventory.sql');
 const prerequisiteMigrations = [
     path.join(root, 'supabase/migrations/20260723_atomic_checkout_inventory.sql'),
     path.join(root, 'supabase/migrations/20260731_order_email_outbox.sql'),
@@ -92,6 +93,7 @@ async function withPostgres(run) {
         apply(path.join(root, 'tests/fixtures/mainspring-checkout-base.sql'));
         prerequisiteMigrations.forEach(apply);
         apply(migrationPath);
+        apply(inventoryFinalizationMigration);
         await run({ psql, psqlAsync });
     } finally {
         if (started) {
@@ -119,7 +121,7 @@ test('discounted order remains authoritative through email and payment lifecycle
 
         const order = JSON.parse(psql('-At', '-c', `
             SELECT row_to_json(result)
-            FROM public.create_mainspring_order_with_reservation(
+            FROM public.create_mainspring_order(
                 'MS-DISCOUNT-1',
                 'Test Customer',
                 'customer@example.com',
@@ -139,6 +141,7 @@ test('discounted order remains authoritative through email and payment lifecycle
         assert.equal(Number(order.discounted_subtotal_aed), 900);
         assert.equal(Number(order.surcharge_pct), 3);
         assert.equal(Number(order.total_aed), 927);
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 101;'), 'available');
 
         const redemption = JSON.parse(psql('-At', '-c', `
             SELECT row_to_json(r)
@@ -165,6 +168,13 @@ test('discounted order remains authoritative through email and payment lifecycle
             SET payment_status = 'processing'
             WHERE order_ref = 'MS-DISCOUNT-1';
             UPDATE public.mainspring_orders
+            SET payment_status = 'pending'
+            WHERE order_ref = 'MS-DISCOUNT-1';
+        `);
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 101;'), 'available');
+
+        psql('-c', `
+            UPDATE public.mainspring_orders
             SET payment_status = 'paid'
             WHERE order_ref = 'MS-DISCOUNT-1';
         `);
@@ -175,6 +185,113 @@ test('discounted order remains authoritative through email and payment lifecycle
             WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-DISCOUNT-1');
         `), 'redeemed');
         assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 101;'), 'sold');
+    });
+});
+
+test('concurrent payment finalization can sell a watch only once', async () => {
+    await withPostgres(async ({ psql, psqlAsync }) => {
+        psql('-c', `
+            INSERT INTO public.mainspring_products
+                (id, brand, model, category, price, status)
+            VALUES (150, 'Rolex', 'Shared Watch', 'watches', 1200, 'available');
+
+            SELECT *
+            FROM public.create_mainspring_order(
+                'MS-PAID-RACE-1', 'Payment Race One', 'one@example.com', '+971****0101', 'Dubai',
+                '[{"id":150,"qty":1}]'::jsonb, 'ziina', NULL, NULL, NULL
+            );
+            SELECT *
+            FROM public.create_mainspring_order(
+                'MS-PAID-RACE-2', 'Payment Race Two', 'two@example.com', '+971****0102', 'Dubai',
+                '[{"id":150,"qty":1}]'::jsonb, 'ziina', NULL, NULL, NULL
+            );
+        `);
+
+        const finalize = (orderRef) => psqlAsync('-c', `
+            UPDATE public.mainspring_orders
+            SET payment_status = 'paid'
+            WHERE order_ref = '${orderRef}';
+        `);
+        const results = await Promise.all([
+            finalize('MS-PAID-RACE-1'),
+            finalize('MS-PAID-RACE-2'),
+        ]);
+
+        assert.deepEqual(results.map((result) => result.ok).sort(), [false, true]);
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 150;'), 'sold');
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_orders
+            WHERE order_ref IN ('MS-PAID-RACE-1', 'MS-PAID-RACE-2')
+              AND payment_status = 'paid';
+        `), '1');
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_orders
+            WHERE order_ref IN ('MS-PAID-RACE-1', 'MS-PAID-RACE-2')
+              AND payment_status = 'pending';
+        `), '1');
+    });
+});
+
+test('failed and cancelled payment transitions leave inventory available', async () => {
+    await withPostgres(async ({ psql }) => {
+        psql('-c', `
+            INSERT INTO public.mainspring_products
+                (id, brand, model, category, price, status)
+            VALUES
+                (160, 'Omega', 'Failed Payment Watch', 'watches', 900, 'available'),
+                (161, 'Tudor', 'Cancelled Payment Watch', 'watches', 950, 'available');
+
+            SELECT *
+            FROM public.create_mainspring_order(
+                'MS-FAILED-PAYMENT', 'Failed Payment', 'failed@example.com', '+971****0160', 'Dubai',
+                '[{"id":160,"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, NULL
+            );
+            SELECT *
+            FROM public.create_mainspring_order(
+                'MS-CANCELLED-PAYMENT', 'Cancelled Payment', 'cancelled@example.com', '+971****0161', 'Dubai',
+                '[{"id":161,"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, NULL
+            );
+
+            UPDATE public.mainspring_orders
+            SET payment_status = 'failed'
+            WHERE order_ref = 'MS-FAILED-PAYMENT';
+            UPDATE public.mainspring_orders
+            SET payment_status = 'cancelled'
+            WHERE order_ref = 'MS-CANCELLED-PAYMENT';
+        `);
+
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 160;'), 'available');
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 161;'), 'available');
+    });
+});
+
+test('legacy order RPC delegates without reserving inventory during rollout', async () => {
+    await withPostgres(async ({ psql }) => {
+        psql('-c', `
+            INSERT INTO public.mainspring_products
+                (id, brand, model, category, price, status)
+            VALUES (162, 'Cartier', 'Legacy RPC Watch', 'watches', 1100, 'available');
+        `);
+
+        const result = JSON.parse(psql('-At', '-c', `
+            SELECT row_to_json(result)
+            FROM public.create_mainspring_order_with_reservation(
+                'MS-LEGACY-RPC', 'Legacy RPC', 'legacy@example.com', '+971****0162', 'Dubai',
+                '[{"id":162,"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, NULL
+            ) AS result;
+        `));
+
+        assert.equal(result.reservation_expires_at, null);
+        assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 162;'), 'available');
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM information_schema.columns
+            WHERE table_schema = 'public'
+              AND table_name = 'mainspring_products'
+              AND column_name IN ('reservation_expires_at', 'reserved_by_order_id', 'reservation_previous_status');
+        `), '0');
     });
 });
 
@@ -249,8 +366,8 @@ test('validation enforces dates, targeting, caps, minimums, and released usage',
 
         psql('-c', `
             SELECT *
-            FROM public.create_mainspring_order_with_reservation(
-                'MS-RELEASE-1', 'Release Test', 'release@example.com', '+971500000011', 'Dubai',
+            FROM public.create_mainspring_order(
+                'MS-RELEASE-1', 'Release Test', 'release@example.com', '+971****0011', 'Dubai',
                 '[{"id":201,"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, 'RELEASE10'
             );
         `);
@@ -286,7 +403,7 @@ test('concurrent orders cannot both consume the final discount use', async () =>
 
         const call = (orderRef, productId, phone) => psqlAsync('-c', `
             SELECT *
-            FROM public.create_mainspring_order_with_reservation(
+            FROM public.create_mainspring_order(
                 '${orderRef}', 'Concurrency Test', 'concurrency@example.com', '${phone}', 'Dubai',
                 '[{"id":${productId},"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, 'LASTUSE'
             );

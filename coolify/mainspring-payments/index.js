@@ -330,8 +330,8 @@ async function runPaymentReconciler() {
 
 // ----------------------------------------------------------------------------
 // POST /discounts/validate
-// Preview only. Order creation independently revalidates and reserves usage in
-// the same database transaction as inventory reservation.
+// Preview only. Order creation independently revalidates and claims usage in
+// the same database transaction as order creation.
 // ----------------------------------------------------------------------------
 app.post('/discounts/validate', async (req, res) => {
   try {
@@ -467,7 +467,7 @@ app.post('/create-order', async (req, res) => {
     }
 
     const orderRef = 'MS-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(3).toString('hex').toUpperCase();
-    const rpcResp = await fetch(sbUrl('rpc/create_mainspring_order_with_reservation'), {
+    const rpcResp = await fetch(sbUrl('rpc/create_mainspring_order'), {
       method: 'POST',
       headers: sbHeaders,
       body: JSON.stringify({
@@ -486,12 +486,12 @@ app.post('/create-order', async (req, res) => {
 
     if (!rpcResp.ok) {
       const detail = await rpcResp.text();
-      const unavailable = /sold or reserved|no longer reserved/i.test(detail);
+      const unavailable = /sold|no longer available|inventory/i.test(detail);
       const discountRejected = /discount|usage limit|minimum subtotal|does not apply/i.test(detail);
-      console.error('Atomic order reservation failed:', rpcResp.status, detail);
+      console.error('Atomic order creation failed:', rpcResp.status, detail);
       return res.status(unavailable ? 409 : 400).json({
         error: unavailable
-          ? 'One or more items were just reserved or sold. Please refresh your cart.'
+          ? 'One or more items are no longer available. Please refresh your cart.'
           : discountRejected
             ? 'This discount code can no longer be applied. Please review it or remove it.'
             : 'Unable to create this order. Please check your details and try again.',
@@ -501,7 +501,7 @@ app.post('/create-order', async (req, res) => {
     const rows = await rpcResp.json();
     const order = Array.isArray(rows) ? rows[0] : rows;
     if (!order?.order_ref) {
-      console.error('Atomic order reservation returned no order:', rows);
+      console.error('Atomic order creation returned no order:', rows);
       return res.status(500).json({ error: 'Failed to create order' });
     }
 
@@ -515,7 +515,6 @@ app.post('/create-order', async (req, res) => {
       total_aed: Number(order.total_aed),
       payment_method: order.payment_method,
       surcharge_pct: Number(order.surcharge_pct),
-      reservation_expires_at: order.reservation_expires_at,
     });
   } catch (err) {
     console.error('create-order error:', err);

@@ -57,9 +57,8 @@
 
     function statusPriority(status) {
         if (status === 'available' || status === 'active' || !status) return 0;
-        if (status === 'reserved') return 1;
-        if (status === 'sold') return 2;
-        return 3;
+        if (status === 'sold') return 1;
+        return 2;
     }
 
     function rankProductSearchResults(products, value) {
