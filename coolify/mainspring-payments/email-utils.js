@@ -63,23 +63,45 @@ function itemLabel(item) {
     || 'Product ' + ((item && item.id) || '');
 }
 
-function buildItemsHtml(order) {
+function safeImageUrl(value) {
+  const candidate = String(value || '').trim();
+  if (!candidate || candidate.length > 2048) return null;
+  try {
+    const parsed = new URL(candidate);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function buildItemsHtml(order, includeReferenceCode) {
   return orderItems(order).map((item) => {
-    const qty = Number(item && item.qty) || 1;
     const price = Number(item && item.price) || 0;
+    const referenceCode = String((item && item.reference_code) || '').trim();
+    const thumbnailUrl = safeImageUrl(item && (item.thumbnail_url || item.image_url));
+    const thumbnail = thumbnailUrl
+      ? '<img src="' + escapeHtml(thumbnailUrl) + '" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:cover;border:1px solid #d9d3c7;">'
+      : '';
+    const reference = includeReferenceCode && referenceCode
+      ? '<div style="margin-top:5px;color:#6b6b6b;font-size:12px;letter-spacing:0.5px;">Ref: ' + escapeHtml(referenceCode) + '</div>'
+      : '';
     return '<tr>'
-      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;color:#141414;">' + escapeHtml(itemLabel(item)) + '</td>'
-      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;text-align:center;color:#6b6b6b;">' + qty + '</td>'
-      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;text-align:right;color:#141414;">' + escapeHtml(formatAED(price * qty)) + '</td>'
+      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;color:#141414;">'
+      + '<table role="presentation" style="border-collapse:collapse;"><tr>'
+      + (thumbnail ? '<td style="padding:0 12px 0 0;vertical-align:top;">' + thumbnail + '</td>' : '')
+      + '<td style="padding:0;vertical-align:middle;">' + escapeHtml(itemLabel(item)) + reference + '</td>'
+      + '</tr></table></td>'
+      + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;text-align:right;color:#141414;white-space:nowrap;">' + escapeHtml(formatAED(price)) + '</td>'
       + '</tr>';
   }).join('');
 }
 
-function buildItemsText(order) {
+function buildItemsText(order, includeReferenceCode) {
   return orderItems(order).map((item) => {
-    const qty = Number(item && item.qty) || 1;
     const price = Number(item && item.price) || 0;
-    return '- ' + itemLabel(item) + ' x' + qty + ': ' + formatAED(price * qty);
+    const referenceCode = String((item && item.reference_code) || '').trim();
+    const reference = includeReferenceCode && referenceCode ? ' (Ref: ' + referenceCode + ')' : '';
+    return '- ' + itemLabel(item) + reference + ': ' + formatAED(price);
   }).join('\n');
 }
 
@@ -149,7 +171,7 @@ function emailShell(title, intro, content) {
     + '</table></td></tr></table></body></html>';
 }
 
-function orderSummaryHtml(order, includeCustomer) {
+function orderSummaryHtml(order, includeCustomer, includeReferenceCode) {
   const customer = includeCustomer
     ? '<div style="background:#f0ece4;border-left:3px solid #c4a265;padding:16px;margin:18px 0;line-height:1.6;">'
       + '<strong>Customer details</strong><br>'
@@ -165,12 +187,11 @@ function orderSummaryHtml(order, includeCustomer) {
     + '<br><strong>Payment method:</strong> ' + escapeHtml(paymentMethodLabel(order && order.payment_method)) + '</p>'
     + '<table role="presentation" style="width:100%;border-collapse:collapse;">'
     + '<thead><tr><th style="padding:9px 0;text-align:left;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Item</th>'
-    + '<th style="padding:9px 0;text-align:center;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Qty</th>'
     + '<th style="padding:9px 0;text-align:right;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Amount</th></tr></thead>'
-    + '<tbody>' + buildItemsHtml(order) + '</tbody></table>' + totalsHtml(order);
+    + '<tbody>' + buildItemsHtml(order, includeReferenceCode) + '</tbody></table>' + totalsHtml(order);
 }
 
-function orderSummaryText(order, includeCustomer) {
+function orderSummaryText(order, includeCustomer, includeReferenceCode) {
   const customer = includeCustomer
     ? 'Customer details\nName: ' + ((order && order.customer_name) || '')
       + '\nEmail: ' + ((order && order.customer_email) || '')
@@ -181,7 +202,7 @@ function orderSummaryText(order, includeCustomer) {
   return customer
     + 'Order: ' + ((order && order.order_ref) || '')
     + '\nPayment method: ' + paymentMethodLabel(order && order.payment_method)
-    + '\n\nItems\n' + buildItemsText(order)
+    + '\n\nItems\n' + buildItemsText(order, includeReferenceCode)
     + '\n\n' + totalsText(order);
 }
 
@@ -191,10 +212,10 @@ function buildBusinessOrderEmail(order) {
     html: emailShell(
       'New order received',
       'A customer has submitted order ' + order.order_ref + '.',
-      orderSummaryHtml(order, true)
+      orderSummaryHtml(order, true, true)
     ),
     text: 'New order received\n\nA customer has submitted order ' + order.order_ref
-      + '.\n\n' + orderSummaryText(order, true),
+      + '.\n\n' + orderSummaryText(order, true, true),
   };
 }
 
@@ -204,10 +225,26 @@ function buildBusinessPaymentEmail(order) {
     html: emailShell(
       'Payment confirmed',
       'Payment has been verified for order ' + order.order_ref + '.',
-      orderSummaryHtml(order, true)
+      orderSummaryHtml(order, true, true)
     ),
     text: 'Payment confirmed\n\nPayment has been verified for order ' + order.order_ref
-      + '.\n\n' + orderSummaryText(order, true),
+      + '.\n\n' + orderSummaryText(order, true, true),
+  };
+}
+
+function buildBusinessPaymentReviewEmail(order) {
+  return {
+    subject: 'ACTION REQUIRED: Ziina payment needs review for ' + order.order_ref,
+    html: emailShell(
+      'Payment needs manual review',
+      'Ziina reports a completed payment for order ' + order.order_ref
+        + ', but the order could not be finalized in inventory. Do not release another watch until this is reviewed.',
+      orderSummaryHtml(order, true, true)
+    ),
+    text: 'Payment needs manual review\n\nZiina reports a completed payment for order '
+      + order.order_ref
+      + ', but the order could not be finalized in inventory. Do not release another watch until this is reviewed.\n\n'
+      + orderSummaryText(order, true, true),
   };
 }
 
@@ -222,11 +259,11 @@ function buildCustomerPaymentEmail(order) {
       'Payment receipt',
       intro,
       '<div style="display:inline-block;background:#f0ece4;border:1px solid #c4a265;color:#141414;padding:6px 12px;margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:1.5px;">PAID</div>'
-        + orderSummaryHtml(order, false)
+        + orderSummaryHtml(order, false, false)
         + '<p style="margin-top:22px;line-height:1.6;color:#4f5853;">We will contact you with updates on your order. '
         + 'If you need help, reply to this email or contact ' + CONTACT_EMAIL + '.</p>'
     ),
-    text: 'Payment receipt\n\n' + intro + '\n\n' + orderSummaryText(order, false)
+    text: 'Payment receipt\n\n' + intro + '\n\n' + orderSummaryText(order, false, false)
       + '\n\nWe will contact you with updates on your order. If you need help, reply to this email or contact '
       + CONTACT_EMAIL + '.',
   };
@@ -271,6 +308,7 @@ module.exports = {
   CONTACT_EMAIL,
   buildBusinessOrderEmail,
   buildBusinessPaymentEmail,
+  buildBusinessPaymentReviewEmail,
   buildCustomerPaymentEmail,
   normalizeEmail,
   normalizeSender,

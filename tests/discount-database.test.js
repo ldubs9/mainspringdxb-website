@@ -9,6 +9,7 @@ const { execFile, execFileSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const migrationPath = path.join(root, 'supabase/migrations/20260801_discount_codes.sql');
 const inventoryFinalizationMigration = path.join(root, 'supabase/migrations/20260807_payment_finalizes_inventory.sql');
+const referenceAndEmailRoutingMigration = path.join(root, 'supabase/migrations/20260809_order_reference_codes_and_email_routing.sql');
 const prerequisiteMigrations = [
     path.join(root, 'supabase/migrations/20260723_atomic_checkout_inventory.sql'),
     path.join(root, 'supabase/migrations/20260731_order_email_outbox.sql'),
@@ -94,6 +95,7 @@ async function withPostgres(run) {
         prerequisiteMigrations.forEach(apply);
         apply(migrationPath);
         apply(inventoryFinalizationMigration);
+        apply(referenceAndEmailRoutingMigration);
         await run({ psql, psqlAsync });
     } finally {
         if (started) {
@@ -154,14 +156,11 @@ test('discounted order remains authoritative through email and payment lifecycle
         assert.equal(redemption.status, 'reserved');
         assert.equal(Number(redemption.discount_aed), 100);
 
-        const emailEvent = JSON.parse(psql('-At', '-c', `
-            SELECT order_data
-            FROM public.claim_mainspring_order_email_events(1)
-            WHERE event_type = 'order_created_business';
-        `));
-        assert.equal(emailEvent.discount_code, 'SAVE10');
-        assert.equal(Number(emailEvent.discount_aed), 100);
-        assert.equal(Number(emailEvent.discounted_subtotal_aed), 900);
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_order_email_events
+            WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-DISCOUNT-1');
+        `), '0', 'pending Ziina orders do not queue owner email');
 
         psql('-c', `
             UPDATE public.mainspring_orders
@@ -178,6 +177,15 @@ test('discounted order remains authoritative through email and payment lifecycle
             SET payment_status = 'paid'
             WHERE order_ref = 'MS-DISCOUNT-1';
         `);
+
+        const emailEvent = JSON.parse(psql('-At', '-c', `
+            SELECT order_data
+            FROM public.claim_mainspring_order_email_events(2)
+            WHERE event_type = 'payment_confirmed_business';
+        `));
+        assert.equal(emailEvent.discount_code, 'SAVE10');
+        assert.equal(Number(emailEvent.discount_aed), 100);
+        assert.equal(Number(emailEvent.discounted_subtotal_aed), 900);
 
         assert.equal(psql('-At', '-c', `
             SELECT status
@@ -424,5 +432,130 @@ test('concurrent orders cannot both consume the final discount use', async () =>
             FROM public.mainspring_orders
             WHERE order_ref IN ('MS-CONCURRENT-1', 'MS-CONCURRENT-2');
         `), '1');
+    });
+});
+
+test('order snapshots and status history use reference codes while Ziina waits for paid email', async () => {
+    assert.equal(fs.existsSync(referenceAndEmailRoutingMigration), true, 'forward reference migration exists');
+
+    await withPostgres(async ({ psql }) => {
+        psql('-c', `
+            INSERT INTO public.mainspring_products
+                (id, brand, model, reference_code, image_urls, category, price, status)
+            VALUES
+                (401, 'Omega', 'Ziina Watch', 'REF-ZIINA', ARRAY['https://cdn.example.com/ziina.jpg'], 'watches', 1000, 'available'),
+                (402, 'Rolex', 'Bank Watch', 'REF-BANK', ARRAY['https://cdn.example.com/bank.jpg'], 'watches', 1100, 'available'),
+                (403, 'Cartier', 'Cash Watch', 'REF-CASH', ARRAY['https://cdn.example.com/cash.jpg'], 'watches', 1200, 'available');
+
+            SELECT * FROM public.create_mainspring_order(
+                'MS-REF-ZIINA', 'Ziina Customer', 'ziina@example.com', '+971500000401', 'Dubai',
+                '[{"id":401,"qty":1}]'::jsonb, 'ziina', NULL, NULL, NULL
+            );
+            SELECT * FROM public.create_mainspring_order(
+                'MS-REF-BANK', 'Bank Customer', 'bank@example.com', '+971500000402', 'Dubai',
+                '[{"id":402,"qty":1}]'::jsonb, 'bank_transfer', NULL, NULL, NULL
+            );
+            SELECT * FROM public.create_mainspring_cash_order(
+                'MS-REF-CASH', 'Cash Customer', 'cash@example.com', '+971500000403', 'Dubai',
+                '[{"id":403,"qty":1}]'::jsonb, 'cash_in_store', NULL, NULL, NULL
+            );
+        `);
+
+        const ziinaOrder = JSON.parse(psql('-At', '-c', `
+            SELECT jsonb_build_object(
+                'reference_codes', reference_codes,
+                'reference_code', items->0->>'reference_code',
+                'thumbnail_url', items->0->>'thumbnail_url'
+            )
+            FROM public.mainspring_orders
+            WHERE order_ref = 'MS-REF-ZIINA';
+        `));
+        assert.deepEqual(ziinaOrder.reference_codes, ['REF-ZIINA']);
+        assert.equal(ziinaOrder.reference_code, 'REF-ZIINA');
+        assert.equal(ziinaOrder.thumbnail_url, 'https://cdn.example.com/ziina.jpg');
+
+        psql('-c', `
+            UPDATE public.mainspring_products
+            SET reference_code = 'REF-ZIINA-CHANGED',
+                image_urls = ARRAY['https://cdn.example.com/changed.jpg']
+            WHERE id = 401;
+            UPDATE public.mainspring_orders
+            SET items = items
+            WHERE order_ref = 'MS-REF-ZIINA';
+        `);
+        assert.equal(psql('-At', '-c', `
+            SELECT (items->0->>'reference_code') || '|' || (items->0->>'thumbnail_url')
+            FROM public.mainspring_orders
+            WHERE order_ref = 'MS-REF-ZIINA';
+        `), 'REF-ZIINA|https://cdn.example.com/ziina.jpg', 'stored watch snapshots remain immutable');
+
+        assert.equal(psql('-At', '-c', `
+            SELECT reference_codes[1]
+            FROM public.mainspring_order_status_history
+            WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-REF-ZIINA')
+            ORDER BY created_at
+            LIMIT 1;
+        `), 'REF-ZIINA');
+
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_order_email_events AS e
+            JOIN public.mainspring_orders AS o ON o.id = e.order_id
+            WHERE o.order_ref = 'MS-REF-ZIINA';
+        `), '0');
+
+        psql('-c', `
+            INSERT INTO public.mainspring_order_email_events (
+                order_id, event_type, status, attempts, locked_at
+            )
+            SELECT id, 'order_created_business', 'processing', 1, NOW() - INTERVAL '20 minutes'
+            FROM public.mainspring_orders
+            WHERE order_ref = 'MS-REF-ZIINA';
+        `);
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.claim_mainspring_order_email_events(10)
+            WHERE event_type = 'order_created_business'
+              AND order_data->>'order_ref' = 'MS-REF-ZIINA';
+        `), '0', 'stale Ziina creation events are never reclaimed');
+        psql('-c', `
+            DELETE FROM public.mainspring_order_email_events
+            WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-REF-ZIINA')
+              AND event_type = 'order_created_business';
+        `);
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_order_email_events AS e
+            JOIN public.mainspring_orders AS o ON o.id = e.order_id
+            WHERE o.order_ref IN ('MS-REF-BANK', 'MS-REF-CASH')
+              AND e.event_type = 'order_created_business';
+        `), '2');
+
+        assert.equal(psql('-At', '-c', `
+            SELECT payment_method || '|' || reference_codes[1]
+            FROM public.mainspring_orders
+            WHERE order_ref = 'MS-REF-CASH';
+        `), 'cash_in_store|REF-CASH');
+
+        assert.equal(psql('-At', '-c', `
+            SELECT e.reference_codes[1]
+            FROM public.mainspring_order_email_events AS e
+            JOIN public.mainspring_orders AS o ON o.id = e.order_id
+            WHERE o.order_ref = 'MS-REF-CASH'
+              AND e.event_type = 'order_created_business';
+        `), 'REF-CASH');
+
+        psql('-c', `
+            UPDATE public.mainspring_orders
+            SET payment_status = 'paid'
+            WHERE order_ref = 'MS-REF-ZIINA';
+        `);
+        assert.equal(psql('-At', '-c', `
+            SELECT COUNT(*)
+            FROM public.mainspring_order_email_events AS e
+            JOIN public.mainspring_orders AS o ON o.id = e.order_id
+            WHERE o.order_ref = 'MS-REF-ZIINA'
+              AND e.event_type IN ('payment_confirmed_business', 'payment_confirmed_customer');
+        `), '2');
     });
 });

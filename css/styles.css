@@ -818,38 +818,6 @@
             color: var(--cream-dark);
         }
 
-        /* Cart item quantity controls */
-        .cart-item-qty {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 6px;
-        }
-
-        .cart-item-qty button {
-            width: 28px;
-            height: 28px;
-            border: 1px solid var(--cream-dark);
-            background: var(--light-gray);
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0;
-            transition: var(--transition);
-        }
-
-        .cart-item-qty button:hover {
-            background: var(--cream-dark);
-        }
-
-        .cart-item-qty span {
-            font-size: 0.9rem;
-            font-weight: 600;
-            min-width: 20px;
-            text-align: center;
-        }
 
         /* Checkout Overlay */
         .checkout-overlay {

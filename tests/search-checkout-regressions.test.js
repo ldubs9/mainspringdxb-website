@@ -90,42 +90,29 @@ test('selecting a navbar result closes the overlay before opening the product', 
     assert.match(app, /openProductFromSearch\(event,/);
 });
 
-test('navbar search overlay has rounded chrome, larger zoomed images, and reduced card typography at all breakpoints', () => {
+test('navbar search overlay uses rounded chrome and standalone square result cards', () => {
     assert.match(styles, /\.search-panel\s*\{[^}]*border-radius:\s*18px/s);
-    assert.match(styles, /\.search-results \.product-image\s*\{[^}]*min-height:/s);
-    assert.match(styles, /\.search-results \.product-image img\s*\{[^}]*transform:\s*scale\(1\.15\)/s);
-    assert.match(styles, /\.search-results \.product-name\s*\{[^}]*font-size:\s*0\.504rem/s);
-    assert.match(styles, /\.search-results \.product-brand\s*\{[^}]*font-size:\s*0\.805rem/s);
-    assert.match(styles, /\.search-results \.product-price\s*\{[^}]*font-size:\s*0\.8925rem/s);
+    assert.match(pageStyles, /\.search-card-image\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1/s);
+    assert.match(pageStyles, /\.search-card:hover \.search-card-image img\s*\{[^}]*transform:\s*scale\(1\.06\)/s);
+    assert.match(pageStyles, /\.search-card-brand\s*\{[^}]*font-size:\s*0\.682rem/s);
+    assert.match(pageStyles, /\.search-card-model\s*\{[^}]*font-size:\s*0\.697rem/s);
 });
 
-test('mobile navbar search keeps image sizing and shows compact brand, model, and price metadata', () => {
-    const mobileStart = styles.indexOf('/* Mobile navbar search metadata */');
-    const mobileEnd = styles.indexOf('/* End mobile navbar search metadata */', mobileStart);
-    const mobileSearch = styles.slice(mobileStart, mobileEnd);
-
-    assert.ok(mobileStart >= 0 && mobileEnd > mobileStart, 'mobile search metadata rules exist');
-    assert.match(mobileSearch, /\.search-results \.product-card\s*\{[^}]*height:\s*auto/s);
-    assert.match(mobileSearch, /\.search-results \.product-card \.product-info\s*\{[^}]*--product-model-font-size:\s*0\.68rem[^}]*display:\s*flex/s);
-    assert.match(mobileSearch, /\.search-results \.product-card \.product-name\s*\{[^}]*font-size:\s*0\.68rem/s);
-    assert.match(mobileSearch, /\.search-results \.product-card \.product-brand\s*\{[^}]*font-size:\s*0\.64rem/s);
-    assert.match(mobileSearch, /\.search-results \.product-card \.product-price\s*\{[^}]*font-size:\s*0\.74rem/s);
-    assert.doesNotMatch(mobileSearch, /\.search-results \.product-image\s*\{/);
-    assert.match(app, /search-result-meta/);
-    assert.match(app, /search-result-model/);
-    assert.match(app, /search-result-brand/);
-    assert.match(app, /search-result-price/);
-    assert.match(pageStyles, /\.search-result-meta\s*\{[^}]*display:\s*flex/s);
+test('mobile navbar search keeps compact brand and model metadata', () => {
+    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-image\s*\{[^}]*border-radius:\s*10px/s);
+    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-brand\s*\{[^}]*font-size:\s*0\.638rem/s);
+    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-model\s*\{[^}]*font-size:\s*0\.646rem/s);
+    assert.match(app, /class="search-card-image"/);
+    assert.match(app, /class="search-card-brand"/);
+    assert.match(app, /class="search-card-model"/);
 });
 
-test('final stylesheet keeps navbar search typography compact on desktop and metadata visible on mobile', () => {
-    assert.match(pageStyles, /\.search-results \.product-card \.product-info\s*\{[^}]*--product-model-font-size:\s*0\.7875rem/s);
-    assert.match(pageStyles, /\.search-results \.product-card \.product-brand\s*\{[^}]*font-size:\s*0\.70875rem/s);
-    assert.match(pageStyles, /\.search-results \.product-card \.product-price\s*\{[^}]*font-size:\s*0\.8925rem/s);
-    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card\s*\{[^}]*height:\s*auto/s);
-    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-results \.product-card \.product-info\s*\{[^}]*display:\s*flex[^}]*min-height:/s);
+test('final stylesheet keeps navbar search independent from listing-card styles', () => {
+    assert.match(pageStyles, /Standalone markup \(\.search-card\) rather than the listing card/);
+    assert.match(pageStyles, /\.search-card-meta\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
+    assert.doesNotMatch(app.slice(app.indexOf('function renderSearchResults'), app.indexOf('function renderProducts')), /product-card/);
     assert.match(index, /css\/pages\.css\?v=10/);
-    assert.match(loader, /js\/app\.js\?v=13/);
+    assert.match(loader, /js\/app\.js\?v=14/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -149,36 +136,58 @@ test('checkout offers only card, bank transfer, and cash payment in store', () =
     assert.doesNotMatch(step, /Cash on Delivery/i);
 });
 
-test('cart stores and renders the product thumbnail, including legacy cart hydration', () => {
+test('cart enforces one unit per inventory record and renders no quantity controls', () => {
+    const normalizeStart = app.indexOf('function normalizeStoredCart');
+    const normalizeEnd = app.indexOf('let storedCart;', normalizeStart);
     const addStart = app.indexOf('function addToCart');
     const addEnd = app.indexOf('function removeFromCart', addStart);
     const renderStart = app.indexOf('function renderCart');
     const renderEnd = app.indexOf('function getCartTotal', renderStart);
+    const checkoutStart = app.indexOf('function renderCheckoutStep1');
+    const checkoutEnd = app.indexOf('async function applyDiscountCode', checkoutStart);
+
+    assert.ok(normalizeStart >= 0, 'stored cart normalization exists');
+    const normalizeStoredCart = new Function(`${app.slice(normalizeStart, normalizeEnd)}; return normalizeStoredCart;`)();
+    assert.deepEqual(
+        normalizeStoredCart([
+            { id: 7, name: 'First', price: 100, qty: 4 },
+            { id: '7', name: 'Duplicate', price: 100, qty: 1 },
+            { id: 8, name: 'Second', price: 200 },
+        ]),
+        [
+            { id: 7, name: 'First', price: 100, qty: 1 },
+            { id: 8, name: 'Second', price: 200, qty: 1 },
+        ]
+    );
 
     assert.match(app.slice(addStart, addEnd), /image_url:\s*getProductThumbnail\(product\)/);
     assert.match(app.slice(addStart, addEnd), /name:\s*product\.model\s*\|\|\s*product\.name/);
+    assert.doesNotMatch(app.slice(addStart, addEnd), /existing\.qty\s*\+=/);
     assert.match(app.slice(renderStart, renderEnd), /<img[^>]+cart-item-thumbnail[^>]+src="\$\{escapeHtml\(item\.image_url\)\}"/);
+    assert.doesNotMatch(app.slice(renderStart, renderEnd), /cart-item-qty|updateCartQty|item\.qty/);
+    assert.doesNotMatch(app.slice(checkoutStart, checkoutEnd), /item-qty|x\$\{item\.qty\}/);
+    assert.doesNotMatch(styles, /\.cart-item-qty/);
     assert.match(app, /function hydrateCartProductDetails/);
     assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
-    assert.match(index, /css\/styles\.css\?v=9/);
-    assert.match(index, /js\/loader\.js\?v=6/);
-    assert.match(loader, /js\/app\.js\?v=13/);
+    assert.match(index, /css\/styles\.css\?v=10/);
+    assert.match(index, /js\/loader\.js\?v=7/);
+    assert.match(loader, /js\/app\.js\?v=14/);
 });
 
-test('cash checkout opens a product-specific WhatsApp inquiry without creating or holding inventory', () => {
+test('cash checkout creates an order before opening a product-specific WhatsApp inquiry', () => {
     const confirmStart = app.indexOf('async function confirmCheckout');
-    const fetchStart = app.indexOf("fetch(PAYMENTS_BASE + '/create-order'", confirmStart);
-    const beforeOrderCreation = app.slice(confirmStart, fetchStart);
+    const confirmEnd = app.indexOf('// Tap card payment', confirmStart);
+    const confirmCheckout = app.slice(confirmStart, confirmEnd);
     const messageStart = app.indexOf('function buildCashInquiryMessage');
     const messageEnd = app.indexOf('function startCashInquiryWhatsApp', messageStart);
     const buildCashInquiryMessage = new Function(`${app.slice(messageStart, messageEnd)}; return buildCashInquiryMessage;`)();
     const message = buildCashInquiryMessage([
         { brand: 'Dugena', name: 'Poseidon', reference_code: 'MS-250', qty: 1 }
-    ], { name: 'Luca', phone: '+971500000000' });
+    ], { name: 'Luca', phone: '+971500000000' }, 'MS-CASH-1');
 
-    assert.match(beforeOrderCreation, /selectedPaymentMethod\s*===\s*'cash_in_store'[\s\S]*?startCashInquiryWhatsApp\(\)[\s\S]*?return/);
-    assert.doesNotMatch(beforeOrderCreation, /saveCart\(\)|\/create-order/);
+    assert.match(confirmCheckout, /fetch\(PAYMENTS_BASE \+ '\/create-order'/);
+    assert.match(confirmCheckout, /selectedPaymentMethod\s*===\s*'cash_in_store'[\s\S]*?showCashInStoreConfirmation\(orderRef, orderTotal, orderedItems\)/);
     assert.match(app, /function buildCashInquiryMessage/);
     assert.match(app, /item\.reference_code/);
     assert.match(app, /item\.brand/);
@@ -187,11 +196,13 @@ test('cash checkout opens a product-specific WhatsApp inquiry without creating o
     assert.match(app, /const chatWindow = window\.open\(whatsappUrl, '_blank'\)/);
     assert.match(app, /if \(!chatWindow\)[\s\S]*?window\.location\.assign\(whatsappUrl\)[\s\S]*?return/);
     assert.match(app, /chatWindow\.opener = null/);
-    assert.match(message, /Dugena Poseidon \(Ref: MS-250\) x1/);
+    assert.match(message, /Dugena Poseidon \(Ref: MS-250\)/);
+    assert.doesNotMatch(message, /x1/);
+    assert.match(message, /Order Ref: MS-CASH-1/);
     assert.match(message, /Luca/);
     assert.match(message, /subject to availability until payment is confirmed/i);
-    assert.doesNotMatch(app, /function showCashInStoreConfirmation/);
-    assert.doesNotMatch(payments, /validMethods\s*=\s*\[[^\]]*cash_in_store/);
+    assert.match(app, /function showCashInStoreConfirmation/);
+    assert.match(payments, /validMethods\s*=\s*\[[^\]]*cash_in_store/);
 });
 
 test('bank transfer confirmation uses the supplied account holder, IBAN, and BIC', () => {
@@ -202,7 +213,7 @@ test('bank transfer confirmation uses the supplied account holder, IBAN, and BIC
 });
 
 test('order creation delegates price validation without changing inventory state', () => {
-    assert.match(payments, /validMethods\s*=\s*\['bank_transfer',\s*'ziina'\]/);
+    assert.match(payments, /validMethods\s*=\s*\['bank_transfer',\s*'ziina',\s*'cash_in_store'\]/);
     assert.match(payments, /rpc\/create_mainspring_order/);
     assert.doesNotMatch(payments, /create_mainspring_order_with_reservation/);
     assert.doesNotMatch(payments, /reservation/i);

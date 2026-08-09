@@ -46,6 +46,8 @@ CREATE TABLE public.mainspring_products (
     brand TEXT,
     model TEXT,
     name TEXT,
+    reference_code TEXT,
+    image_urls TEXT[],
     category TEXT,
     subcategory TEXT,
     price NUMERIC(12, 2) NOT NULL CHECK (price >= 0),

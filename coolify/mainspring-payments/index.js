@@ -27,6 +27,7 @@ const crypto = require('crypto');
 const {
   buildBusinessOrderEmail,
   buildBusinessPaymentEmail,
+  buildBusinessPaymentReviewEmail,
   buildCustomerPaymentEmail,
   normalizeEmail,
   normalizeSender,
@@ -133,6 +134,25 @@ async function updateEmailEvent(eventId, values) {
   }
 }
 
+async function sendZiinaFinalizationAlert(order, paymentIntentId) {
+  if (!EMAIL_CONFIGURED) {
+    console.error('CRITICAL: completed Ziina payment could not be finalized and owner email is not configured:', order.order_ref);
+    return;
+  }
+
+  const message = buildBusinessPaymentReviewEmail(order);
+  await sendResendEmail({
+    apiKey: RESEND_API_KEY,
+    from: TRANSACTIONAL_EMAIL_FROM,
+    to: BUSINESS_EMAIL,
+    replyTo: BUSINESS_EMAIL,
+    subject: message.subject,
+    html: message.html,
+    text: message.text,
+    idempotencyKey: 'mainspring/ziina-finalization-review/' + order.order_ref + '/' + paymentIntentId,
+  });
+}
+
 async function processEmailOutbox() {
   if (!EMAIL_CONFIGURED || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return 0;
 
@@ -231,7 +251,8 @@ async function findZiinaOrder(paymentIntentId, expectedOrderRef) {
   let filters = 'payment_gateway_ref=eq.' + encodeURIComponent(paymentIntentId);
   if (expectedOrderRef) filters += '&order_ref=eq.' + encodeURIComponent(expectedOrderRef);
   const response = await fetch(
-    sbUrl('mainspring_orders?' + filters + '&select=order_ref,payment_method,payment_status'),
+    sbUrl('mainspring_orders?' + filters
+      + '&select=order_ref,payment_method,payment_status,customer_name,customer_email,customer_phone,customer_address,items,subtotal_aed,discount_code,discount_type,discount_value,discount_aed,discounted_subtotal_aed,surcharge_pct,total_aed'),
     { headers: sbHeaders }
   );
   if (!response.ok) {
@@ -275,7 +296,15 @@ async function reconcileZiinaPaymentIntent(paymentIntentId, expectedOrderRef) {
       }
     );
     if (!updateResponse.ok) {
-      throw new Error('Unable to update reconciled payment (' + updateResponse.status + '): ' + String(await updateResponse.text()).substring(0, 300));
+      const detail = String(await updateResponse.text()).substring(0, 300);
+      if (paymentStatus === 'paid') {
+        try {
+          await sendZiinaFinalizationAlert(order, paymentIntentId);
+        } catch (alertError) {
+          console.error('CRITICAL: unable to send Ziina payment finalization alert:', alertError);
+        }
+      }
+      throw new Error('Unable to update reconciled payment (' + updateResponse.status + '): ' + detail);
     }
   }
 
@@ -421,7 +450,7 @@ app.post('/create-order', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields: customer_name, customer_email, customer_phone, customer_address, items, payment_method' });
     }
 
-    const validMethods = ['bank_transfer', 'ziina'];
+    const validMethods = ['bank_transfer', 'ziina', 'cash_in_store'];
     if (!validMethods.includes(payment_method)) {
       return res.status(400).json({ error: 'Invalid payment method' });
     }
@@ -439,7 +468,8 @@ app.post('/create-order', async (req, res) => {
     if (!cleanItems) {
       return res.status(400).json({ error: 'Each cart item must identify one valid inventory record' });
     }
-    const hasDiscountCode = String(discount_code || '').trim().length > 0;
+    const hasDiscountCode = payment_method !== 'cash_in_store'
+      && String(discount_code || '').trim().length > 0;
     const cleanDiscountCode = hasDiscountCode ? normalizeDiscountCode(discount_code) : null;
     if (hasDiscountCode && !cleanDiscountCode) {
       return res.status(400).json({ error: 'Enter a valid discount code.' });
@@ -467,7 +497,10 @@ app.post('/create-order', async (req, res) => {
     }
 
     const orderRef = 'MS-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(3).toString('hex').toUpperCase();
-    const rpcResp = await fetch(sbUrl('rpc/create_mainspring_order'), {
+    const orderRpcPath = payment_method === 'cash_in_store'
+      ? 'rpc/create_mainspring_cash_order'
+      : 'rpc/create_mainspring_order';
+    const rpcResp = await fetch(sbUrl(orderRpcPath), {
       method: 'POST',
       headers: sbHeaders,
       body: JSON.stringify({

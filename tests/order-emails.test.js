@@ -8,6 +8,7 @@ const paymentsPath = 'coolify/mainspring-payments/index.js';
 const migrationPath = 'supabase/migrations/20260731_order_email_outbox.sql';
 const checkoutMigrationPath = 'supabase/migrations/20260807_payment_finalizes_inventory.sql';
 const statusTriggerRepairPath = 'supabase/migrations/20260731_repair_order_status_trigger.sql';
+const referenceMigrationPath = 'supabase/migrations/20260809_order_reference_codes_and_email_routing.sql';
 const appPath = 'js/app.js';
 
 test('transactional email templates escape customer data and contain order details', () => {
@@ -16,6 +17,7 @@ test('transactional email templates escape customer data and contain order detai
     const {
         buildBusinessOrderEmail,
         buildBusinessPaymentEmail,
+        buildBusinessPaymentReviewEmail,
         buildCustomerPaymentEmail,
         normalizeEmail,
         normalizeSender,
@@ -27,7 +29,15 @@ test('transactional email templates escape customer data and contain order detai
         customer_email: ' Customer@Example.com ',
         customer_phone: '+971500000000',
         customer_address: 'Dubai & UAE',
-        items: [{ id: 42, brand: 'Rolex', name: '<b>Datejust</b>', price: 15000, qty: 1 }],
+        items: [{
+            id: 42,
+            brand: 'Rolex',
+            name: '<b>Datejust</b>',
+            price: 15000,
+            qty: 1,
+            reference_code: 'REF-A001',
+            thumbnail_url: 'https://cdn.example.com/watches/ref-a001.jpg?size=small&crop=1',
+        }],
         subtotal_aed: 15000,
         total_aed: 15450,
         payment_method: 'ziina',
@@ -46,6 +56,8 @@ test('transactional email templates escape customer data and contain order detai
     assert.match(businessOrder.subject, /New order MS-EMAIL-1/);
     assert.match(businessOrder.text, /Customer@Example\.com/);
     assert.match(businessOrder.text, /Rolex <b>Datejust<\/b>/);
+    assert.match(businessOrder.text, /REF-A001/);
+    assert.match(businessOrder.html, /<img[^>]+https:\/\/cdn\.example\.com\/watches\/ref-a001\.jpg\?size=small&amp;crop=1/);
     assert.doesNotMatch(businessOrder.html, /<script>/);
     assert.doesNotMatch(businessOrder.html, /<b>Datejust<\/b>/);
     assert.match(businessOrder.html, /&lt;b&gt;Datejust&lt;\/b&gt;/);
@@ -53,15 +65,46 @@ test('transactional email templates escape customer data and contain order detai
     const businessPayment = buildBusinessPaymentEmail(order);
     assert.match(businessPayment.subject, /Payment confirmed/);
     assert.match(businessPayment.text, /AED 15,450/);
+    assert.match(businessPayment.text, /REF-A001/);
+    assert.match(businessPayment.html, /ref-a001\.jpg/);
+
+    const paymentReview = buildBusinessPaymentReviewEmail(order);
+    assert.match(paymentReview.subject, /ACTION REQUIRED/);
+    assert.match(paymentReview.text, /REF-A001/);
+    assert.match(paymentReview.html, /ref-a001\.jpg/);
 
     const customerPayment = buildCustomerPaymentEmail(order);
     assert.match(customerPayment.subject, /Payment receipt/);
     assert.match(customerPayment.text, /MS-EMAIL-1/);
     assert.match(customerPayment.text, /info@mainspringdubai\.com/);
+    assert.doesNotMatch(customerPayment.text, /REF-A001/);
+    assert.doesNotMatch(customerPayment.html, /REF-A001/);
+    assert.match(customerPayment.html, /ref-a001\.jpg/);
     assert.match(customerPayment.html, /MAINSPRING DUBAI/);
     assert.match(customerPayment.html, /#f0ece4/i);
     assert.match(customerPayment.html, /#c4a265/i);
     assert.match(customerPayment.html, /#141414/i);
+});
+
+test('transactional email templates reject unsafe thumbnail URLs', () => {
+    assert.ok(fs.existsSync(emailUtilsPath), 'email helper module exists');
+    delete require.cache[emailUtilsPath];
+    const { buildBusinessOrderEmail } = require(emailUtilsPath);
+    const email = buildBusinessOrderEmail({
+        order_ref: 'MS-UNSAFE-IMAGE',
+        items: [{
+            id: 9,
+            brand: 'Omega',
+            name: 'Unsafe',
+            price: 100,
+            qty: 1,
+            reference_code: 'REF-UNSAFE',
+            thumbnail_url: 'javascript:alert(1)',
+        }],
+    });
+
+    assert.doesNotMatch(email.html, /javascript:/i);
+    assert.doesNotMatch(email.html, /<img/);
 });
 
 test('Resend transport sends one idempotent API request', async () => {
@@ -175,6 +218,8 @@ test('Ziina returns are verified server-side and processing payments are reconci
     assert.match(payments, /status\(429\).*Too many verification attempts/s);
     assert.match(payments, /payment_status=in\.\(processing,pending\)/);
     assert.match(payments, /setInterval\(runPaymentReconciler, PAYMENT_RECONCILE_INTERVAL_MS\)/);
+    assert.match(payments, /paymentStatus === 'paid'[\s\S]*?sendZiinaFinalizationAlert\(order, paymentIntentId\)/);
+    assert.match(payments, /mainspring\/ziina-finalization-review/);
     assert.match(payments, /payment_reconciliation_enabled/);
     assert.match(app, /async function handlePaymentReturn\(\)/);
     assert.match(app, /PAYMENTS_BASE \+ '\/ziina-reconcile'/);
@@ -206,4 +251,19 @@ test('legacy Mainspring status trigger is replaced with the canonical history ta
     assert.doesNotMatch(sql, /INSERT INTO public\.order_status_history/i);
     assert.match(sql, /CREATE TRIGGER mainspring_orders_status_change_trigger/i);
     assert.match(sql, /NOTIFY pgrst, 'reload schema'/i);
+});
+
+test('forward migration snapshots watch references and suppresses pending Ziina owner emails', () => {
+    assert.ok(fs.existsSync(referenceMigrationPath), 'reference and routing migration exists');
+    const sql = fs.readFileSync(referenceMigrationPath, 'utf8');
+
+    assert.match(sql, /ALTER TABLE public\.mainspring_orders[\s\S]*ADD COLUMN IF NOT EXISTS reference_codes TEXT\[\]/i);
+    assert.match(sql, /ALTER TABLE public\.mainspring_order_status_history[\s\S]*ADD COLUMN IF NOT EXISTS reference_codes TEXT\[\]/i);
+    assert.match(sql, /'reference_code'\s*,\s*CASE WHEN TG_OP = 'INSERT'[\s\S]*?p\.reference_code/i);
+    assert.match(sql, /'thumbnail_url'/i);
+    assert.match(sql, /NEW\.payment_method\s*<>\s*'ziina'/i);
+    assert.match(sql, /event_type\s*=\s*'order_created_business'[\s\S]*payment_method\s*=\s*'ziina'/i);
+    assert.match(sql, /e\.status IN \('pending', 'processing', 'failed'\)/i);
+    assert.match(sql, /AND NOT \([\s\S]*e\.event_type = 'order_created_business'[\s\S]*o\.payment_method = 'ziina'/i);
+    assert.match(sql, /'reference_codes'\s*,\s*o\.reference_codes/i);
 });

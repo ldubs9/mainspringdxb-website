@@ -86,7 +86,7 @@ test('storefront previews one code, invalidates stale previews, and submits only
     assert.match(source, /function clearDiscountCode\(\)/);
     assert.match(source, /discount_code: appliedDiscount\?\.discount_code \|\| null/);
     assert.match(source, /appliedDiscount = null;[\s\S]{0,200}localStorage\.setItem\('mainspring_cart'/);
-    assert.match(source, /Discount codes are not applied to cash enquiries/);
+    assert.match(source, /Discount codes are not applied to cash orders/);
     assert.doesNotMatch(source, /discount_value\s*\/\s*100/);
 });
 

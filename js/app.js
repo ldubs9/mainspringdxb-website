@@ -65,8 +65,28 @@
             }
         });
 
-        // Cart (localStorage)
-        let cart = JSON.parse(localStorage.getItem('mainspring_cart')) || [];
+        // Cart (localStorage). Every product is unique inventory, so legacy
+        // carts are deduplicated and any old quantity is forced back to one.
+        function normalizeStoredCart(items) {
+            if (!Array.isArray(items)) return [];
+            const seen = new Set();
+            return items.reduce((normalized, item) => {
+                const id = Number(item && item.id);
+                if (!Number.isSafeInteger(id) || id <= 0 || seen.has(id)) return normalized;
+                seen.add(id);
+                normalized.push({ ...item, id, qty: 1 });
+                return normalized;
+            }, []);
+        }
+
+        let storedCart;
+        try {
+            storedCart = JSON.parse(localStorage.getItem('mainspring_cart'));
+        } catch (_error) {
+            storedCart = [];
+        }
+        let cart = normalizeStoredCart(storedCart);
+        localStorage.setItem('mainspring_cart', JSON.stringify(cart));
 
         function saveCart() {
             appliedDiscount = null;
@@ -77,7 +97,7 @@
         }
 
         function updateCartBadge() {
-            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            const totalItems = cart.length;
             document.getElementById('cartBadge').textContent = totalItems;
             document.getElementById('cartBadge').style.display = totalItems > 0 ? 'flex' : 'none';
             document.getElementById('cartBadgeMobile').textContent = totalItems;
@@ -107,12 +127,12 @@
         }
 
         function addToCart(product) {
-            const existing = cart.find(item => item.id === product.id);
-            if (existing) {
-                existing.qty += 1;
-            } else {
+            const productId = Number(product.id);
+            if (!Number.isSafeInteger(productId) || productId <= 0) return;
+            const existing = cart.find(item => item.id === productId);
+            if (!existing) {
                 cart.push({
-                    id: product.id,
+                    id: productId,
                     name: product.model || product.name,
                     brand: product.brand,
                     price: product.price,
@@ -120,30 +140,17 @@
                     reference_code: product.reference_code || product.reference_number || '',
                     qty: 1
                 });
+                saveCart();
+                trackClick('add_to_cart', product.name);
             }
-            saveCart();
             renderCart();
             openCart();
-            trackClick('add_to_cart', product.name);
         }
 
         function removeFromCart(productId) {
-            cart = cart.filter(item => item.id !== productId);
+            cart = cart.filter(item => item.id !== Number(productId));
             saveCart();
             renderCart();
-        }
-
-        function updateCartQty(productId, delta) {
-            const item = cart.find(i => i.id === productId);
-            if (item) {
-                item.qty += delta;
-                if (item.qty <= 0) {
-                    removeFromCart(productId);
-                    return;
-                }
-                saveCart();
-                renderCart();
-            }
         }
 
         function openCart() {
@@ -213,7 +220,7 @@
             }
 
             cartFooterEl.style.display = 'block';
-            const totalAED = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+            const totalAED = cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
             document.getElementById('cartTotal').textContent = formatPrice(totalAED);
             document.getElementById('cartTotal').setAttribute('data-price-aed', totalAED);
 
@@ -227,11 +234,6 @@
                     <div class="cart-item-details">
                         <p class="cart-item-name">${item.brand} ${item.name}</p>
                         <p class="cart-item-price" data-price-aed="${item.price}">${formatPrice(item.price)}</p>
-                        <div class="cart-item-qty">
-                            <button onclick="updateCartQty(${item.id}, -1)">−</button>
-                            <span>${item.qty}</span>
-                            <button onclick="updateCartQty(${item.id}, 1)">+</button>
-                        </div>
                     </div>
                     <button class="cart-item-remove" onclick="removeFromCart(${item.id})">&times;</button>
                 </div>
@@ -239,7 +241,7 @@
         }
 
         function getCartTotal() {
-            return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+            return cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
         }
 
         // Checkout — Secure multi-step flow
@@ -315,8 +317,7 @@
                     ${cart.map(item => `
                         <div class="checkout-summary-item">
                             <span class="item-name">${item.brand} ${item.name}</span>
-                            <span class="item-qty">x${item.qty}</span>
-                            <span data-price-aed="${item.price * item.qty}">${formatPrice(item.price * item.qty)}</span>
+                            <span data-price-aed="${item.price}">${formatPrice(item.price)}</span>
                         </div>
                     `).join('')}
                     <div class="checkout-discount">
@@ -393,7 +394,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         discount_code: discountDraft,
-                        items: cart.map(item => ({ id: item.id, qty: item.qty })),
+                        items: cart.map(item => ({ id: item.id, qty: 1 })),
                         customer_phone: customer.phone
                     })
                 });
@@ -504,7 +505,7 @@
                         <div class="payment-method-icon"><i class="fas fa-store"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Cash Payment in Store</div>
-                            <div class="payment-method-desc">Start a WhatsApp chat to discuss cash payment and availability. Inventory is not held until payment is confirmed. Discount codes are not applied to cash enquiries.</div>
+                            <div class="payment-method-desc">Place the order, then continue on WhatsApp to arrange cash payment. Inventory is not held until payment is confirmed. Discount codes are not applied to cash orders.</div>
                         </div>
                         <div class="payment-method-price" data-price-aed="${originalSubtotal}">${formatPrice(originalSubtotal)}</div>
                     </div>
@@ -520,17 +521,12 @@
             el.classList.add('selected');
             const btn = document.getElementById('confirmCheckoutBtn');
             btn.disabled = false;
-            btn.textContent = method === 'cash_in_store' ? 'CHAT ON WHATSAPP' : 'PLACE ORDER';
+            btn.textContent = 'PLACE ORDER';
         }
 
         // Step 3: Create order + process payment
         async function confirmCheckout() {
             if (!selectedPaymentMethod) return;
-
-            if (selectedPaymentMethod === 'cash_in_store') {
-                startCashInquiryWhatsApp();
-                return;
-            }
 
             const btn = document.getElementById('confirmCheckoutBtn');
             btn.disabled = true;
@@ -565,6 +561,7 @@
 
                 const orderRef = orderData.order_ref;
                 const orderTotal = orderData.total_aed;
+                const orderedItems = cart.slice();
 
                 // Clear cart
                 cart = [];
@@ -579,6 +576,8 @@
                     await handleZiinaPayment(orderRef);
                 } else if (selectedPaymentMethod === 'bank_transfer') {
                     showBankTransferConfirmation(orderRef, orderTotal);
+                } else if (selectedPaymentMethod === 'cash_in_store') {
+                    showCashInStoreConfirmation(orderRef, orderTotal, orderedItems);
                 }
 
             } catch (err) {
@@ -674,19 +673,20 @@
             `;
         }
 
-        function buildCashInquiryMessage(items, customer) {
+        function buildCashInquiryMessage(items, customer, orderRef) {
             const itemLines = items.map(item => {
                 const name = `${item.brand || ''} ${item.name || ''}`.trim();
                 const reference = item.reference_code ? ` (Ref: ${item.reference_code})` : '';
-                return `- ${name}${reference} x${item.qty || 1}`;
+                return `- ${name}${reference}`;
             }).join('\n');
 
-            return `Hello Mainspring, I would like to discuss paying cash for:\n\n${itemLines}\n\nName: ${customer.name || ''}\nPhone: ${customer.phone || ''}\n\nI understand the watch is subject to availability until payment is confirmed. Please confirm availability and the cash payment arrangements.`;
+            const orderLine = orderRef ? `Order Ref: ${orderRef}\n` : '';
+            return `Hello Mainspring, I would like to discuss paying cash for:\n\n${itemLines}\n\n${orderLine}Name: ${customer.name || ''}\nPhone: ${customer.phone || ''}\n\nI understand the watch is subject to availability until payment is confirmed. Please confirm availability and the cash payment arrangements.`;
         }
 
-        function startCashInquiryWhatsApp() {
+        function startCashInquiryWhatsApp(orderRef, items) {
             const customer = JSON.parse(localStorage.getItem('mainspring_customer') || '{}');
-            const message = buildCashInquiryMessage(cart, customer);
+            const message = buildCashInquiryMessage(items, customer, orderRef);
             const whatsappUrl = `https://wa.me/971585625042?text=${encodeURIComponent(message)}`;
             const chatWindow = window.open(whatsappUrl, '_blank');
             if (!chatWindow) {
@@ -694,18 +694,21 @@
                 return;
             }
             chatWindow.opener = null;
-            trackClick('checkout_cash_inquiry', cart.map(item => item.reference_code || item.id).join(','));
+            trackClick('checkout_cash_inquiry', orderRef);
+        }
 
+        function showCashInStoreConfirmation(orderRef, total, items) {
+            startCashInquiryWhatsApp(orderRef, items);
             const body = document.getElementById('checkoutBody');
             body.innerHTML = `
-                ${renderStepIndicator(2)}
+                ${renderStepIndicator(3)}
                 <div class="checkout-confirmation">
                     <i class="fab fa-whatsapp" style="color: #25D366;"></i>
-                    <h4>Continue on WhatsApp</h4>
-                    <p>We opened a chat with the watches in your cart.</p>
-                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">No order has been created and inventory is not held until payment is confirmed. We will confirm availability and agree the cash payment details with you directly.</p>
-                    <button class="checkout-confirm-btn" onclick="startCashInquiryWhatsApp()"><i class="fab fa-whatsapp"></i> Open WhatsApp Again</button>
-                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Keep Browsing</button>
+                    <h4>Order Placed — Cash Payment in Store</h4>
+                    <p>Your order <strong>${escapeHtml(orderRef)}</strong> for <strong>${formatPrice(total)}</strong> has been recorded.</p>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: var(--gray);">We opened WhatsApp so you can arrange the cash payment. Inventory is not held until payment is confirmed.</p>
+                    <button class="checkout-confirm-btn" onclick="sendOrderWhatsApp('cash_in_store', '${escapeHtml(orderRef)}')"><i class="fab fa-whatsapp"></i> Open WhatsApp Again</button>
+                    <button class="checkout-confirm-btn is-secondary" style="margin-top: 10px;" onclick="closeCheckout()">Done</button>
                 </div>
             `;
         }
@@ -916,8 +919,8 @@
                             <p style="font-size: 0.78rem; color: var(--gray); text-transform: uppercase; margin-bottom: 10px;">Items</p>
                             ${data.items.map(item => `
                                 <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem;">
-                                    <span>${item.brand} ${item.name} <span style="color: var(--gray);">x${item.qty}</span></span>
-                                    <span data-price-aed="${item.price * item.qty}">${formatPrice(item.price * item.qty)}</span>
+                                    <span>${item.brand} ${item.name}</span>
+                                    <span data-price-aed="${item.price}">${formatPrice(item.price)}</span>
                                 </div>
                             `).join('')}
                         </div>
