@@ -10,6 +10,8 @@ const navOverlay = fs.readFileSync('components/nav-overlay.html', 'utf8');
 const pagesCss = fs.readFileSync('css/pages.css', 'utf8');
 const stylesCss = fs.readFileSync('css/styles.css', 'utf8');
 const homeMotion = fs.readFileSync('js/home-motion.js', 'utf8');
+const loader = fs.readFileSync('js/loader.js', 'utf8');
+const index = fs.readFileSync('index.html', 'utf8');
 
 test('checkout WhatsApp icons inherit the light button foreground color', () => {
     assert.match(pagesCss, /\.checkout-confirm-btn\s+\.fa-whatsapp\s*\{[^}]*color:\s*inherit\s*!important;/s);
@@ -68,6 +70,21 @@ test('product listing queries exclude sold and archived products by default', ()
     assert.ok(helperStart >= 0, 'unavailable-product filter helper is present');
     assert.match(helper, /query\.or\('status\.not\.in\.\(sold,archived\),status\.is\.null'\)/);
     assert.match(watches, /q = excludeUnavailableProducts\(q\)/);
+});
+
+test('watch condition control uses product conditions rather than availability status', () => {
+    assert.match(watches, /id="conditionFilter"/);
+    assert.match(watches, /id="drawerConditionDropdown"/);
+    assert.match(watches, /selectFilter\('condition', '', this\)/);
+    assert.doesNotMatch(watches, /<span class="drawer-section-title">Condition<\/span>[\s\S]*?Available Now/);
+    assert.match(app, /loadConditionsFilter\(\)/);
+    assert.match(app, /if \(conditionFilter\) q = q\.eq\('condition', conditionFilter\)/);
+});
+
+test('condition filter changes use fresh component and application assets', () => {
+    assert.match(loader, /const COMPONENTS_VERSION = '5'/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=16'/);
+    assert.match(index, /js\/loader\.js\?v=9/);
 });
 
 test('inventory UI has no reservation status or reserve action', () => {

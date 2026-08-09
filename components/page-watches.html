@@ -17,7 +17,7 @@
                 <input type="hidden" id="brandFilter" value="">
                 <input type="hidden" id="priceFilter" value="">
                 <input type="hidden" id="sortFilter" value="newest">
-                <input type="hidden" id="statusFilter" value="">
+                <input type="hidden" id="conditionFilter" value="">
                 <input type="hidden" id="genderFilter" value="">
                 <input type="hidden" id="movementFilter" value="">
                 <input type="hidden" id="countryFilter" value="">
@@ -125,11 +125,10 @@
 
                     <div class="drawer-section">
                         <span class="drawer-section-title">Condition</span>
-                        <div class="custom-dropdown" id="drawerStatusDropdown">
-                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerStatusDropdown')">Any Condition</div>
+                        <div class="custom-dropdown" id="drawerConditionDropdown">
+                            <div class="custom-dropdown-trigger" onclick="toggleDropdown(event, 'drawerConditionDropdown')">Any Condition</div>
                             <div class="custom-dropdown-menu">
-                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('status', '', this)">Any Condition</div>
-                                <div class="custom-dropdown-item" data-value="available" onclick="selectFilter('status', 'available', this)">Available Now</div>
+                                <div class="custom-dropdown-item selected" data-value="" onclick="selectFilter('condition', '', this)">Any Condition</div>
                             </div>
                         </div>
                     </div>

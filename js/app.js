@@ -1556,6 +1556,7 @@
             if (pageName === 'watches') {
                 updatePriceDropdownLabels();
                 loadBrandsFilter();
+                loadConditionsFilter();
                 loadWatches();
             } else if (pageName === 'accessories') {
                 setAccessoryCategoriesVisible(true);
@@ -1620,6 +1621,49 @@
             }
         }
 
+        // Load the exact condition values used by watch records. Keeping these
+        // data-driven prevents the filter from drifting away from the catalogue.
+        let conditionsFilterLoaded = false;
+
+        async function loadConditionsFilter() {
+            if (conditionsFilterLoaded) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('mainspring_products')
+                    .select('condition')
+                    .eq('category', 'watch')
+                    .not('condition', 'is', null)
+                    .neq('condition', '');
+
+                if (error || !data) return;
+
+                const conditions = [...new Set(data.map(p => p.condition).filter(Boolean))].sort();
+                const dropdown = document.getElementById('drawerConditionDropdown');
+                const menu = dropdown?.querySelector('.custom-dropdown-menu');
+                if (!menu) return;
+
+                const anyConditionItem = menu.querySelector('.custom-dropdown-item[data-value=""]');
+                menu.innerHTML = '';
+                if (anyConditionItem) menu.appendChild(anyConditionItem);
+
+                conditions.forEach(condition => {
+                    const item = document.createElement('div');
+                    item.className = 'custom-dropdown-item';
+                    item.dataset.value = condition;
+                    item.textContent = condition;
+                    item.addEventListener('click', function () {
+                        selectFilter('condition', condition, this);
+                    });
+                    menu.appendChild(item);
+                });
+
+                setWatchFilter('condition', document.getElementById('conditionFilter')?.value || '');
+                conditionsFilterLoaded = true;
+            } catch (e) {
+                // Silently fail — dropdown retains "Any Condition" only.
+            }
+        }
+
         // Load watches from Supabase
         // Sold and archived products are never shown on the site.
         function excludeUnavailableProducts(query) {
@@ -1643,7 +1687,7 @@
                 const searchTerm = document.getElementById('searchInput').value;
                 const searchFilter = buildProductSearchFilter(searchTerm);
                 const sortBy = document.getElementById('sortFilter').value;
-                const statusFilter = document.getElementById('statusFilter').value;
+                const conditionFilter = document.getElementById('conditionFilter').value;
                 const genderFilter = document.getElementById('genderFilter').value;
                 const movementFilter = document.getElementById('movementFilter').value;
                 const countryFilter = document.getElementById('countryFilter').value;
@@ -1651,12 +1695,9 @@
                 // Apply all active filters to a query builder
                 function applyWatchFilters(q) {
                     q = q.eq('category', 'watch');
-                    if (statusFilter === 'available') {
-                        q = q.eq('status', 'available');
-                    } else {
-                        // No status filter selected — still never show sold/archived products.
-                        q = excludeUnavailableProducts(q);
-                    }
+                    // Availability is a listing rule, not the product-condition filter.
+                    q = excludeUnavailableProducts(q);
+                    if (conditionFilter) q = q.eq('condition', conditionFilter);
                     if (brandFilter) q = q.eq('brand', brandFilter);
                     if (genderFilter) q = q.eq('gender', genderFilter);
                     if (movementFilter) q = q.eq('movement', movementFilter);
@@ -1917,7 +1958,7 @@
         // identical "?page=watches" steps, so pressing Back looked like it did
         // nothing. Keeping them in the entry also means a filtered view can be
         // reloaded, shared, and restored when returning from a product page.
-        const WATCH_FILTER_KEYS = ['brand', 'price', 'sort', 'status', 'gender', 'movement', 'country'];
+        const WATCH_FILTER_KEYS = ['brand', 'price', 'sort', 'condition', 'gender', 'movement', 'country'];
 
         function readWatchFilters() {
             const filters = {};
@@ -2087,7 +2128,7 @@
             document.getElementById('brandFilter').value = '';
             document.getElementById('priceFilter').value = '';
             document.getElementById('sortFilter').value = 'newest';
-            document.getElementById('statusFilter').value = '';
+            document.getElementById('conditionFilter').value = '';
             document.getElementById('genderFilter').value = '';
             document.getElementById('movementFilter').value = '';
             document.getElementById('countryFilter').value = '';
@@ -2100,7 +2141,7 @@
 
             // Reset Drawer Dropdowns if they exist
             if (document.getElementById('drawerSortDropdown')) document.getElementById('drawerSortDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Newest Arrivals';
-            if (document.getElementById('drawerStatusDropdown')) document.getElementById('drawerStatusDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Condition';
+            if (document.getElementById('drawerConditionDropdown')) document.getElementById('drawerConditionDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Condition';
             if (document.getElementById('genderDropdown')) document.getElementById('genderDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Gender';
             if (document.getElementById('drawerGenderDropdown')) document.getElementById('drawerGenderDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Gender';
             if (document.getElementById('drawerMovementDropdown')) document.getElementById('drawerMovementDropdown').querySelector('.custom-dropdown-trigger').textContent = 'Any Movement';
@@ -2247,7 +2288,7 @@
         const WATCH_FILTER_DROPDOWNS = {
             brand: ['brandDropdown'],
             gender: ['genderDropdown', 'drawerGenderDropdown'],
-            status: ['drawerStatusDropdown'],
+            condition: ['drawerConditionDropdown'],
             movement: ['drawerMovementDropdown'],
             sort: ['drawerSortDropdown'],
         };
@@ -2261,14 +2302,15 @@
                 const dropdown = document.getElementById(id);
                 if (!dropdown) return;
                 const trigger = dropdown.querySelector('.custom-dropdown-trigger');
-                const item = dropdown.querySelector(`.custom-dropdown-item[data-value="${value}"]`);
+                const item = [...dropdown.querySelectorAll('.custom-dropdown-item')]
+                    .find(option => option.dataset.value === value);
 
                 dropdown.querySelectorAll('.custom-dropdown-item').forEach(i => i.classList.remove('selected'));
                 if (item) {
                     item.classList.add('selected');
                     if (trigger) trigger.textContent = item.textContent.trim();
                 } else if (trigger && value) {
-                    // Brand items are populated asynchronously — fall back to the raw value.
+                    // Data-driven brand and condition items are populated asynchronously.
                     trigger.textContent = value;
                 }
             });
