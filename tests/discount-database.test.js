@@ -10,6 +10,7 @@ const root = path.resolve(__dirname, '..');
 const migrationPath = path.join(root, 'supabase/migrations/20260801_discount_codes.sql');
 const inventoryFinalizationMigration = path.join(root, 'supabase/migrations/20260807_payment_finalizes_inventory.sql');
 const referenceAndEmailRoutingMigration = path.join(root, 'supabase/migrations/20260809_order_reference_codes_and_email_routing.sql');
+const cashConstraintAndZiinaNoticeMigration = path.join(root, 'supabase/migrations/20260809_cash_constraint_and_ziina_notice.sql');
 const prerequisiteMigrations = [
     path.join(root, 'supabase/migrations/20260723_atomic_checkout_inventory.sql'),
     path.join(root, 'supabase/migrations/20260731_order_email_outbox.sql'),
@@ -96,6 +97,14 @@ async function withPostgres(run) {
         apply(migrationPath);
         apply(inventoryFinalizationMigration);
         apply(referenceAndEmailRoutingMigration);
+        psql('-c', `
+            ALTER TABLE public.mainspring_orders
+                DROP CONSTRAINT IF EXISTS mainspring_orders_payment_method_check;
+            ALTER TABLE public.mainspring_orders
+                ADD CONSTRAINT orders_payment_method_check
+                CHECK (payment_method IN ('bank_transfer', 'ziina'));
+        `);
+        apply(cashConstraintAndZiinaNoticeMigration);
         await run({ psql, psqlAsync });
     } finally {
         if (started) {
@@ -160,7 +169,7 @@ test('discounted order remains authoritative through email and payment lifecycle
             SELECT COUNT(*)
             FROM public.mainspring_order_email_events
             WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-DISCOUNT-1');
-        `), '0', 'pending Ziina orders do not queue owner email');
+        `), '1', 'pending Ziina orders queue one owner notice distinct from payment confirmation');
 
         psql('-c', `
             UPDATE public.mainspring_orders
@@ -180,7 +189,7 @@ test('discounted order remains authoritative through email and payment lifecycle
 
         const emailEvent = JSON.parse(psql('-At', '-c', `
             SELECT order_data
-            FROM public.claim_mainspring_order_email_events(2)
+            FROM public.claim_mainspring_order_email_events(10)
             WHERE event_type = 'payment_confirmed_business';
         `));
         assert.equal(emailEvent.discount_code, 'SAVE10');
@@ -435,7 +444,7 @@ test('concurrent orders cannot both consume the final discount use', async () =>
     });
 });
 
-test('order snapshots and status history use reference codes while Ziina waits for paid email', async () => {
+test('order snapshots and status history use reference codes while Ziina receives a clearly pending owner email', async () => {
     assert.equal(fs.existsSync(referenceAndEmailRoutingMigration), true, 'forward reference migration exists');
 
     await withPostgres(async ({ psql }) => {
@@ -502,27 +511,14 @@ test('order snapshots and status history use reference codes while Ziina waits f
             FROM public.mainspring_order_email_events AS e
             JOIN public.mainspring_orders AS o ON o.id = e.order_id
             WHERE o.order_ref = 'MS-REF-ZIINA';
-        `), '0');
+        `), '1');
 
-        psql('-c', `
-            INSERT INTO public.mainspring_order_email_events (
-                order_id, event_type, status, attempts, locked_at
-            )
-            SELECT id, 'order_created_business', 'processing', 1, NOW() - INTERVAL '20 minutes'
-            FROM public.mainspring_orders
-            WHERE order_ref = 'MS-REF-ZIINA';
-        `);
         assert.equal(psql('-At', '-c', `
             SELECT COUNT(*)
             FROM public.claim_mainspring_order_email_events(10)
             WHERE event_type = 'order_created_business'
               AND order_data->>'order_ref' = 'MS-REF-ZIINA';
-        `), '0', 'stale Ziina creation events are never reclaimed');
-        psql('-c', `
-            DELETE FROM public.mainspring_order_email_events
-            WHERE order_id = (SELECT id FROM public.mainspring_orders WHERE order_ref = 'MS-REF-ZIINA')
-              AND event_type = 'order_created_business';
-        `);
+        `), '1', 'pending Ziina owner notice is claimable');
         assert.equal(psql('-At', '-c', `
             SELECT COUNT(*)
             FROM public.mainspring_order_email_events AS e

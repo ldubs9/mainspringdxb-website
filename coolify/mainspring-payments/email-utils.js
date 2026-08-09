@@ -74,7 +74,7 @@ function safeImageUrl(value) {
   }
 }
 
-function buildItemsHtml(order, includeReferenceCode) {
+function buildItemsHtml(order, referenceAudience) {
   return orderItems(order).map((item) => {
     const price = Number(item && item.price) || 0;
     const referenceCode = String((item && item.reference_code) || '').trim();
@@ -82,8 +82,9 @@ function buildItemsHtml(order, includeReferenceCode) {
     const thumbnail = thumbnailUrl
       ? '<img src="' + escapeHtml(thumbnailUrl) + '" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:cover;border:1px solid #d9d3c7;">'
       : '';
-    const reference = includeReferenceCode && referenceCode
-      ? '<div style="margin-top:5px;color:#6b6b6b;font-size:12px;letter-spacing:0.5px;">Ref: ' + escapeHtml(referenceCode) + '</div>'
+    const referenceLabel = referenceAudience === 'customer' ? 'Product Number (PN): ' : 'Ref: ';
+    const reference = referenceAudience && referenceCode
+      ? '<div style="margin-top:5px;color:#6b6b6b;font-size:12px;letter-spacing:0.5px;">' + referenceLabel + escapeHtml(referenceCode) + '</div>'
       : '';
     return '<tr>'
       + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;color:#141414;">'
@@ -96,11 +97,12 @@ function buildItemsHtml(order, includeReferenceCode) {
   }).join('');
 }
 
-function buildItemsText(order, includeReferenceCode) {
+function buildItemsText(order, referenceAudience) {
   return orderItems(order).map((item) => {
     const price = Number(item && item.price) || 0;
     const referenceCode = String((item && item.reference_code) || '').trim();
-    const reference = includeReferenceCode && referenceCode ? ' (Ref: ' + referenceCode + ')' : '';
+    const referenceLabel = referenceAudience === 'customer' ? 'PN: ' : 'Ref: ';
+    const reference = referenceAudience && referenceCode ? ' (' + referenceLabel + referenceCode + ')' : '';
     return '- ' + itemLabel(item) + reference + ': ' + formatAED(price);
   }).join('\n');
 }
@@ -171,7 +173,7 @@ function emailShell(title, intro, content) {
     + '</table></td></tr></table></body></html>';
 }
 
-function orderSummaryHtml(order, includeCustomer, includeReferenceCode) {
+function orderSummaryHtml(order, includeCustomer, referenceAudience) {
   const customer = includeCustomer
     ? '<div style="background:#f0ece4;border-left:3px solid #c4a265;padding:16px;margin:18px 0;line-height:1.6;">'
       + '<strong>Customer details</strong><br>'
@@ -188,10 +190,10 @@ function orderSummaryHtml(order, includeCustomer, includeReferenceCode) {
     + '<table role="presentation" style="width:100%;border-collapse:collapse;">'
     + '<thead><tr><th style="padding:9px 0;text-align:left;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Item</th>'
     + '<th style="padding:9px 0;text-align:right;color:#6b6b6b;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:2px solid #141414;">Amount</th></tr></thead>'
-    + '<tbody>' + buildItemsHtml(order, includeReferenceCode) + '</tbody></table>' + totalsHtml(order);
+    + '<tbody>' + buildItemsHtml(order, referenceAudience) + '</tbody></table>' + totalsHtml(order);
 }
 
-function orderSummaryText(order, includeCustomer, includeReferenceCode) {
+function orderSummaryText(order, includeCustomer, referenceAudience) {
   const customer = includeCustomer
     ? 'Customer details\nName: ' + ((order && order.customer_name) || '')
       + '\nEmail: ' + ((order && order.customer_email) || '')
@@ -202,20 +204,27 @@ function orderSummaryText(order, includeCustomer, includeReferenceCode) {
   return customer
     + 'Order: ' + ((order && order.order_ref) || '')
     + '\nPayment method: ' + paymentMethodLabel(order && order.payment_method)
-    + '\n\nItems\n' + buildItemsText(order, includeReferenceCode)
+    + '\n\nItems\n' + buildItemsText(order, referenceAudience)
     + '\n\n' + totalsText(order);
 }
 
 function buildBusinessOrderEmail(order) {
+  const isPendingZiina = order && order.payment_method === 'ziina' && order.payment_status !== 'paid';
+  const subject = isPendingZiina
+    ? 'New Ziina order (payment pending) ' + order.order_ref
+    : 'New order ' + order.order_ref;
+  const title = isPendingZiina ? 'New Ziina order - payment pending' : 'New order received';
+  const intro = isPendingZiina
+    ? 'A customer has submitted order ' + order.order_ref + '. This is not a payment confirmation. Ziina payment is still pending.'
+    : 'A customer has submitted order ' + order.order_ref + '.';
   return {
-    subject: 'New order ' + order.order_ref,
+    subject,
     html: emailShell(
-      'New order received',
-      'A customer has submitted order ' + order.order_ref + '.',
-      orderSummaryHtml(order, true, true)
+      title,
+      intro,
+      orderSummaryHtml(order, true, 'owner')
     ),
-    text: 'New order received\n\nA customer has submitted order ' + order.order_ref
-      + '.\n\n' + orderSummaryText(order, true, true),
+    text: title + '\n\n' + intro + '\n\n' + orderSummaryText(order, true, 'owner'),
   };
 }
 
@@ -225,10 +234,10 @@ function buildBusinessPaymentEmail(order) {
     html: emailShell(
       'Payment confirmed',
       'Payment has been verified for order ' + order.order_ref + '.',
-      orderSummaryHtml(order, true, true)
+      orderSummaryHtml(order, true, 'owner')
     ),
     text: 'Payment confirmed\n\nPayment has been verified for order ' + order.order_ref
-      + '.\n\n' + orderSummaryText(order, true, true),
+      + '.\n\n' + orderSummaryText(order, true, 'owner'),
   };
 }
 
@@ -239,12 +248,12 @@ function buildBusinessPaymentReviewEmail(order) {
       'Payment needs manual review',
       'Ziina reports a completed payment for order ' + order.order_ref
         + ', but the order could not be finalized in inventory. Do not release another watch until this is reviewed.',
-      orderSummaryHtml(order, true, true)
+      orderSummaryHtml(order, true, 'owner')
     ),
     text: 'Payment needs manual review\n\nZiina reports a completed payment for order '
       + order.order_ref
       + ', but the order could not be finalized in inventory. Do not release another watch until this is reviewed.\n\n'
-      + orderSummaryText(order, true, true),
+      + orderSummaryText(order, true, 'owner'),
   };
 }
 
@@ -259,11 +268,11 @@ function buildCustomerPaymentEmail(order) {
       'Payment receipt',
       intro,
       '<div style="display:inline-block;background:#f0ece4;border:1px solid #c4a265;color:#141414;padding:6px 12px;margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:1.5px;">PAID</div>'
-        + orderSummaryHtml(order, false, false)
+        + orderSummaryHtml(order, false, 'customer')
         + '<p style="margin-top:22px;line-height:1.6;color:#4f5853;">We will contact you with updates on your order. '
         + 'If you need help, reply to this email or contact ' + CONTACT_EMAIL + '.</p>'
     ),
-    text: 'Payment receipt\n\n' + intro + '\n\n' + orderSummaryText(order, false, false)
+    text: 'Payment receipt\n\n' + intro + '\n\n' + orderSummaryText(order, false, 'customer')
       + '\n\nWe will contact you with updates on your order. If you need help, reply to this email or contact '
       + CONTACT_EMAIL + '.',
   };

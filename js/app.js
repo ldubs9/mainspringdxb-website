@@ -676,7 +676,7 @@
         function buildCashInquiryMessage(items, customer, orderRef) {
             const itemLines = items.map(item => {
                 const name = `${item.brand || ''} ${item.name || ''}`.trim();
-                const reference = item.reference_code ? ` (Ref: ${item.reference_code})` : '';
+                const reference = item.reference_code ? ` (PN: ${item.reference_code})` : '';
                 return `- ${name}${reference}`;
             }).join('\n');
 

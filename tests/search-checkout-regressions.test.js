@@ -112,7 +112,7 @@ test('final stylesheet keeps navbar search independent from listing-card styles'
     assert.match(pageStyles, /\.search-card-meta\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
     assert.doesNotMatch(app.slice(app.indexOf('function renderSearchResults'), app.indexOf('function renderProducts')), /product-card/);
     assert.match(index, /css\/pages\.css\?v=10/);
-    assert.match(loader, /js\/app\.js\?v=14/);
+    assert.match(loader, /js\/app\.js\?v=15/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -171,8 +171,8 @@ test('cart enforces one unit per inventory record and renders no quantity contro
     assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
     assert.match(index, /css\/styles\.css\?v=10/);
-    assert.match(index, /js\/loader\.js\?v=7/);
-    assert.match(loader, /js\/app\.js\?v=14/);
+    assert.match(index, /js\/loader\.js\?v=8/);
+    assert.match(loader, /js\/app\.js\?v=15/);
 });
 
 test('cash checkout creates an order before opening a product-specific WhatsApp inquiry', () => {
@@ -190,13 +190,15 @@ test('cash checkout creates an order before opening a product-specific WhatsApp 
     assert.match(confirmCheckout, /selectedPaymentMethod\s*===\s*'cash_in_store'[\s\S]*?showCashInStoreConfirmation\(orderRef, orderTotal, orderedItems\)/);
     assert.match(app, /function buildCashInquiryMessage/);
     assert.match(app, /item\.reference_code/);
+    assert.match(message, /PN: MS-250/);
+    assert.doesNotMatch(message, /Ref: MS-250/);
     assert.match(app, /item\.brand/);
     assert.match(app, /item\.name/);
     assert.match(app, /inventory is not held until payment is confirmed/i);
     assert.match(app, /const chatWindow = window\.open\(whatsappUrl, '_blank'\)/);
     assert.match(app, /if \(!chatWindow\)[\s\S]*?window\.location\.assign\(whatsappUrl\)[\s\S]*?return/);
     assert.match(app, /chatWindow\.opener = null/);
-    assert.match(message, /Dugena Poseidon \(Ref: MS-250\)/);
+    assert.match(message, /Dugena Poseidon \(PN: MS-250\)/);
     assert.doesNotMatch(message, /x1/);
     assert.match(message, /Order Ref: MS-CASH-1/);
     assert.match(message, /Luca/);

@@ -9,6 +9,7 @@ const migrationPath = 'supabase/migrations/20260731_order_email_outbox.sql';
 const checkoutMigrationPath = 'supabase/migrations/20260807_payment_finalizes_inventory.sql';
 const statusTriggerRepairPath = 'supabase/migrations/20260731_repair_order_status_trigger.sql';
 const referenceMigrationPath = 'supabase/migrations/20260809_order_reference_codes_and_email_routing.sql';
+const cashConstraintAndZiinaNoticePath = 'supabase/migrations/20260809_cash_constraint_and_ziina_notice.sql';
 const appPath = 'js/app.js';
 
 test('transactional email templates escape customer data and contain order details', () => {
@@ -52,8 +53,10 @@ test('transactional email templates escape customer data and contain order detai
     );
     assert.equal(normalizeSender('Bad Sender <not-an-email>'), null);
 
-    const businessOrder = buildBusinessOrderEmail(order);
-    assert.match(businessOrder.subject, /New order MS-EMAIL-1/);
+    const businessOrder = buildBusinessOrderEmail({ ...order, payment_status: 'pending' });
+    assert.match(businessOrder.subject, /payment pending/i);
+    assert.match(businessOrder.text, /not a payment confirmation/i);
+    assert.match(businessOrder.html, /not a payment confirmation/i);
     assert.match(businessOrder.text, /Customer@Example\.com/);
     assert.match(businessOrder.text, /Rolex <b>Datejust<\/b>/);
     assert.match(businessOrder.text, /REF-A001/);
@@ -77,8 +80,9 @@ test('transactional email templates escape customer data and contain order detai
     assert.match(customerPayment.subject, /Payment receipt/);
     assert.match(customerPayment.text, /MS-EMAIL-1/);
     assert.match(customerPayment.text, /info@mainspringdubai\.com/);
-    assert.doesNotMatch(customerPayment.text, /REF-A001/);
-    assert.doesNotMatch(customerPayment.html, /REF-A001/);
+    assert.match(customerPayment.text, /PN: REF-A001/);
+    assert.match(customerPayment.html, /Product Number \(PN\): REF-A001/);
+    assert.doesNotMatch(customerPayment.text, /Ref: REF-A001/);
     assert.match(customerPayment.html, /ref-a001\.jpg/);
     assert.match(customerPayment.html, /MAINSPRING DUBAI/);
     assert.match(customerPayment.html, /#f0ece4/i);
@@ -253,17 +257,18 @@ test('legacy Mainspring status trigger is replaced with the canonical history ta
     assert.match(sql, /NOTIFY pgrst, 'reload schema'/i);
 });
 
-test('forward migration snapshots watch references and suppresses pending Ziina owner emails', () => {
+test('forward repair migration permits cash and restores pending Ziina owner emails', () => {
     assert.ok(fs.existsSync(referenceMigrationPath), 'reference and routing migration exists');
-    const sql = fs.readFileSync(referenceMigrationPath, 'utf8');
+    assert.ok(fs.existsSync(cashConstraintAndZiinaNoticePath), 'cash constraint and Ziina notice migration exists');
+    const referenceSql = fs.readFileSync(referenceMigrationPath, 'utf8');
+    const sql = fs.readFileSync(cashConstraintAndZiinaNoticePath, 'utf8');
 
-    assert.match(sql, /ALTER TABLE public\.mainspring_orders[\s\S]*ADD COLUMN IF NOT EXISTS reference_codes TEXT\[\]/i);
-    assert.match(sql, /ALTER TABLE public\.mainspring_order_status_history[\s\S]*ADD COLUMN IF NOT EXISTS reference_codes TEXT\[\]/i);
-    assert.match(sql, /'reference_code'\s*,\s*CASE WHEN TG_OP = 'INSERT'[\s\S]*?p\.reference_code/i);
-    assert.match(sql, /'thumbnail_url'/i);
-    assert.match(sql, /NEW\.payment_method\s*<>\s*'ziina'/i);
-    assert.match(sql, /event_type\s*=\s*'order_created_business'[\s\S]*payment_method\s*=\s*'ziina'/i);
-    assert.match(sql, /e\.status IN \('pending', 'processing', 'failed'\)/i);
-    assert.match(sql, /AND NOT \([\s\S]*e\.event_type = 'order_created_business'[\s\S]*o\.payment_method = 'ziina'/i);
-    assert.match(sql, /'reference_codes'\s*,\s*o\.reference_codes/i);
+    assert.match(referenceSql, /ALTER TABLE public\.mainspring_orders[\s\S]*ADD COLUMN IF NOT EXISTS reference_codes TEXT\[\]/i);
+    assert.match(referenceSql, /'reference_code'\s*,\s*CASE WHEN TG_OP = 'INSERT'[\s\S]*?p\.reference_code/i);
+    assert.match(sql, /DROP CONSTRAINT IF EXISTS orders_payment_method_check/i);
+    assert.match(sql, /DROP CONSTRAINT IF EXISTS mainspring_orders_payment_method_check/i);
+    assert.match(sql, /cash_in_store/i);
+    assert.match(sql, /VALUES \(NEW\.id, 'order_created_business'\)/i);
+    assert.doesNotMatch(sql, /NEW\.payment_method\s*<>\s*'ziina'/i);
+    assert.doesNotMatch(sql, /AND NOT \([\s\S]*payment_method\s*=\s*'ziina'/i);
 });
