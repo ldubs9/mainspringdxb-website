@@ -53,6 +53,29 @@ test('shared search normalizes input, rejects stale requests, and ranks only act
     assert.equal(guard.isCurrent(rolexRequest), true);
 });
 
+test('shared search finds reference codes without requiring the REF- prefix', () => {
+    const {
+        buildProductSearchFilter,
+        rankProductSearchResults,
+    } = loadSearchModule();
+    const products = [
+        { id: 1, reference_code: 'REF-AX001', status: 'available' },
+        { id: 2, reference_code: 'REF-A001', status: 'available' },
+        { id: 3, reference_code: 'REF-B001', status: 'available' },
+    ];
+
+    assert.match(buildProductSearchFilter('AX001'), /reference_code\.ilike\.\*ax001\*/);
+    assert.match(buildProductSearchFilter('A001'), /reference_code\.ilike\.\*a001\*/);
+    assert.deepEqual(
+        rankProductSearchResults(products, 'AX001').map((product) => product.id),
+        [1]
+    );
+    assert.deepEqual(
+        rankProductSearchResults(products, 'A001').map((product) => product.id),
+        [2]
+    );
+});
+
 test('shared search fetches every matching database page before ranking', async () => {
     const { fetchAllProductSearchResults } = loadSearchModule();
     const products = Array.from({ length: 7 }, (_, index) => ({
@@ -83,6 +106,7 @@ test('navbar and collection searches use the shared all-record search path', () 
     assert.match(app, /fetchAllProductSearchResults\(createWatchSearchQuery/);
     assert.match(app, /globalSearchRequestGuard\.isCurrent/);
     assert.doesNotMatch(app, /\.limit\(40\)/);
+    assert.match(index, /js\/product-search\.js\?v=3/);
 });
 
 test('selecting a navbar result closes the overlay before opening the product', () => {
