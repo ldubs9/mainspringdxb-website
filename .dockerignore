@@ -1,0 +1,15 @@
+.git
+.github
+.claude
+.vscode
+.DS_Store
+coolify
+services
+scripts
+supabase
+tests
+node_modules
+*.sql
+*.md
+igfetch_requirements.txt
+data/instagram_raw.json
