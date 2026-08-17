@@ -2716,7 +2716,7 @@
                     </div>` : ''}
                     ${product.size ? `
                     <div class="meta-item">
-                        <span class="meta-label">Diameter</span>
+                        <span class="meta-label">Size</span>
                         <span class="meta-value">${product.size}</span>
                     </div>` : ''}
                     ${product.bracelet ? `

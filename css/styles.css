@@ -1548,9 +1548,17 @@
             transition-delay: 0.68s;
         }
 
+        .nav-overlay.active .nav-links li:nth-child(9) {
+            transition-delay: 0.76s;
+        }
+
+        .nav-overlay.active .nav-links li:nth-child(10) {
+            transition-delay: 0.84s;
+        }
+
         .nav-links a {
             font-family: 'Fraunces', serif;
-            font-size: 2.25rem;
+            font-size: 1.35rem;
             color: rgba(255, 255, 255, 0.5);
             text-decoration: none;
             letter-spacing: -0.01em;
@@ -1574,7 +1582,7 @@
 
         .nav-section-label {
             font-family: 'Fraunces', serif;
-            font-size: 2.25rem;
+            font-size: 1.35rem;
             color: rgba(255, 255, 255, 0.5);
             letter-spacing: 0.1em;
             font-weight: 400;
@@ -1592,7 +1600,7 @@
 
         .nav-watches-filters a {
             font-family: 'Lato', sans-serif !important;
-            font-size: 0.85rem !important;
+            font-size: 0.51rem !important;
             color: rgba(245, 241, 235, 0.6);
             letter-spacing: 0.08em;
             text-transform: capitalize;
@@ -1687,7 +1695,7 @@
 
         .nav-dropdown a {
             font-family: 'Lato', sans-serif !important;
-            font-size: 0.9rem !important;
+            font-size: 0.54rem !important;
             letter-spacing: 0.08em !important;
             padding: 8px 20px !important;
             display: block;
@@ -4558,8 +4566,9 @@
                 }
 
                 .nav-links>li>a,
-                .nav-item-wrapper>a {
-                    font-size: 1.62rem !important;
+                .nav-item-wrapper>a,
+                .nav-section-label {
+                    font-size: 0.975rem !important;
                 }
 
                 .nav-dropdown::before {
@@ -4568,7 +4577,7 @@
 
                 .nav-dropdown a {
                     padding: 12px 20px !important;
-                    font-size: 1rem !important;
+                    font-size: 0.6rem !important;
                     font-family: 'Lato', sans-serif !important;
                     letter-spacing: 0.08em !important;
                     border-bottom: 1px solid rgba(0, 0, 0, 0.06);

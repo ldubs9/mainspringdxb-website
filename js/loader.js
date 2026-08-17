@@ -39,7 +39,7 @@
     // visitor could keep running last week's markup (with last week's inline
     // handlers) against freshly deployed JS. Bump this whenever any file in
     // components/ changes.
-    const COMPONENTS_VERSION = '5';
+    const COMPONENTS_VERSION = '6';
 
     async function fetchHTML(url) {
         const res = await fetch(`${url}?v=${COMPONENTS_VERSION}`);
