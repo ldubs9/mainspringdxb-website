@@ -56,6 +56,7 @@ test('shared search normalizes input, rejects stale requests, and ranks only act
 test('shared search finds reference codes without requiring the REF- prefix', () => {
     const {
         buildProductSearchFilter,
+        normalizeProductSearchTerm,
         rankProductSearchResults,
     } = loadSearchModule();
     const products = [
@@ -66,6 +67,11 @@ test('shared search finds reference codes without requiring the REF- prefix', ()
 
     assert.match(buildProductSearchFilter('AX001'), /reference_code\.ilike\.\*ax001\*/);
     assert.match(buildProductSearchFilter('A001'), /reference_code\.ilike\.\*a001\*/);
+    // customers see PN-A001 on the site, the database stores REF-A001
+    assert.equal(normalizeProductSearchTerm('PN-A001'), 'ref-a001');
+    assert.equal(normalizeProductSearchTerm('pn a001'), 'ref-a001');
+    assert.equal(normalizeProductSearchTerm('PN-AX012'), 'ref-ax012');
+    assert.match(buildProductSearchFilter('PN-A001'), /reference_code\.ilike\.\*ref-a001\*/);
     assert.deepEqual(
         rankProductSearchResults(products, 'AX001').map((product) => product.id),
         [1]
@@ -106,7 +112,7 @@ test('navbar and collection searches use the shared all-record search path', () 
     assert.match(app, /fetchAllProductSearchResults\(createWatchSearchQuery/);
     assert.match(app, /globalSearchRequestGuard\.isCurrent/);
     assert.doesNotMatch(app, /\.limit\(40\)/);
-    assert.match(index, /js\/product-search\.js\?v=3/);
+    assert.match(index, /js\/product-search\.js\?v=4/);
 });
 
 test('selecting a navbar result closes the overlay before opening the product', () => {
@@ -136,7 +142,7 @@ test('final stylesheet keeps navbar search independent from listing-card styles'
     assert.match(pageStyles, /\.search-card-meta\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
     assert.doesNotMatch(app.slice(app.indexOf('function renderSearchResults'), app.indexOf('function renderProducts')), /product-card/);
     assert.match(index, /css\/pages\.css\?v=10/);
-    assert.match(loader, /js\/app\.js\?v=16/);
+    assert.match(loader, /js\/app\.js\?v=17/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -196,7 +202,7 @@ test('cart enforces one unit per inventory record and renders no quantity contro
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
     assert.match(index, /css\/styles\.css\?v=10/);
     assert.match(index, /js\/loader\.js\?v=9/);
-    assert.match(loader, /js\/app\.js\?v=16/);
+    assert.match(loader, /js\/app\.js\?v=17/);
 });
 
 test('cash checkout creates an order before opening a product-specific WhatsApp inquiry', () => {
@@ -205,24 +211,27 @@ test('cash checkout creates an order before opening a product-specific WhatsApp 
     const confirmCheckout = app.slice(confirmStart, confirmEnd);
     const messageStart = app.indexOf('function buildCashInquiryMessage');
     const messageEnd = app.indexOf('function startCashInquiryWhatsApp', messageStart);
-    const buildCashInquiryMessage = new Function(`${app.slice(messageStart, messageEnd)}; return buildCashInquiryMessage;`)();
+    const helperStart = app.indexOf('function toPublicRef');
+    const helperEnd = app.indexOf('// Initialize Supabase', helperStart);
+    const helpers = app.slice(helperStart, helperEnd);
+    const buildCashInquiryMessage = new Function(`${helpers}\n${app.slice(messageStart, messageEnd)}; return buildCashInquiryMessage;`)();
     const message = buildCashInquiryMessage([
-        { brand: 'Dugena', name: 'Poseidon', reference_code: 'MS-250', qty: 1 }
+        { brand: 'Dugena', name: 'Poseidon', reference_code: 'REF-A250', qty: 1 }
     ], { name: 'Luca', phone: '+971500000000' }, 'MS-CASH-1');
 
     assert.match(confirmCheckout, /fetch\(PAYMENTS_BASE \+ '\/create-order'/);
     assert.match(confirmCheckout, /selectedPaymentMethod\s*===\s*'cash_in_store'[\s\S]*?showCashInStoreConfirmation\(orderRef, orderTotal, orderedItems\)/);
     assert.match(app, /function buildCashInquiryMessage/);
     assert.match(app, /item\.reference_code/);
-    assert.match(message, /PN: MS-250/);
-    assert.doesNotMatch(message, /Ref: MS-250/);
+    assert.match(message, /\(PN-A250\)/);
+    assert.doesNotMatch(message, /REF-A250/);
     assert.match(app, /item\.brand/);
     assert.match(app, /item\.name/);
     assert.match(app, /inventory is not held until payment is confirmed/i);
     assert.match(app, /const chatWindow = window\.open\(whatsappUrl, '_blank'\)/);
     assert.match(app, /if \(!chatWindow\)[\s\S]*?window\.location\.assign\(whatsappUrl\)[\s\S]*?return/);
     assert.match(app, /chatWindow\.opener = null/);
-    assert.match(message, /Dugena Poseidon \(PN: MS-250\)/);
+    assert.match(message, /Dugena Poseidon \(PN-A250\)/);
     assert.doesNotMatch(message, /x1/);
     assert.match(message, /Order Ref: MS-CASH-1/);
     assert.match(message, /Luca/);

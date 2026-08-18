@@ -19,7 +19,9 @@
             .toLowerCase()
             .replace(/[^\p{L}\p{N}\s\-/]/gu, ' ')
             .replace(/\s+/g, ' ')
-            .trim();
+            .trim()
+            // customers see PN-A001, the database stores REF-A001
+            .replace(/^pn[-\s]?(?=[a-z]?x?\d)/, 'ref-');
     }
 
     function buildProductSearchFilter(value) {

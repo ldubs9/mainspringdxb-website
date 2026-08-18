@@ -80,9 +80,11 @@ test('transactional email templates escape customer data and contain order detai
     assert.match(customerPayment.subject, /Payment receipt/);
     assert.match(customerPayment.text, /MS-EMAIL-1/);
     assert.match(customerPayment.text, /info@mainspringdubai\.com/);
-    assert.match(customerPayment.text, /PN: REF-A001/);
-    assert.match(customerPayment.html, /Product Number \(PN\): REF-A001/);
+    assert.match(customerPayment.text, /Product Number: PN-A001/);
+    assert.match(customerPayment.html, /Product Number: PN-A001/);
     assert.doesNotMatch(customerPayment.text, /Ref: REF-A001/);
+    assert.doesNotMatch(customerPayment.text, /REF-A001/);
+    assert.doesNotMatch(customerPayment.html, /REF-A001/);
     assert.match(customerPayment.html, /ref-a001\.jpg/);
     assert.match(customerPayment.html, /MAINSPRING DUBAI/);
     assert.match(customerPayment.html, /#f0ece4/i);

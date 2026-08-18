@@ -58,6 +58,11 @@ function orderItems(order) {
   return Array.isArray(order && order.items) ? order.items : [];
 }
 
+function publicReference(code) {
+  const value = String(code || '').trim();
+  return value ? value.replace(/^REF-/i, 'PN-') : '';
+}
+
 function itemLabel(item) {
   return [item && item.brand, item && item.name].filter(Boolean).join(' ').trim()
     || 'Product ' + ((item && item.id) || '');
@@ -82,9 +87,11 @@ function buildItemsHtml(order, referenceAudience) {
     const thumbnail = thumbnailUrl
       ? '<img src="' + escapeHtml(thumbnailUrl) + '" alt="" width="72" height="72" style="display:block;width:72px;height:72px;object-fit:cover;border:1px solid #d9d3c7;">'
       : '';
-    const referenceLabel = referenceAudience === 'customer' ? 'Product Number (PN): ' : 'Ref: ';
+    const isCustomer = referenceAudience === 'customer';
+    const referenceLabel = isCustomer ? 'Product Number: ' : 'Ref: ';
+    const referenceValue = isCustomer ? publicReference(referenceCode) : referenceCode;
     const reference = referenceAudience && referenceCode
-      ? '<div style="margin-top:5px;color:#6b6b6b;font-size:12px;letter-spacing:0.5px;">' + referenceLabel + escapeHtml(referenceCode) + '</div>'
+      ? '<div style="margin-top:5px;color:#6b6b6b;font-size:12px;letter-spacing:0.5px;">' + referenceLabel + escapeHtml(referenceValue) + '</div>'
       : '';
     return '<tr>'
       + '<td style="padding:13px 0;border-bottom:1px solid #d9d3c7;color:#141414;">'
@@ -101,8 +108,10 @@ function buildItemsText(order, referenceAudience) {
   return orderItems(order).map((item) => {
     const price = Number(item && item.price) || 0;
     const referenceCode = String((item && item.reference_code) || '').trim();
-    const referenceLabel = referenceAudience === 'customer' ? 'PN: ' : 'Ref: ';
-    const reference = referenceAudience && referenceCode ? ' (' + referenceLabel + referenceCode + ')' : '';
+    const isCustomer = referenceAudience === 'customer';
+    const referenceLabel = isCustomer ? 'Product Number: ' : 'Ref: ';
+    const referenceValue = isCustomer ? publicReference(referenceCode) : referenceCode;
+    const reference = referenceAudience && referenceCode ? ' (' + referenceLabel + referenceValue + ')' : '';
     return '- ' + itemLabel(item) + reference + ': ' + formatAED(price);
   }).join('\n');
 }

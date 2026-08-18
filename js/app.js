@@ -3,6 +3,19 @@
         // Using the anon (public) key — safe to expose in frontend code
         const SUPABASE_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NTgzMjI0MCwiZXhwIjo0OTMxNTA1ODQwLCJyb2xlIjoiYW5vbiJ9.G7a98S-SVHYk1h5hU2VjVmbu_RF42KOK8jVDrR1kOZM';
 
+        // Customer-facing product numbers.
+        // Internally (database, Telegram bot, staff email) a product keeps its
+        // REF-A001 code. Customers only ever see PN-A001.
+        function toPublicRef(code) {
+            const value = String(code || '').trim();
+            return value ? value.replace(/^REF-/i, 'PN-') : '';
+        }
+
+        function toInternalRef(code) {
+            const value = String(code || '').trim();
+            return value ? value.replace(/^PN-/i, 'REF-') : '';
+        }
+
         // Initialize Supabase
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -676,7 +689,7 @@
         function buildCashInquiryMessage(items, customer, orderRef) {
             const itemLines = items.map(item => {
                 const name = `${item.brand || ''} ${item.name || ''}`.trim();
-                const reference = item.reference_code ? ` (PN: ${item.reference_code})` : '';
+                const reference = item.reference_code ? ` (${toPublicRef(item.reference_code)})` : '';
                 return `- ${name}${reference}`;
             }).join('\n');
 
@@ -1787,7 +1800,7 @@
                 const firstImage = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
                 const brand = escapeMarkup(product.brand || '');
                 const model = escapeMarkup(product.model || product.name || '');
-                const identifier = escapeMarkup(product.reference_code || product.id);
+                const identifier = escapeMarkup(toPublicRef(product.reference_code) || product.id);
                 const alt = escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}`.trim());
 
                 return `
@@ -1845,7 +1858,7 @@
                 }
 
                 const statusClass = isSold ? ' sold' : '';
-                const productIdentifier = product.reference_code || product.id;
+                const productIdentifier = toPublicRef(product.reference_code) || product.id;
                 const openProductCall = `showProductDetail(event, '${productIdentifier}')`;
                 const encodedCartProduct = encodeProductForCart(product);
 
@@ -2561,7 +2574,7 @@
                 if (isNumericId) {
                     query = query.eq('id', productIdentifier);
                 } else {
-                    query = query.eq('reference_code', productIdentifier);
+                    query = query.eq('reference_code', toInternalRef(productIdentifier));
                 }
 
                 const { data, error } = await query.single();
@@ -2741,7 +2754,7 @@
             loadRecommendations(product);
 
             // Update URL with resolved reference_code if it differs from what was initially pushed
-            const urlIdentifier = product.reference_code || product.id;
+            const urlIdentifier = toPublicRef(product.reference_code) || product.id;
             if (String(urlIdentifier) !== String(productIdentifier)) {
                 history.replaceState({ page: 'detail', productId: urlIdentifier }, '', `?page=detail&product=${encodeURIComponent(urlIdentifier)}`);
             }
@@ -2758,7 +2771,7 @@
                 ).join('');
                 main.innerHTML = `
                     <img src="${productImages[currentImageIndex]}" alt="Product Image" onclick="openImageZoom()">
-                    ${currentProduct && currentProduct.reference_code ? `<div class="gallery-ref-code">${currentProduct.reference_code}</div>` : ''}
+                    ${currentProduct && currentProduct.reference_code ? `<div class="gallery-ref-code">${toPublicRef(currentProduct.reference_code)}</div>` : ''}
                     <div class="gallery-nav-bar">
                         <button class="gallery-nav prev" onclick="prevImage()"><i class="fas fa-chevron-left"></i></button>
                         <div class="gallery-dots">${dotsHtml}</div>
@@ -3157,14 +3170,14 @@
 
                 return `
                 <div class="product-card">
-                    <div class="product-image" onclick="showProductDetail(event, '${product.reference_code || product.id}')">
+                    <div class="product-image" onclick="showProductDetail(event, '${toPublicRef(product.reference_code) || product.id}')">
                         ${firstImage ?
                         `<img src="${firstImage}" alt="${displayBrand} ${displayName}" loading="lazy">` :
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
                     }
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name" onclick="showProductDetail(event, '${product.reference_code || product.id}')">${displayName}</h3>
+                        <h3 class="product-name" onclick="showProductDetail(event, '${toPublicRef(product.reference_code) || product.id}')">${displayName}</h3>
                         <p class="product-brand">${displayBrand}</p>
                         ${product.condition ? `<p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 8px;">${product.condition}</p>` : ''}
                         <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
