@@ -233,9 +233,19 @@
             }
 
             cartFooterEl.style.display = 'block';
-            const totalAED = cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
-            document.getElementById('cartTotal').textContent = formatPrice(totalAED);
-            document.getElementById('cartTotal').setAttribute('data-price-aed', totalAED);
+            // Cart prices are VAT-exclusive; VAT is shown here and charged at checkout.
+            const subtotalAED = cart.reduce((sum, item) => sum + Number(item.price || 0), 0);
+            const totalAED = withVat(subtotalAED);
+            const vatAED = totalAED - subtotalAED;
+            const setAmount = (id, amountAED) => {
+                const el = document.getElementById(id);
+                el.textContent = formatPrice(amountAED);
+                el.setAttribute('data-price-aed', amountAED);
+            };
+            setAmount('cartSubtotal', subtotalAED);
+            setAmount('cartVat', vatAED);
+            setAmount('cartTotal', totalAED);
+            document.getElementById('cartVatLabel').textContent = `VAT (${VAT_PCT}%)`;
 
             cartItemsEl.innerHTML = cart.map(item => `
                 <div class="cart-item">

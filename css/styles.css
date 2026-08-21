@@ -781,10 +781,20 @@
             border-top: 1px solid var(--cream-dark);
         }
 
+        .cart-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
         .cart-total {
             display: flex;
             justify-content: space-between;
             margin-bottom: 20px;
+            padding-top: 12px;
+            border-top: 1px solid var(--cream-dark);
             font-family: 'Fraunces', serif;
             font-size: 1.2rem;
         }
