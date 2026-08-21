@@ -53,10 +53,9 @@ Deno.serve(async (req: Request) => {
       0
     );
 
-    const surchargeRate = (payment_method === "tabby" || payment_method === "tamara") ? 8.5
-      : (payment_method === "ziina") ? 3
-      : 0;
-    const total = Math.round(subtotal * (1 + surchargeRate / 100));
+    // VAT applies to every payment method; card payments carry no surcharge.
+    const vatRate = 5;
+    const total = Math.round(subtotal * (1 + vatRate / 100));
 
     // Generate order reference
     const orderRef = "MS-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -84,7 +83,8 @@ Deno.serve(async (req: Request) => {
           qty: Math.min(Math.max(1, Math.floor(Number(i.qty))), 10),
         })),
         subtotal_aed: subtotal,
-        surcharge_pct: surchargeRate,
+        surcharge_pct: 0,
+        vat_pct: vatRate,
         total_aed: total,
         payment_method,
         payment_status: "pending",
@@ -119,7 +119,8 @@ Deno.serve(async (req: Request) => {
         order_ref: orderRef,
         total_aed: total,
         payment_method,
-        surcharge_pct: surchargeRate,
+        surcharge_pct: 0,
+        vat_pct: vatRate,
       }),
       { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

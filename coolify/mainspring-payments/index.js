@@ -252,7 +252,7 @@ async function findZiinaOrder(paymentIntentId, expectedOrderRef) {
   if (expectedOrderRef) filters += '&order_ref=eq.' + encodeURIComponent(expectedOrderRef);
   const response = await fetch(
     sbUrl('mainspring_orders?' + filters
-      + '&select=order_ref,payment_method,payment_status,customer_name,customer_email,customer_phone,customer_address,items,subtotal_aed,discount_code,discount_type,discount_value,discount_aed,discounted_subtotal_aed,surcharge_pct,total_aed'),
+      + '&select=order_ref,payment_method,payment_status,customer_name,customer_email,customer_phone,customer_address,items,subtotal_aed,discount_code,discount_type,discount_value,discount_aed,discounted_subtotal_aed,surcharge_pct,vat_pct,total_aed'),
     { headers: sbHeaders }
   );
   if (!response.ok) {
@@ -548,6 +548,7 @@ app.post('/create-order', async (req, res) => {
       total_aed: Number(order.total_aed),
       payment_method: order.payment_method,
       surcharge_pct: Number(order.surcharge_pct),
+      vat_pct: Number(order.vat_pct),
     });
   } catch (err) {
     console.error('create-order error:', err);

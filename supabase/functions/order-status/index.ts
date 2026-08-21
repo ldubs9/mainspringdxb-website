@@ -37,7 +37,7 @@ Deno.serve(async (req: Request) => {
     // Lookup order — must match BOTH ref and phone
     const { data: order, error } = await supabaseAdmin
       .from("mainspring_orders")
-      .select("id, order_ref, items, subtotal_aed, discount_code, discount_type, discount_value, discount_aed, discounted_subtotal_aed, total_aed, surcharge_pct, payment_method, payment_status, order_status, tracking_number, created_at")
+      .select("id, order_ref, items, subtotal_aed, discount_code, discount_type, discount_value, discount_aed, discounted_subtotal_aed, total_aed, surcharge_pct, vat_pct, payment_method, payment_status, order_status, tracking_number, created_at")
       .eq("order_ref", order_ref)
       .eq("customer_phone", cleanPhone)
       .single();
@@ -70,6 +70,7 @@ Deno.serve(async (req: Request) => {
         discounted_subtotal_aed: order.discounted_subtotal_aed,
         total_aed: order.total_aed,
         surcharge_pct: order.surcharge_pct,
+        vat_pct: order.vat_pct,
         payment_method: order.payment_method,
         payment_status: order.payment_status,
         order_status: order.order_status,

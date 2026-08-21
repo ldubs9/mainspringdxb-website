@@ -71,7 +71,7 @@
     const script = document.createElement('script');
     // Versioned to bust the browser cache when app.js changes (matches the
     // ?v= convention used for other scripts in index.html).
-    script.src = 'js/app.js?v=17';
+    script.src = 'js/app.js?v=18';
     script.onload = () => {
         // Dispatch a custom event that app.js can listen for
         window.dispatchEvent(new CustomEvent('componentsLoaded'));

@@ -123,23 +123,30 @@ function totalsHtml(order) {
     ? Number(order.discounted_subtotal_aed)
     : subtotal - discount;
   const total = Number(order && order.total_aed) || 0;
+  const vatPct = Number(order && order.vat_pct) || 0;
   const surchargePct = Number(order && order.surcharge_pct) || 0;
-  const surcharge = Math.max(0, total - discountedSubtotal);
+  // The stored total already carries whichever charge applied to this order.
+  const extra = Math.max(0, total - discountedSubtotal);
   const discountCode = String((order && order.discount_code) || '').trim();
   const discountRow = discount > 0
     ? '<tr><td style="padding:5px 0;color:#6b6b6b;">Discount (' + escapeHtml(discountCode) + ')</td>'
       + '<td style="padding:5px 0;text-align:right;color:#4f5853;">-' + escapeHtml(formatAED(discount)) + '</td></tr>'
     : '';
-  const surchargeRow = surchargePct > 0
-    ? '<tr><td style="padding:5px 0;color:#6b6b6b;">Card surcharge (' + escapeHtml(String(surchargePct)) + '%)</td>'
-      + '<td style="padding:5px 0;text-align:right;color:#141414;">' + escapeHtml(formatAED(surcharge)) + '</td></tr>'
+  const extraLabel = vatPct > 0
+    ? 'VAT (' + String(vatPct) + '%)'
+    : surchargePct > 0
+      ? 'Card surcharge (' + String(surchargePct) + '%)'
+      : null;
+  const extraRow = extraLabel
+    ? '<tr><td style="padding:5px 0;color:#6b6b6b;">' + escapeHtml(extraLabel) + '</td>'
+      + '<td style="padding:5px 0;text-align:right;color:#141414;">' + escapeHtml(formatAED(extra)) + '</td></tr>'
     : '';
 
   return '<table role="presentation" style="width:100%;margin-top:18px;border-collapse:collapse;">'
     + '<tr><td style="padding:5px 0;color:#6b6b6b;">Subtotal</td><td style="padding:5px 0;text-align:right;color:#141414;">'
     + escapeHtml(formatAED(subtotal)) + '</td></tr>'
     + discountRow
-    + surchargeRow
+    + extraRow
     + '<tr><td style="padding:13px 0 4px;font-family:Georgia,serif;font-size:18px;font-weight:700;border-top:2px solid #c4a265;">Total</td>'
     + '<td style="padding:13px 0 4px;text-align:right;font-family:Georgia,serif;font-size:18px;font-weight:700;border-top:2px solid #c4a265;">'
     + escapeHtml(formatAED(total)) + '</td></tr></table>';
@@ -152,13 +159,19 @@ function totalsText(order) {
     ? Number(order.discounted_subtotal_aed)
     : subtotal - discount;
   const total = Number(order && order.total_aed) || 0;
+  const vatPct = Number(order && order.vat_pct) || 0;
   const surchargePct = Number(order && order.surcharge_pct) || 0;
-  const surcharge = Math.max(0, total - discountedSubtotal);
+  const extra = Math.max(0, total - discountedSubtotal);
   const discountCode = String((order && order.discount_code) || '').trim();
+  const extraLabel = vatPct > 0
+    ? 'VAT (' + vatPct + '%)'
+    : surchargePct > 0
+      ? 'Card surcharge (' + surchargePct + '%)'
+      : null;
 
   return 'Subtotal: ' + formatAED(subtotal)
     + (discount > 0 ? '\nDiscount (' + discountCode + '): -' + formatAED(discount) : '')
-    + (surchargePct > 0 ? '\nCard surcharge (' + surchargePct + '%): ' + formatAED(surcharge) : '')
+    + (extraLabel ? '\n' + extraLabel + ': ' + formatAED(extra) : '')
     + '\nTotal: ' + formatAED(total);
 }
 

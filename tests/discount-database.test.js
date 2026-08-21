@@ -11,6 +11,7 @@ const migrationPath = path.join(root, 'supabase/migrations/20260801_discount_cod
 const inventoryFinalizationMigration = path.join(root, 'supabase/migrations/20260807_payment_finalizes_inventory.sql');
 const referenceAndEmailRoutingMigration = path.join(root, 'supabase/migrations/20260809_order_reference_codes_and_email_routing.sql');
 const cashConstraintAndZiinaNoticeMigration = path.join(root, 'supabase/migrations/20260809_cash_constraint_and_ziina_notice.sql');
+const vatMigration = path.join(root, 'supabase/migrations/20260821_vat_replaces_card_surcharge.sql');
 const prerequisiteMigrations = [
     path.join(root, 'supabase/migrations/20260723_atomic_checkout_inventory.sql'),
     path.join(root, 'supabase/migrations/20260731_order_email_outbox.sql'),
@@ -105,6 +106,7 @@ async function withPostgres(run) {
                 CHECK (payment_method IN ('bank_transfer', 'ziina'));
         `);
         apply(cashConstraintAndZiinaNoticeMigration);
+        apply(vatMigration);
         await run({ psql, psqlAsync });
     } finally {
         if (started) {
@@ -150,8 +152,11 @@ test('discounted order remains authoritative through email and payment lifecycle
         assert.equal(order.discount_code, 'SAVE10');
         assert.equal(Number(order.discount_aed), 100);
         assert.equal(Number(order.discounted_subtotal_aed), 900);
-        assert.equal(Number(order.surcharge_pct), 3);
-        assert.equal(Number(order.total_aed), 927);
+        assert.equal(Number(order.surcharge_pct), 0);
+        assert.equal(Number(order.total_aed), 945);
+        assert.equal(psql('-At', '-c', `
+            SELECT vat_pct FROM public.mainspring_orders WHERE order_ref = 'MS-DISCOUNT-1';
+        `), '5.00');
         assert.equal(psql('-At', '-c', 'SELECT status FROM public.mainspring_products WHERE id = 101;'), 'available');
 
         const redemption = JSON.parse(psql('-At', '-c', `
@@ -195,6 +200,8 @@ test('discounted order remains authoritative through email and payment lifecycle
         assert.equal(emailEvent.discount_code, 'SAVE10');
         assert.equal(Number(emailEvent.discount_aed), 100);
         assert.equal(Number(emailEvent.discounted_subtotal_aed), 900);
+        assert.equal(Number(emailEvent.vat_pct), 5);
+        assert.equal(Number(emailEvent.surcharge_pct), 0);
 
         assert.equal(psql('-At', '-c', `
             SELECT status

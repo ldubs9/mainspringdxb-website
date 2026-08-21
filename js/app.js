@@ -265,6 +265,11 @@
         // /create-order, /ziina-checkout and /ziina-webhook.
         const PAYMENTS_BASE = window.PAYMENTS_BASE || 'https://pay.mainspring.swiftloop.tech';
 
+        // VAT is charged on every order, regardless of payment method.
+        // The database remains authoritative; this only previews the total.
+        const VAT_PCT = 5;
+        const withVat = (amount) => Math.round(amount * (1 + VAT_PCT / 100));
+
         let selectedPaymentMethod = null;
         let checkoutStep = 1; // 1=details, 2=payment, 3=confirm
         let appliedDiscount = null;
@@ -482,7 +487,8 @@
             const total = appliedDiscount
                 ? Number(appliedDiscount.discounted_subtotal_aed)
                 : originalSubtotal;
-            const cardTotal = Math.round(total * 1.03);
+            const payableTotal = withVat(total);
+            const cashTotal = withVat(originalSubtotal);
             const body = document.getElementById('checkoutBody');
 
             body.innerHTML = `
@@ -502,25 +508,27 @@
                         <div class="payment-method-info">
                             <div class="payment-method-name">Card Payment</div>
                             <div class="payment-method-desc">Visa, Mastercard, Amex — secure via Ziina</div>
-                            <div class="payment-method-surcharge">+3% surcharge</div>
+                            <div class="payment-method-vat">Includes ${VAT_PCT}% VAT</div>
                         </div>
-                        <div class="payment-method-price" data-price-aed="${cardTotal}">${formatPrice(cardTotal)}</div>
+                        <div class="payment-method-price" data-price-aed="${payableTotal}">${formatPrice(payableTotal)}</div>
                     </div>
                     <div class="payment-method" onclick="selectPayment('bank_transfer', this)">
                         <div class="payment-method-icon"><i class="fas fa-university"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Bank Transfer</div>
                             <div class="payment-method-desc">Transfer directly to our business account</div>
+                            <div class="payment-method-vat">Includes ${VAT_PCT}% VAT</div>
                         </div>
-                        <div class="payment-method-price" data-price-aed="${total}">${formatPrice(total)}</div>
+                        <div class="payment-method-price" data-price-aed="${payableTotal}">${formatPrice(payableTotal)}</div>
                     </div>
                     <div class="payment-method" onclick="selectPayment('cash_in_store', this)">
                         <div class="payment-method-icon"><i class="fas fa-store"></i></div>
                         <div class="payment-method-info">
                             <div class="payment-method-name">Cash Payment in Store</div>
                             <div class="payment-method-desc">Place the order, then continue on WhatsApp to arrange cash payment. Inventory is not held until payment is confirmed. Discount codes are not applied to cash orders.</div>
+                            <div class="payment-method-vat">Includes ${VAT_PCT}% VAT</div>
                         </div>
-                        <div class="payment-method-price" data-price-aed="${originalSubtotal}">${formatPrice(originalSubtotal)}</div>
+                        <div class="payment-method-price" data-price-aed="${cashTotal}">${formatPrice(cashTotal)}</div>
                     </div>
                 </div>
 
@@ -924,7 +932,8 @@
                                 ${data.discount_code && Number(data.discount_aed) > 0
                                     ? `<p style="font-size: 0.78rem; color: var(--gray);">Discount ${escapeHtml(data.discount_code)}: -${formatPrice(Number(data.discount_aed))}</p>`
                                     : ''}
-                                ${data.surcharge_pct > 0 ? `<p style="font-size: 0.78rem; color: var(--gray);">Includes ${data.surcharge_pct}% surcharge</p>` : ''}
+                                ${data.vat_pct > 0 ? `<p style="font-size: 0.78rem; color: var(--gray);">Includes ${data.vat_pct}% VAT</p>` : ''}
+                                ${data.surcharge_pct > 0 ? `<p style="font-size: 0.78rem; color: var(--gray);">Includes ${data.surcharge_pct}% card surcharge</p>` : ''}
                             </div>
                         </div>
 

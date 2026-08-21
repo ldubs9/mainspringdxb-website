@@ -1055,9 +1055,9 @@
             color: var(--gray);
         }
 
-        .payment-method-surcharge {
+        .payment-method-vat {
             font-size: 0.8rem;
-            color: #c0392b;
+            color: var(--gray);
             font-weight: 600;
         }
 

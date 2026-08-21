@@ -24,10 +24,20 @@ function sampleDiscountedOrder() {
         discount_value: 10,
         discount_aed: 100,
         discounted_subtotal_aed: 900,
-        surcharge_pct: 3,
-        total_aed: 927,
+        surcharge_pct: 0,
+        vat_pct: 5,
+        total_aed: 945,
         payment_method: 'ziina',
     };
+}
+
+function sampleLegacySurchargeOrder() {
+    return Object.assign(sampleDiscountedOrder(), {
+        order_ref: 'MS-EMAIL-LEGACY',
+        surcharge_pct: 3,
+        vat_pct: 0,
+        total_aed: 927,
+    });
 }
 
 test('discount helpers normalize codes and reject forged or duplicate cart records', () => {
@@ -62,7 +72,7 @@ test('payments service previews discounts with the existing database limiter and
     assert.match(source, /discounted_subtotal_aed/);
 });
 
-test('transactional order emails preserve the stored discount and post-discount surcharge breakdown', () => {
+test('transactional order emails preserve the stored discount and post-discount VAT breakdown', () => {
     const order = sampleDiscountedOrder();
     for (const email of [
         emailUtils.buildBusinessOrderEmail(order),
@@ -70,11 +80,20 @@ test('transactional order emails preserve the stored discount and post-discount 
         emailUtils.buildCustomerPaymentEmail(order),
     ]) {
         assert.match(email.text, /Discount \(SAVE10\): -AED 100/);
-        assert.match(email.text, /Card surcharge \(3%\): AED 27/);
-        assert.match(email.text, /Total: AED 927/);
+        assert.match(email.text, /VAT \(5%\): AED 45/);
+        assert.match(email.text, /Total: AED 945/);
         assert.match(email.html, /Discount \(SAVE10\)/);
-        assert.match(email.html, /Card surcharge \(3%\)/);
+        assert.match(email.html, /VAT \(5%\)/);
+        assert.doesNotMatch(email.text, /surcharge/i);
     }
+});
+
+test('orders placed before VAT still show their historical card surcharge', () => {
+    const order = sampleLegacySurchargeOrder();
+    const email = emailUtils.buildCustomerPaymentEmail(order);
+    assert.match(email.text, /Card surcharge \(3%\): AED 27/);
+    assert.match(email.text, /Total: AED 927/);
+    assert.doesNotMatch(email.text, /VAT/);
 });
 
 test('storefront previews one code, invalidates stale previews, and submits only the code', () => {
