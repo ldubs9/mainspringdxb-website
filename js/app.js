@@ -3397,132 +3397,92 @@
 
         // Slideshow functionality
         let currentSlideIndex = 0;
-        let slideShowTimeout;
-        let slideTransitionRequest = 0;
-        const slideImageLoads = new Map();
+        let slideShowInterval;
 
-        function getSlideImageUrl(slide) {
-            const background = slide && slide.style ? slide.style.backgroundImage : '';
-            const match = background.match(/^url\((['"]?)(.*?)\1\)$/);
-            return match ? match[2] : '';
-        }
-
-        function preloadSlideImage(slide) {
-            const url = getSlideImageUrl(slide);
-            if (!url) return Promise.resolve(false);
-            if (slide.dataset.imageReady === 'true') return Promise.resolve(true);
-            if (slideImageLoads.has(url)) return slideImageLoads.get(url);
-
-            const load = new Promise(resolve => {
-                const image = new Image();
-                let settled = false;
-
-                const finish = ready => {
-                    if (settled) return;
-                    settled = true;
-                    slide.dataset.imageReady = ready ? 'true' : 'false';
-                    resolve(ready);
-                };
-
-                image.onload = async () => {
-                    if (typeof image.decode === 'function') {
-                        try {
-                            await image.decode();
-                        } catch (_) {
-                            // A decoded bitmap is preferable, but a successfully loaded
-                            // image remains safe to display when decode() is unavailable.
-                        }
-                    }
-                    finish(image.naturalWidth > 0);
-                };
-                image.onerror = () => finish(false);
-                image.src = url;
-            });
-
-            slideImageLoads.set(url, load);
-            load.then(ready => {
-                if (!ready) slideImageLoads.delete(url);
-            });
-            return load;
-        }
-
-        function activateSlide(index) {
+        function goToSlide(index) {
             const slides = document.querySelectorAll('.slideshow-slide');
             const dots = document.querySelectorAll('.dot');
+
+            // Validate index
+            if (index < 0 || index >= slides.length) return;
+
+            // Clear any existing auto-play interval
+            clearInterval(slideShowInterval);
+
+            // Get current and next slides
             const currentSlide = slides[currentSlideIndex];
             const nextSlide = slides[index];
 
+            // Remove active and prev classes from all slides
             slides.forEach(slide => {
-                slide.classList.remove('active', 'prev', 'is-initial');
+                slide.classList.remove('active', 'prev');
             });
+
+            // Remove active class from all dots
             dots.forEach(dot => {
                 dot.classList.remove('active');
             });
 
-            if (currentSlide && currentSlide !== nextSlide) currentSlide.classList.add('prev');
+            // Mark current slide as prev (exiting)
+            currentSlide.classList.add('prev');
+
+            // Set new slide as active (entering)
             nextSlide.classList.add('active');
-            if (dots[index]) dots[index].classList.add('active');
+
+            // Update dot
+            dots[index].classList.add('active');
+
+            // Update current index
             currentSlideIndex = index;
-        }
 
-        function scheduleNextSlide(delay = 5000) {
-            clearTimeout(slideShowTimeout);
-            slideShowTimeout = setTimeout(nextSlide, delay);
-        }
-
-        async function goToSlide(index) {
-            const slides = document.querySelectorAll('.slideshow-slide');
-
-            if (index < 0 || index >= slides.length) return;
-            clearTimeout(slideShowTimeout);
-
-            const nextSlide = slides[index];
-            const request = ++slideTransitionRequest;
-            const ready = await preloadSlideImage(nextSlide);
-
-            if (request !== slideTransitionRequest) return;
-            if (ready && (index !== currentSlideIndex || !nextSlide.classList.contains('active'))) {
-                activateSlide(index);
-            }
-            scheduleNextSlide();
+            // Restart auto-play after 1 second (duration of animation)
+            slideShowInterval = setTimeout(() => {
+                autoPlaySlideshow();
+            }, 3500);
         }
 
         function nextSlide() {
             const slides = document.querySelectorAll('.slideshow-slide');
-            if (slides.length === 0) return;
             let nextIndex = (currentSlideIndex + 1) % slides.length;
             goToSlide(nextIndex);
         }
 
-        async function autoPlaySlideshow() {
+        function autoPlaySlideshow() {
             const slides = document.querySelectorAll('.slideshow-slide');
             if (slides.length === 0) return;
 
-            const activeIndex = Array.from(slides).findIndex(slide => slide.classList.contains('active'));
-            currentSlideIndex = activeIndex >= 0 ? activeIndex : 0;
+            let nextIndex = (currentSlideIndex + 1) % slides.length;
+            goToSlide(nextIndex);
 
-            let ready = await preloadSlideImage(slides[currentSlideIndex]);
-            if (!ready) {
-                for (let index = 0; index < slides.length; index++) {
-                    if (index === currentSlideIndex) continue;
-                    if (await preloadSlideImage(slides[index])) {
-                        activateSlide(index);
-                        ready = true;
-                        break;
-                    }
-                }
-            }
+            // Set interval to auto-play every 5 seconds
+            slideShowInterval = setInterval(() => {
+                nextIndex = (currentSlideIndex + 1) % slides.length;
+                const dots = document.querySelectorAll('.dot');
+                const currentSlide = slides[currentSlideIndex];
+                const nextSlide = slides[nextIndex];
 
-            if (!ready) {
-                clearTimeout(slideShowTimeout);
-                slideShowTimeout = setTimeout(autoPlaySlideshow, 2000);
-                return;
-            }
+                // Remove active and prev classes
+                slides.forEach(slide => {
+                    slide.classList.remove('active', 'prev');
+                });
 
-            slides.forEach((slide, index) => {
-                if (index !== currentSlideIndex) preloadSlideImage(slide);
-            });
-            scheduleNextSlide();
+                // Remove active class from dots
+                dots.forEach(dot => {
+                    dot.classList.remove('active');
+                });
+
+                // Mark current slide as prev
+                currentSlide.classList.add('prev');
+
+                // Set new slide as active
+                nextSlide.classList.add('active');
+
+                // Update dot
+                dots[nextIndex].classList.add('active');
+
+                // Update index
+                currentSlideIndex = nextIndex;
+            }, 5000);
         }
 
         // Parallax disabled — all elements are static

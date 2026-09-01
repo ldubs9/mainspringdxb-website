@@ -50,18 +50,18 @@ test('homepage omits decorative eyebrow labels and uses shop blocks at 75% of th
     assert.doesNotMatch(homeMotion, /ms-hero-(?:eyebrow|rail|cue)/);
 });
 
-test('hero slideshow never replaces a visible frame before the next image is ready', () => {
-    assert.match(index, /<link rel="preload" as="image" href="slideshow-1\.jpg" fetchpriority="high">/);
-    assert.match(home, /class="slideshow-slide active is-initial"[^>]*slideshow-1\.jpg/);
-    assert.match(stylesCss, /\.hero-slideshow\s*\{[^}]*background:[^;}]*url\(['"]?\.\.\/slideshow-1\.jpg/s);
-    assert.match(stylesCss, /\.slideshow-slide\.active\.is-initial\s*\{[^}]*animation:\s*none/s);
-    assert.match(app, /function preloadSlideImage\(slide\)/);
-    assert.match(app, /async function goToSlide\(index\)[\s\S]*?await preloadSlideImage\(nextSlide\)/);
+test('hero slideshow uses its original immediate transition without loading fallbacks', () => {
+    assert.doesNotMatch(index, /<link rel="preload"[^>]*slideshow-1\.jpg/);
+    assert.match(home, /class="slideshow-slide active"[^>]*slideshow-1\.jpg/);
+    assert.doesNotMatch(home, /is-initial/);
+    assert.doesNotMatch(stylesCss, /\.hero-slideshow\s*\{[^}]*background:[^;}]*slideshow-1\.jpg/s);
+    assert.doesNotMatch(stylesCss, /\.slideshow-slide\.active\.is-initial/);
+    assert.doesNotMatch(app, /preloadSlideImage|slideImageLoads|imageReady/);
 
     const autoplayStart = app.indexOf('function autoPlaySlideshow');
     const autoplayEnd = app.indexOf('// Parallax disabled', autoplayStart);
     const autoplay = app.slice(autoplayStart, autoplayEnd);
-    assert.doesNotMatch(autoplay, /goToSlide\(nextIndex\);/);
+    assert.match(autoplay, /goToSlide\(nextIndex\);/);
 });
 
 test('accessory cards use the canonical Supabase subcategory values', () => {
@@ -114,9 +114,9 @@ test('watch condition control uses product conditions rather than availability s
 });
 
 test('condition filter changes use fresh component and application assets', () => {
-    assert.match(loader, /const COMPONENTS_VERSION = '9'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=19'/);
-    assert.match(index, /js\/loader\.js\?v=9/);
+    assert.match(loader, /const COMPONENTS_VERSION = '10'/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=20'/);
+    assert.match(index, /js\/loader\.js\?v=10/);
 });
 
 test('inventory UI has no reservation status or reserve action', () => {
