@@ -3874,13 +3874,13 @@
                 }
 
                 if (posts.length === 0) {
-                    track.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">Follow @mainspring.dxb on Instagram to see our latest content</div>';
+                    track.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--gray);">Follow @mainspring.ae on Instagram to see our latest content</div>';
                     return;
                 }
 
                 // Render the locally cached images, each linking to its real Instagram post
                 const itemHtml = posts.map(post => {
-                    const url = post.url || 'https://www.instagram.com/mainspring.dxb';
+                    const url = post.url || 'https://www.instagram.com/mainspring.ae';
                     const img = post.image_url || '';
                     const cap = escapeHtml((post.caption || '').slice(0, 140));
                     return `

@@ -1,11 +1,11 @@
-# igfetch_fetch.py — duplicate of fetch_instagram_looter.py (adapted for mainspring.dxb)
+# igfetch_fetch.py — duplicate of fetch_instagram_looter.py (adapted for mainspring.ae)
 
 """
 Instagram Looter API Fetcher (prefixed copy)
 Copy this file into the repo's `scripts/` folder and run with:
 
 export RAPIDAPI_KEY='YOUR_KEY'
-python3 scripts/igfetch_fetch.py --username mainspring.dxb --count 6
+python3 scripts/igfetch_fetch.py --username mainspring.ae --count 6
 
 This file is identical in behavior to `fetch_instagram_looter.py`.
 """
@@ -15,7 +15,10 @@ import json
 import requests
 import sys
 
-def fetch_user_posts_looter(username="mainspring.dxb", limit=10):
+DEFAULT_USERNAME = "mainspring.ae"
+
+
+def fetch_user_posts_looter(username=DEFAULT_USERNAME, limit=10, user_id=None):
     api_key = os.environ.get('RAPIDAPI_KEY')
     if not api_key:
         print("ERROR: RAPIDAPI_KEY environment variable not set")
@@ -33,20 +36,25 @@ def fetch_user_posts_looter(username="mainspring.dxb", limit=10):
     os.makedirs('images', exist_ok=True)
 
     try:
-        profile_url = f"{base}/profile2"
-        resp = requests.get(profile_url, headers=headers, params={"username": username}, timeout=30)
-        if resp.status_code != 200:
-            print(f"Failed to get profile: HTTP {resp.status_code}")
-            print(resp.text[:500])
-            sys.exit(1)
-        profile = resp.json()
+        configured_user_id = user_id or os.environ.get('INSTAGRAM_USER_ID')
+        if configured_user_id:
+            user_id = str(configured_user_id)
+            print(f"Using configured user id: {user_id}")
+        else:
+            profile_url = f"{base}/profile2"
+            resp = requests.get(profile_url, headers=headers, params={"username": username}, timeout=30)
+            if resp.status_code != 200:
+                print(f"Failed to get profile: HTTP {resp.status_code}")
+                print(resp.text[:500])
+                sys.exit(1)
+            profile = resp.json()
 
-        user_id = None
-        if isinstance(profile, dict):
-            user_id = (profile.get('id') or profile.get('user_id') or profile.get('pk') or
-                       (profile.get('data') and profile.get('data').get('id')))
-        if not user_id and isinstance(profile.get('user'), dict):
-            user_id = profile['user'].get('id') or profile['user'].get('pk')
+            user_id = None
+            if isinstance(profile, dict):
+                user_id = (profile.get('id') or profile.get('user_id') or profile.get('pk') or
+                           (profile.get('data') and profile.get('data').get('id')))
+                if not user_id and isinstance(profile.get('user'), dict):
+                    user_id = profile['user'].get('id') or profile['user'].get('pk')
         if not user_id:
             print("Could not determine user ID from profile response:")
             print(json.dumps(profile, indent=2)[:1000])
@@ -158,7 +166,8 @@ def fetch_user_posts_looter(username="mainspring.dxb", limit=10):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--username","-u", default="mainspring.dxb")
+    parser.add_argument("--username","-u", default=DEFAULT_USERNAME)
+    parser.add_argument("--user-id", default=None, help="Optional stable Instagram user ID")
     parser.add_argument("--count","-c", type=int, default=10)
     args = parser.parse_args()
-    fetch_user_posts_looter(username=args.username, limit=args.count)
+    fetch_user_posts_looter(username=args.username, limit=args.count, user_id=args.user_id)

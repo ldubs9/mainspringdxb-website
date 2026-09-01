@@ -10,4 +10,4 @@ def check_env_var(var_name):
 if __name__ == '__main__':
     print('igfetch environment check')
     print('RAPIDAPI_KEY set:' , check_env_var('RAPIDAPI_KEY'))
-    print('To run: python3 scripts/igfetch_fetch.py --username mainspring.dxb --count 6')
+    print('To run: python3 scripts/igfetch_fetch.py --username mainspring.ae --count 6')

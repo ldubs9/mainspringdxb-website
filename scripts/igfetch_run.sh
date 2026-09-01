@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# igfetch_run.sh — loop wrapper for igfetch_fetch.py (mainspring.dxb defaults)
+# igfetch_run.sh — loop wrapper for igfetch_fetch.py (mainspring.ae defaults)
 
 INTERVAL_HOURS=${INTERVAL_HOURS:-24}
-USERNAME=${USERNAME:-mainspring.dxb}
+USERNAME=${USERNAME:-mainspring.ae}
 COUNT=${COUNT:-6}
 
 echo "Starting igfetch loop: username=$USERNAME count=$COUNT interval=${INTERVAL_HOURS}h"

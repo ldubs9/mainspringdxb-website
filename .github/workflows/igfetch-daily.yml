@@ -24,8 +24,11 @@ jobs:
       - name: Fetch Instagram posts
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          # Use the stable Instagram user ID so the provider does not depend on
+          # its username index when resolving the account.
+          INSTAGRAM_USER_ID: '52804570589'
         run: |
-          python3 scripts/igfetch_fetch.py --username mainspring.dxb --count 10
+          python3 scripts/igfetch_fetch.py --username mainspring.ae --count 10
 
       - name: Commit and push updates
         env:
