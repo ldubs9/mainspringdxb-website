@@ -9,6 +9,8 @@ const accessories = fs.readFileSync('components/page-accessories.html', 'utf8');
 const navOverlay = fs.readFileSync('components/nav-overlay.html', 'utf8');
 const pagesCss = fs.readFileSync('css/pages.css', 'utf8');
 const stylesCss = fs.readFileSync('css/styles.css', 'utf8');
+const home = fs.readFileSync('components/page-home.html', 'utf8');
+const homeCss = fs.readFileSync('css/home.css', 'utf8');
 const homeMotion = fs.readFileSync('js/home-motion.js', 'utf8');
 const loader = fs.readFileSync('js/loader.js', 'utf8');
 const index = fs.readFileSync('index.html', 'utf8');
@@ -30,6 +32,22 @@ test('product metadata renders non-empty deliverables immediately after movement
 
 test('hero copy remains fully visible while scrolling the hero', () => {
     assert.doesNotMatch(homeMotion, /gsap\.to\('#msHero \.ms-hero-inner',[\s\S]*?opacity:\s*0\.2/);
+});
+
+test('homepage omits decorative eyebrow labels and uses shop blocks at 75% of their former height', () => {
+    for (const removedCopy of [
+        /Dubai\s*&middot;\s*UAE/i,
+        /Est\. for the obsessed/i,
+        /100% authentic with 3 months warranty/i,
+        /01 \/ Multi-point inspection/i,
+    ]) {
+        assert.doesNotMatch(home, removedCopy);
+    }
+
+    assert.doesNotMatch(home, /class="ms-shop-num"/);
+    assert.match(homeCss, /\.ms-shop\s*\{[^}]*min-height:\s*calc\(58\.5vh - 37\.5px\)/s);
+    assert.match(homeCss, /@media \(max-width: 992px\)[\s\S]*?\.ms-shop-block\s*\{[^}]*min-height:\s*calc\(42vh - 37\.5px\)/);
+    assert.doesNotMatch(homeMotion, /ms-hero-(?:eyebrow|rail|cue)/);
 });
 
 test('accessory cards use the canonical Supabase subcategory values', () => {
@@ -82,7 +100,7 @@ test('watch condition control uses product conditions rather than availability s
 });
 
 test('condition filter changes use fresh component and application assets', () => {
-    assert.match(loader, /const COMPONENTS_VERSION = '7'/);
+    assert.match(loader, /const COMPONENTS_VERSION = '8'/);
     assert.match(loader, /script\.src = 'js\/app\.js\?v=18'/);
     assert.match(index, /js\/loader\.js\?v=9/);
 });

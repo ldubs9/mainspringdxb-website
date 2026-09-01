@@ -127,23 +127,20 @@
         if (hero) {
             var heroTitle = hero.querySelector('.ms-hero-title');
             var tl = gsap.timeline({ delay: 0.15, defaults: { ease: 'power4.out' } });
-            tl.from('#msHero .ms-hero-eyebrow', { y: 24, opacity: 0, duration: 0.8 });
             if (heroTitle) {
-                tl.from(wordInners(heroTitle), { yPercent: 115, duration: 1.1, stagger: 0.08 }, '-=0.4');
+                tl.from(wordInners(heroTitle), { yPercent: 115, duration: 1.1, stagger: 0.08 });
             }
             tl.from('#msHero .ms-hero-meta', { y: 30, opacity: 0, duration: 0.9 }, '-=0.5')
-              .from('#msHero .ms-hero-dots', { y: 16, opacity: 0, duration: 0.7 }, '-=0.6')
-              .from('#msHero .ms-hero-cue', { opacity: 0, duration: 0.8 }, '-=0.4')
-              .from('#msHero .ms-hero-rail', { opacity: 0, duration: 0.9, stagger: 0.1 }, '-=0.7');
+              .from('#msHero .ms-hero-dots', { y: 16, opacity: 0, duration: 0.7 }, '-=0.6');
 
             // Safety net: the intro is rAF-driven. If the ticker never runs
             // (e.g. the page loaded in a fully throttled/background context),
             // force the hero content visible after the intro should have ended.
             // This setTimeout fires on the macrotask queue regardless of rAF.
             setTimeout(function () {
-                var eb = document.querySelector('#msHero .ms-hero-eyebrow');
-                if (eb && parseFloat(getComputedStyle(eb).opacity) < 0.05) {
-                    gsap.set('#msHero .ms-hero-eyebrow, #msHero .ms-hero-meta, #msHero .ms-hero-dots, #msHero .ms-hero-cue, #msHero .ms-hero-rail', { clearProps: 'opacity,transform,x,y' });
+                var meta = document.querySelector('#msHero .ms-hero-meta');
+                if (meta && parseFloat(getComputedStyle(meta).opacity) < 0.05) {
+                    gsap.set('#msHero .ms-hero-meta, #msHero .ms-hero-dots', { clearProps: 'opacity,transform,x,y' });
                     if (heroTitle) gsap.set(wordInners(heroTitle), { yPercent: 0 });
                 }
             }, 2800);

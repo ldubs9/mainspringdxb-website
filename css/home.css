@@ -193,17 +193,6 @@
 .ms-hero-corner.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; }
 .ms-hero-corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; }
 
-/* vertical rails */
-.ms-hero-rail {
-    position: absolute; z-index: 5; top: 50%;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.66rem; letter-spacing: 0.32em; text-transform: uppercase;
-    color: rgba(255,255,255,0.5);
-}
-.ms-hero-rail span { display: inline-block; }
-.ms-hero-rail-left { left: clamp(18px, 2.2vw, 34px); transform: translateY(-50%) rotate(180deg); writing-mode: vertical-rl; }
-.ms-hero-rail-right { right: clamp(18px, 2.2vw, 34px); transform: translateY(-50%); writing-mode: vertical-rl; }
-
 .ms-hero-inner {
     position: relative;
     z-index: 4;
@@ -212,16 +201,6 @@
     max-width: 1500px;
     margin: 0 auto;
 }
-
-.ms-hero-eyebrow {
-    display: inline-flex; align-items: center; gap: 12px;
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 0.74rem; letter-spacing: 0.2em; text-transform: uppercase;
-    color: rgba(255,255,255,0.72);
-    margin-bottom: clamp(20px, 3vh, 34px);
-}
-.ms-eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ms-gold); box-shadow: 0 0 0 0 rgba(196,162,101,0.6); animation: msPulse 2.6s infinite; }
-@keyframes msPulse { 0%,100%{ box-shadow: 0 0 0 0 rgba(196,162,101,0.55);} 50%{ box-shadow: 0 0 0 7px rgba(196,162,101,0);} }
 
 .ms-hero-title {
     font-family: 'Fraunces', serif;
@@ -402,23 +381,16 @@
     font-family: 'Space Grotesk', sans-serif; color: rgba(255,255,255,0.74);
     font-size: clamp(1rem, 1.4vw, 1.15rem); line-height: 1.8; max-width: 46ch;
 }
-.ms-showcase-caption {
-    position: absolute; z-index: 2; bottom: clamp(22px, 4vh, 44px); right: var(--ms-pad);
-    font-family: 'Space Grotesk', sans-serif; font-size: 0.68rem; letter-spacing: 0.24em;
-    text-transform: uppercase; color: rgba(255,255,255,0.5);
-}
-
 /* ============================================================================
    SHOP (asymmetric split)
 ============================================================================ */
-.ms-shop { display: grid; grid-template-columns: 1.35fr 0.65fr; min-height: calc(78vh - 50px); }
+.ms-shop { display: grid; grid-template-columns: 1.35fr 0.65fr; min-height: calc(58.5vh - 37.5px); }
 .ms-shop-block { position: relative; overflow: hidden; cursor: pointer; display: flex; align-items: flex-end; isolation: isolate; }
 .ms-shop-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transform: scale(1.04); transition: transform 0.9s var(--ms-ease); z-index: 0; }
 .ms-shop-block:hover .ms-shop-bg { transform: scale(1.12); }
 .ms-shop-overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.78) 100%); }
 .ms-shop-overlay.light { background: linear-gradient(180deg, rgba(20,20,20,0.05) 0%, rgba(20,20,20,0.6) 100%); }
 .ms-shop-body { position: relative; z-index: 2; padding: clamp(34px, 5vw, 70px); color: #fff; max-width: 540px; }
-.ms-shop-num { font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; letter-spacing: 0.3em; color: var(--ms-gold-soft); display: block; margin-bottom: 16px; }
 .ms-shop-body h3 { font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(2.2rem, 4.4vw, 4rem); line-height: 1; letter-spacing: -0.02em; margin-bottom: 16px; }
 .ms-shop-body p { font-family: 'Space Grotesk', sans-serif; color: rgba(255,255,255,0.78); font-size: 0.98rem; line-height: 1.7; max-width: 40ch; margin-bottom: 26px; }
 .ms-shop-cta { display: inline-flex; align-items: center; gap: 12px; font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 500; }
@@ -485,7 +457,7 @@
 ============================================================================ */
 @media (max-width: 992px) {
     .ms-shop { grid-template-columns: 1fr; }
-    .ms-shop-block { min-height: calc(56vh - 50px); }
+    .ms-shop-block { min-height: calc(42vh - 37.5px); }
     .ms-standard-row { grid-template-columns: 56px 1fr; grid-template-areas: "num title" "num desc"; row-gap: 14px; }
     .ms-standard-row h3 { grid-area: title; }
     .ms-standard-row p { grid-area: desc; }
@@ -494,10 +466,8 @@
 }
 
 @media (max-width: 768px) {
-    .ms-hero-rail { display: none; }
     .ms-hero { align-items: flex-end; }
     .ms-hero-title { font-size: clamp(2.4rem, 11vw, 3.4rem); margin-bottom: 20px; }
-    .ms-hero-eyebrow { margin-bottom: 16px; font-size: 0.66rem; }
     .ms-hero-meta { flex-direction: column; align-items: flex-start; gap: 18px; }
     .ms-hero-actions { width: 100%; }
     .ms-hero-actions .ms-btn { flex: 1; justify-content: center; }
@@ -523,6 +493,6 @@
 ============================================================================ */
 @media (prefers-reduced-motion: reduce) {
     .ms-marquee-track { animation: none; }
-    .ms-eyebrow-dot, .ms-cue-line::after, .ms-cue-line.horiz::after { animation: none; }
+    .ms-cue-line::after, .ms-cue-line.horiz::after { animation: none; }
     .ms-showcase-media { inset: 0; }
 }
