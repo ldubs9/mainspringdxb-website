@@ -50,6 +50,20 @@ test('homepage omits decorative eyebrow labels and uses shop blocks at 75% of th
     assert.doesNotMatch(homeMotion, /ms-hero-(?:eyebrow|rail|cue)/);
 });
 
+test('hero slideshow never replaces a visible frame before the next image is ready', () => {
+    assert.match(index, /<link rel="preload" as="image" href="slideshow-1\.jpg" fetchpriority="high">/);
+    assert.match(home, /class="slideshow-slide active is-initial"[^>]*slideshow-1\.jpg/);
+    assert.match(stylesCss, /\.hero-slideshow\s*\{[^}]*background:[^;}]*url\(['"]?\.\.\/slideshow-1\.jpg/s);
+    assert.match(stylesCss, /\.slideshow-slide\.active\.is-initial\s*\{[^}]*animation:\s*none/s);
+    assert.match(app, /function preloadSlideImage\(slide\)/);
+    assert.match(app, /async function goToSlide\(index\)[\s\S]*?await preloadSlideImage\(nextSlide\)/);
+
+    const autoplayStart = app.indexOf('function autoPlaySlideshow');
+    const autoplayEnd = app.indexOf('// Parallax disabled', autoplayStart);
+    const autoplay = app.slice(autoplayStart, autoplayEnd);
+    assert.doesNotMatch(autoplay, /goToSlide\(nextIndex\);/);
+});
+
 test('accessory cards use the canonical Supabase subcategory values', () => {
     for (const category of ['pocket-watch', 'books', 'standing-clocks', 'watch-box', 'bags-and-more', 'watch-straps']) {
         assert.match(accessories, new RegExp(`showAccessoryCategory\\('${category}'\\)`));
@@ -100,8 +114,8 @@ test('watch condition control uses product conditions rather than availability s
 });
 
 test('condition filter changes use fresh component and application assets', () => {
-    assert.match(loader, /const COMPONENTS_VERSION = '8'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=18'/);
+    assert.match(loader, /const COMPONENTS_VERSION = '9'/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=19'/);
     assert.match(index, /js\/loader\.js\?v=9/);
 });
 

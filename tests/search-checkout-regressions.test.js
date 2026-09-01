@@ -142,7 +142,7 @@ test('final stylesheet keeps navbar search independent from listing-card styles'
     assert.match(pageStyles, /\.search-card-meta\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
     assert.doesNotMatch(app.slice(app.indexOf('function renderSearchResults'), app.indexOf('function renderProducts')), /product-card/);
     assert.match(index, /css\/pages\.css\?v=10/);
-    assert.match(loader, /js\/app\.js\?v=18/);
+    assert.match(loader, /js\/app\.js\?v=19/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -200,9 +200,9 @@ test('cart enforces one unit per inventory record and renders no quantity contro
     assert.match(app, /function hydrateCartProductDetails/);
     assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
-    assert.match(index, /css\/styles\.css\?v=10/);
+    assert.match(index, /css\/styles\.css\?v=11/);
     assert.match(index, /js\/loader\.js\?v=9/);
-    assert.match(loader, /js\/app\.js\?v=18/);
+    assert.match(loader, /js\/app\.js\?v=19/);
 });
 
 test('cash checkout creates an order before opening a product-specific WhatsApp inquiry', () => {
