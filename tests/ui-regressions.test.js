@@ -31,6 +31,52 @@ test('product metadata renders non-empty deliverables immediately after movement
     assert.match(app, /renderDetailMeta\('Deliverables',\s*product\.deliverables\)/);
 });
 
+test('watch reference metadata does not fall back to the internal product reference code', () => {
+    const helperStart = app.indexOf('function getWatchReference');
+    const helperEnd = app.indexOf('function renderDetailMeta', helperStart);
+    assert.ok(helperStart >= 0, 'watch reference helper exists');
+    assert.ok(helperEnd > helperStart, 'watch reference helper has a bounded body');
+
+    const getWatchReference = new Function(
+        `${app.slice(helperStart, helperEnd)}; return getWatchReference;`
+    )();
+    assert.equal(
+        getWatchReference({ watch_reference: null, reference_code: 'REF-A427' }),
+        '',
+        'a missing watch_reference must render as empty'
+    );
+    assert.equal(
+        getWatchReference({ watch_reference: '124300', reference_code: 'REF-A427' }),
+        '124300'
+    );
+    assert.equal(
+        getWatchReference({ watch_reference: 124300, reference_code: 'REF-A427' }),
+        '124300',
+        'a numeric watch reference must be displayed as text'
+    );
+    assert.equal(
+        getWatchReference({ watch_reference: '   ', reference_code: 'REF-A427' }),
+        '',
+        'whitespace-only watch references must render as empty'
+    );
+
+    const metaStart = app.indexOf('function renderDetailMeta');
+    const metaEnd = app.indexOf('// brand and model', metaStart);
+    const renderDetailMeta = new Function(
+        'escapeMarkup',
+        `${app.slice(metaStart, metaEnd)}; return renderDetailMeta;`
+    )((value) => String(value));
+    assert.equal(renderDetailMeta('Reference Number', null), '');
+    assert.equal(renderDetailMeta('Reference Number', '   '), '');
+    assert.match(renderDetailMeta('Reference Number', 124300), /Reference Number/);
+
+    const detailStart = app.indexOf('async function showProductDetail');
+    const detailEnd = app.indexOf('// Render gallery\n        function renderGallery', detailStart);
+    const detailRenderer = app.slice(detailStart, detailEnd);
+    assert.match(detailRenderer, /const watchReference = getWatchReference\(product\);/);
+    assert.doesNotMatch(detailRenderer, /product\.reference_code\s*\|\|\s*''/);
+});
+
 test('hero copy remains fully visible while scrolling the hero', () => {
     assert.doesNotMatch(homeMotion, /gsap\.to\('#msHero \.ms-hero-inner',[\s\S]*?opacity:\s*0\.2/);
 });
@@ -116,8 +162,8 @@ test('watch condition control uses product conditions rather than availability s
 
 test('condition filter changes use fresh component and application assets', () => {
     assert.match(loader, /const COMPONENTS_VERSION = '10'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=22'/);
-    assert.match(index, /js\/loader\.js\?v=12/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=23'/);
+    assert.match(index, /js\/loader\.js\?v=13/);
 });
 
 test('storefront derives Edge Functions URL from the shared Supabase client', () => {

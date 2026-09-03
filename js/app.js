@@ -1853,6 +1853,11 @@
                 .replace(/\u2029/g, '\\u2029');
         }
 
+        function getWatchReference(product) {
+            const value = product?.watch_reference;
+            return value === null || value === undefined ? '' : String(value).trim();
+        }
+
         function renderDetailMeta(label, value) {
             if (value === null || value === undefined || String(value).trim() === '') return '';
             return `
@@ -1918,7 +1923,7 @@
                 if (product.category === 'watch') {
                     // For watches: show watch_year and watch_reference
                     const year = product.watch_year || product.year || '';
-                    const reference = product.watch_reference || product.reference_number || '';
+                    const reference = getWatchReference(product);
                     const yearMarkup = escapeMarkup(year);
                     const referenceMarkup = escapeMarkup(reference);
                     if (year || reference) {
@@ -2693,7 +2698,7 @@
 
             // Render detail info
             const watchYear = product.watch_year || product.year || '';
-            const watchReference = product.watch_reference || product.reference_number || product.reference_code || '';
+            const watchReference = getWatchReference(product);
             const watchDetails = product.product_details || '';
             const caption = product.caption || '';
             const isUnavailableProduct = ['sold', 'reserved'].includes(product.status);
@@ -2720,7 +2725,7 @@
                 <h1 class="detail-name">${displayNameMarkup}</h1>
                 ${(() => {
                     const primaryFields = [product.gender, product.movement, product.country];
-                    const fallbackFields = [product.size, product.watch_year, product.watch_reference];
+                    const fallbackFields = [product.size, watchYear, watchReference];
                     const infoItems = [];
                     let fallbackIndex = 0;
                     for (let i = 0; i < primaryFields.length; i++) {
