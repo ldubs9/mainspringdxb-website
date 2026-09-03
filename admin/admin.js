@@ -60,6 +60,7 @@
         imageUrls: [],
         selectedImageIndex: 0,
         page: 1,
+        soldMonth: '',
         dirty: false,
         isSaving: false,
         saveStatus: 'idle',
@@ -85,6 +86,9 @@
         search: document.getElementById('admin-product-search'),
         statusFilter: document.getElementById('admin-status-filter'),
         categoryFilter: document.getElementById('admin-category-filter'),
+        soldMonthFilter: document.getElementById('admin-sold-month-filter'),
+        soldReport: document.getElementById('admin-sold-report'),
+        soldMonthSummary: document.getElementById('admin-sold-month-summary'),
         listFeedback: document.getElementById('admin-list-feedback'),
         productList: document.getElementById('admin-product-list'),
         resultCount: document.getElementById('admin-result-count'),
@@ -476,6 +480,26 @@
         });
     }
 
+    function createActionIcon(pathData) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.classList.add('admin-image-action-icon');
+        const paths = Array.isArray(pathData) ? pathData : [pathData];
+        paths.forEach((data) => {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', data);
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', 'currentColor');
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+            path.setAttribute('stroke-width', '1.8');
+            svg.appendChild(path);
+        });
+        return svg;
+    }
+
     function renderImageManager() {
         elements.imageManager.replaceChildren();
         if (!state.imageUrls.length) {
@@ -539,23 +563,34 @@
             actions.className = 'admin-image-actions';
             const thumbnailButton = document.createElement('button');
             thumbnailButton.type = 'button';
-            thumbnailButton.textContent = index === 0 ? 'Thumbnail' : 'Set as thumbnail';
+            thumbnailButton.className = 'admin-image-action admin-image-thumbnail-action';
+            thumbnailButton.setAttribute('aria-label', index === 0 ? 'Current thumbnail' : 'Set as thumbnail');
+            thumbnailButton.title = index === 0 ? 'Current thumbnail' : 'Set as thumbnail';
+            thumbnailButton.appendChild(createActionIcon([
+                'M4 5.5h16v13H4z',
+                'M4 15.5l4.5-4.5 3.5 3.5 2.5-2.5 5.5 5',
+                'M8 9h.01',
+            ]));
             thumbnailButton.disabled = index === 0;
             thumbnailButton.addEventListener('click', () => promoteThumbnail(index));
             actions.appendChild(thumbnailButton);
 
             const upButton = document.createElement('button');
             upButton.type = 'button';
-            upButton.textContent = 'Up';
-            upButton.setAttribute('aria-label', `Move image ${index + 1} up`);
+            upButton.className = 'admin-image-action admin-image-move-action';
+            upButton.setAttribute('aria-label', `Move image ${index + 1} left`);
+            upButton.title = 'Move left';
+            upButton.appendChild(createActionIcon(['M19 12H5', 'M10 6l-6 6 6 6']));
             upButton.disabled = index === 0;
             upButton.addEventListener('click', () => moveImage(index, index - 1));
             actions.appendChild(upButton);
 
             const downButton = document.createElement('button');
             downButton.type = 'button';
-            downButton.textContent = 'Down';
-            downButton.setAttribute('aria-label', `Move image ${index + 1} down`);
+            downButton.className = 'admin-image-action admin-image-move-action';
+            downButton.setAttribute('aria-label', `Move image ${index + 1} right`);
+            downButton.title = 'Move right';
+            downButton.appendChild(createActionIcon(['M5 12h14', 'M14 6l6 6-6 6']));
             downButton.disabled = index === state.imageUrls.length - 1;
             downButton.addEventListener('click', () => moveImage(index, index + 1));
             actions.appendChild(downButton);
@@ -726,9 +761,77 @@
         elements.categoryFilter.value = categories.includes(current) ? current : '';
     }
 
-    function productMatches(product, search, status, category) {
+    function populateSoldMonthFilter() {
+        const isSoldView = elements.statusFilter.value === 'sold';
+        const category = elements.categoryFilter.value;
+        const current = state.soldMonth || elements.soldMonthFilter.value;
+        const monthCounts = utils.countSoldByMonth(state.products, category);
+        const availableMonths = new Set(monthCounts.map(({ month }) => month));
+
+        elements.soldMonthFilter.replaceChildren();
+        const allMonths = document.createElement('option');
+        allMonths.value = '';
+        allMonths.textContent = 'All sold months';
+        elements.soldMonthFilter.appendChild(allMonths);
+        monthCounts.forEach(({ month, count }) => {
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = `${utils.formatSoldMonth(month)} · ${count} sold`;
+            elements.soldMonthFilter.appendChild(option);
+        });
+
+        state.soldMonth = isSoldView && availableMonths.has(current) ? current : '';
+        elements.soldMonthFilter.value = state.soldMonth;
+        elements.soldMonthFilter.disabled = !isSoldView;
+    }
+
+    function renderSoldReport() {
+        const isSoldView = elements.statusFilter.value === 'sold';
+        elements.soldReport.hidden = !isSoldView;
+        elements.soldMonthSummary.replaceChildren();
+        if (!isSoldView) return;
+
+        const monthCounts = utils.countSoldByMonth(state.products, elements.categoryFilter.value);
+        if (!monthCounts.length) {
+            const empty = document.createElement('p');
+            empty.className = 'admin-sold-report-empty';
+            empty.textContent = 'No sold products are available for this category.';
+            elements.soldMonthSummary.appendChild(empty);
+            return;
+        }
+
+        monthCounts.forEach(({ month, count }) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'admin-sold-month-summary-item';
+            button.setAttribute('aria-pressed', String(state.soldMonth === month));
+            button.setAttribute(
+                'aria-label',
+                `${utils.formatSoldMonth(month)}: ${count} sold product${count === 1 ? '' : 's'}`
+            );
+            button.title = state.soldMonth === month ? 'Show all sold months' : `Show ${utils.formatSoldMonth(month)}`;
+
+            const label = document.createElement('span');
+            label.textContent = utils.formatSoldMonth(month);
+            const total = document.createElement('strong');
+            total.textContent = String(count);
+            button.append(label, total);
+            button.addEventListener('click', () => {
+                state.soldMonth = state.soldMonth === month ? '' : month;
+                elements.soldMonthFilter.value = state.soldMonth;
+                applyFilters();
+            });
+            elements.soldMonthSummary.appendChild(button);
+        });
+    }
+
+    function productMatches(product, search, status, category, soldMonth) {
         if (status && utils.normalizeStatus(product.status) !== status) return false;
         if (category && product.category !== category) return false;
+        if (status === 'sold' && soldMonth) {
+            const productMonth = utils.getSoldMonthKey(product.sold_at) || utils.UNKNOWN_SOLD_MONTH;
+            if (productMonth !== soldMonth) return false;
+        }
         if (!search) return true;
         const haystack = [
             product.reference_code,
@@ -741,12 +844,15 @@
     }
 
     function applyFilters(resetPage = true) {
+        populateSoldMonthFilter();
         const search = elements.search.value.trim().toLowerCase();
         const status = elements.statusFilter.value;
         const category = elements.categoryFilter.value;
-        state.filteredProducts = state.products.filter((product) => productMatches(product, search, status, category));
+        state.filteredProducts = state.products.filter((product) => productMatches(product, search, status, category, state.soldMonth));
+        if (status === 'sold') state.filteredProducts = utils.sortSoldProducts(state.filteredProducts);
         if (resetPage) state.page = 1;
         renderProductList();
+        renderSoldReport();
     }
 
     function createMarkerButton(product, marker) {
@@ -855,7 +961,10 @@
         const pageProducts = state.filteredProducts.slice(start, start + PAGE_SIZE);
         elements.productList.replaceChildren();
         pageProducts.forEach((product) => elements.productList.appendChild(createProductRow(product)));
-        elements.resultCount.textContent = `${total} result${total === 1 ? '' : 's'}`;
+        const isSoldView = elements.statusFilter.value === 'sold';
+        elements.resultCount.textContent = isSoldView
+            ? `${total} sold product${total === 1 ? '' : 's'}`
+            : `${total} result${total === 1 ? '' : 's'}`;
         setFeedback(elements.listFeedback, total ? '' : 'No products match these filters.', '');
         renderPagination(totalPages);
     }
@@ -882,6 +991,8 @@
         elements.search.value = '';
         elements.statusFilter.value = '';
         elements.categoryFilter.value = '';
+        elements.soldMonthFilter.value = '';
+        state.soldMonth = '';
         state.page = 1;
     }
 
@@ -904,8 +1015,10 @@
             });
             state.products = [];
             state.filteredProducts = [];
+            populateSoldMonthFilter();
             renderSummary();
             renderProductList();
+            renderSoldReport();
             setFeedback(elements.listFeedback, 'Unable to load the catalogue. Check your access and try again.', 'error');
         }
     }
@@ -1011,6 +1124,10 @@
         elements.search.addEventListener('input', () => applyFilters());
         elements.statusFilter.addEventListener('change', () => applyFilters());
         elements.categoryFilter.addEventListener('change', () => applyFilters());
+        elements.soldMonthFilter.addEventListener('change', () => {
+            state.soldMonth = elements.soldMonthFilter.value;
+            applyFilters();
+        });
         elements.form.addEventListener('submit', saveProduct);
         root.addEventListener('beforeunload', (event) => {
             if (!hasUnsavedChanges()) return;

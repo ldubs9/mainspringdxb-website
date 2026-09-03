@@ -458,8 +458,89 @@ button:disabled {
 
 .admin-filter-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
+}
+
+.admin-sold-report {
+    padding: 16px 22px 18px;
+    border-bottom: 1px solid var(--admin-line);
+    background: var(--admin-panel);
+}
+
+.admin-sold-report-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.admin-sold-report-heading h3 {
+    margin: 0;
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem;
+    font-weight: 500;
+    line-height: 1.1;
+}
+
+.admin-sold-report-note {
+    flex: 0 0 auto;
+    color: var(--admin-gold);
+    font-size: 0.63rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.admin-sold-report-description {
+    margin: 10px 0 0;
+    color: var(--admin-muted);
+    font-size: 0.74rem;
+    line-height: 1.45;
+}
+
+.admin-sold-month-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.admin-sold-month-summary-item {
+    display: flex;
+    min-width: 0;
+    min-height: 38px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border: 1px solid var(--admin-line);
+    border-radius: var(--admin-radius);
+    padding: 7px 10px;
+    background: var(--admin-wash);
+    color: var(--admin-muted);
+    font-size: 0.72rem;
+    text-align: left;
+    transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.admin-sold-month-summary-item:hover,
+.admin-sold-month-summary-item[aria-pressed="true"] {
+    border-color: var(--admin-gold);
+    background: rgba(173, 135, 71, 0.1);
+    color: var(--admin-ink);
+}
+
+.admin-sold-month-summary-item strong {
+    color: var(--admin-ink);
+    font-family: 'Fraunces', serif;
+    font-size: 1.12rem;
+    font-weight: 500;
+}
+
+.admin-sold-report-empty {
+    margin: 12px 0 0;
+    color: var(--admin-muted);
+    font-size: 0.74rem;
 }
 
 .admin-list-feedback {
@@ -967,15 +1048,16 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) 40px 40px;
     align-items: stretch;
     gap: 6px;
-    min-height: 46px;
+    min-height: 40px;
     margin-top: auto;
-    padding: 8px 10px 10px;
+    padding: 4px 10px;
 }
 
 .admin-image-actions button {
     display: flex;
     min-width: 0;
-    min-height: 42px;
+    min-height: 32px;
+    height: 32px;
     align-items: center;
     justify-content: center;
     border: 1px solid var(--admin-line-strong);
@@ -983,8 +1065,16 @@ button:disabled {
     color: var(--admin-muted);
     font-size: 0.67rem;
     line-height: 1.2;
-    padding: 6px 8px;
+    padding: 4px 6px;
     text-align: center;
+    white-space: nowrap;
+}
+
+.admin-image-action-icon {
+    display: block;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
 }
 
 .admin-image-actions button:hover:not(:disabled) {
@@ -1159,6 +1249,10 @@ button:disabled {
         padding-left: 16px;
     }
 
+    .admin-filter-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .admin-product-row {
         padding-left: 16px;
     }
@@ -1236,6 +1330,11 @@ button:disabled {
     .admin-image-actions {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 5px;
+    }
+
+    .admin-sold-report {
+        padding-right: 16px;
+        padding-left: 16px;
     }
 
     .admin-image-actions button:first-child {

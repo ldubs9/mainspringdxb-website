@@ -87,6 +87,44 @@ test('admin marker choices apply a noticeable transparent overlay to the product
     assert.match(adminCss, /z-index: 1/);
 });
 
+test('admin sold reporting derives months and ordering from sold_at only', () => {
+    const utils = require(path.resolve(adminUtilsPath));
+    const products = [
+        { id: 1, reference_code: 'REF-1', status: 'sold', category: 'watch', sold_at: '2026-08-02 10:00:00+00' },
+        { id: 2, reference_code: 'REF-2', status: 'sold', category: 'watch', sold_at: '2026-09-15 10:00:00+00' },
+        { id: 3, reference_code: 'REF-3', status: 'sold', category: 'watch', sold_at: '2026-09-01 10:00:00+00' },
+        { id: 4, reference_code: 'REF-4', status: 'sold', category: 'accessory', sold_at: '2026-09-20 10:00:00+00' },
+        { id: 5, reference_code: 'REF-5', status: 'sold', category: 'watch', sold_at: null },
+        { id: 6, reference_code: 'REF-6', status: 'available', category: 'watch', sold_at: '2026-09-25 10:00:00+00' },
+    ];
+
+    assert.equal(utils.getSoldMonthKey(products[0].sold_at), '2026-08');
+    assert.equal(utils.getSoldMonthKey(products[4].sold_at), null);
+    assert.deepEqual(utils.countSoldByMonth(products, 'watch'), [
+        { month: '2026-09', count: 2 },
+        { month: '2026-08', count: 1 },
+        { month: utils.UNKNOWN_SOLD_MONTH, count: 1 },
+    ]);
+    assert.deepEqual(
+        utils.sortSoldProducts(products.filter((product) => product.status === 'sold')).map((product) => product.id),
+        [4, 2, 3, 1, 5]
+    );
+});
+
+test('admin catalogue exposes a sold month filter and monthly commission report', () => {
+    assert.match(adminIndex, /id="admin-sold-month-filter"/);
+    assert.match(adminIndex, /id="admin-sold-report"/);
+    assert.match(adminIndex, /id="admin-sold-month-summary"/);
+    assert.match(adminScript, /soldMonthFilter/);
+    assert.match(adminScript, /function populateSoldMonthFilter[\s\S]*?countSoldByMonth/);
+    assert.match(adminScript, /function renderSoldReport[\s\S]*?countSoldByMonth/);
+    assert.match(adminScript, /getSoldMonthKey\(product\.sold_at\)/);
+    assert.match(adminScript, /sortSoldProducts\(/);
+    assert.match(adminScript, /soldMonth/);
+    assert.match(adminCss, /\.admin-sold-report/);
+    assert.match(adminCss, /\.admin-sold-month-summary/);
+});
+
 test('admin specification fields expose only the approved dropdown values', () => {
     const utils = require(path.resolve(adminUtilsPath));
     assert.deepEqual(utils.CONDITION_OPTIONS, [
@@ -171,14 +209,29 @@ test('admin image drop targets resolve before and after positions without breaki
     assert.match(adminScript, /setPointerCapture/);
 });
 
+test('admin image actions use compact icons with accessible hover labels', () => {
+    assert.match(adminScript, /function createActionIcon\(/);
+    assert.ok(adminScript.includes("thumbnailButton.className = 'admin-image-action admin-image-thumbnail-action'"));
+    assert.ok(adminScript.includes("thumbnailButton.setAttribute('aria-label', index === 0 ? 'Current thumbnail' : 'Set as thumbnail')"));
+    assert.ok(adminScript.includes("thumbnailButton.title = index === 0 ? 'Current thumbnail' : 'Set as thumbnail'"));
+    assert.ok(adminScript.includes("upButton.setAttribute('aria-label', `Move image ${index + 1} left`)"));
+    assert.ok(adminScript.includes("upButton.title = 'Move left'"));
+    assert.ok(adminScript.includes("downButton.setAttribute('aria-label', `Move image ${index + 1} right`)"));
+    assert.ok(adminScript.includes("downButton.title = 'Move right'"));
+    assert.doesNotMatch(adminScript, /thumbnailButton\.textContent|upButton\.textContent|downButton\.textContent/);
+    assert.match(adminCss, /\.admin-image-actions\s*\{[\s\S]*?min-height: 40px/);
+    assert.match(adminCss, /\.admin-image-actions button\s*\{[\s\S]*?min-height: 32px[\s\S]*?height: 32px/);
+    assert.match(adminCss, /\.admin-image-action-icon\s*\{[\s\S]*?width: 18px[\s\S]*?height: 18px/);
+});
+
 test('admin reload resets catalogue filters and the top bar uses the supplied logo asset', () => {
     assert.match(adminScript, /function resetCatalogueFilters[\s\S]*?elements\.search\.value = ''[\s\S]*?elements\.statusFilter\.value = ''[\s\S]*?elements\.categoryFilter\.value = ''[\s\S]*?state\.page = 1/);
     assert.match(adminScript, /elements\.refresh\.addEventListener\('click', handleRefresh\)/);
     assert.match(adminIndex, /class="admin-logo"/);
     assert.match(adminIndex, /src="\.\.\/header-icon-light\.png"/);
-    assert.match(adminIndex, /admin-utils\.js\?v=2/);
-    assert.match(adminIndex, /admin\.css\?v=2/);
-    assert.match(adminIndex, /admin\.js\?v=2/);
+    assert.match(adminIndex, /admin-utils\.js\?v=4/);
+    assert.match(adminIndex, /admin\.css\?v=4/);
+    assert.match(adminIndex, /admin\.js\?v=4/);
     assert.doesNotMatch(adminIndex, /class="admin-wordmark"[^>]*>Mainspring<\/a>/);
 });
 

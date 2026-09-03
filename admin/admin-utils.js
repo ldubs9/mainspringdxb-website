@@ -53,6 +53,7 @@
     ]);
 
     const NUMERIC_FIELDS = Object.freeze(['price', 'cost_price']);
+    const UNKNOWN_SOLD_MONTH = 'unknown';
 
     function copyImages(images) {
         return Array.isArray(images) ? images.slice() : [];
@@ -119,6 +120,66 @@
         if (status === 'active') return 'available';
         if (status === 'archived') return 'sold';
         return 'available';
+    }
+
+    function getSoldMonthKey(value) {
+        if (typeof value !== 'string') return null;
+        const match = value.trim().match(/^(\d{4})-(\d{2})/);
+        if (!match) return null;
+        const month = Number(match[2]);
+        if (!Number.isInteger(month) || month < 1 || month > 12) return null;
+        return `${match[1]}-${match[2]}`;
+    }
+
+    function getTimestampMilliseconds(value) {
+        if (typeof value !== 'string' || !value.trim()) return null;
+        const normalized = value.trim()
+            .replace(' ', 'T')
+            .replace(/([+-]\d{2})$/, '$1:00');
+        const timestamp = Date.parse(normalized);
+        return Number.isFinite(timestamp) ? timestamp : null;
+    }
+
+    function countSoldByMonth(products, category = '') {
+        const counts = new Map();
+        (Array.isArray(products) ? products : []).forEach((product) => {
+            if (normalizeStatus(product.status) !== 'sold') return;
+            if (category && product.category !== category) return;
+            const month = getSoldMonthKey(product.sold_at) || UNKNOWN_SOLD_MONTH;
+            counts.set(month, (counts.get(month) || 0) + 1);
+        });
+
+        return [...counts.entries()]
+            .sort(([left], [right]) => {
+                if (left === UNKNOWN_SOLD_MONTH) return 1;
+                if (right === UNKNOWN_SOLD_MONTH) return -1;
+                return right.localeCompare(left);
+            })
+            .map(([month, count]) => ({ month, count }));
+    }
+
+    function sortSoldProducts(products) {
+        return (Array.isArray(products) ? products : []).slice().sort((left, right) => {
+            const leftTimestamp = getTimestampMilliseconds(left.sold_at);
+            const rightTimestamp = getTimestampMilliseconds(right.sold_at);
+            if (leftTimestamp === null && rightTimestamp !== null) return 1;
+            if (leftTimestamp !== null && rightTimestamp === null) return -1;
+            if (leftTimestamp !== null && rightTimestamp !== null && leftTimestamp !== rightTimestamp) {
+                return rightTimestamp - leftTimestamp;
+            }
+            return String(left.reference_code || left.id || '').localeCompare(String(right.reference_code || right.id || ''));
+        });
+    }
+
+    function formatSoldMonth(month) {
+        if (month === UNKNOWN_SOLD_MONTH) return 'Missing sold_at';
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return 'Unknown month';
+        const date = new Date(`${month}-01T00:00:00Z`);
+        return new Intl.DateTimeFormat('en-US', {
+            month: 'long',
+            year: 'numeric',
+            timeZone: 'UTC',
+        }).format(date);
     }
 
     function normalizeText(value) {
@@ -200,12 +261,17 @@
         STATUS_OPTIONS,
         SYSTEM_FIELDS,
         buildProductUpdate,
+        countSoldByMonth,
+        formatSoldMonth,
+        getSoldMonthKey,
         getSaveButtonState,
         isSafeImageUrl,
         normalizeStatus,
         reorderImages,
         resolveDropIndex,
         setThumbnail,
+        sortSoldProducts,
+        UNKNOWN_SOLD_MONTH,
         validateImageUrls,
     });
 }));
