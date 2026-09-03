@@ -315,6 +315,10 @@ button:disabled {
     padding: clamp(38px, 6vw, 84px) 0 72px;
 }
 
+.admin-catalogue-main {
+    padding-bottom: 0;
+}
+
 .admin-page-heading {
     display: flex;
     align-items: flex-end;
@@ -409,18 +413,21 @@ button:disabled {
     width: 16px;
     height: 16px;
     flex: 0 0 auto;
-    fill: none;
-    stroke: currentColor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.8;
 }
 
 .admin-reload-icon {
+    width: 17px;
+    height: 17px;
+    max-width: 17px;
+    max-height: 17px;
+    object-fit: contain;
+    opacity: 0.72;
     transition: transform 180ms ease;
 }
 
 .admin-refresh-button:hover:not(:disabled) .admin-reload-icon {
+    filter: invert(1);
+    opacity: 1;
     transform: rotate(18deg);
 }
 

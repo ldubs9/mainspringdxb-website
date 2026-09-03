@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-client.js?v=1"></script>
     <script src="admin-utils.js?v=5"></script>
-    <link rel="stylesheet" href="admin.css?v=5">
+    <link rel="stylesheet" href="admin.css?v=6">
 </head>
 
 <body>
@@ -60,7 +60,7 @@
             </div>
         </header>
 
-        <main class="admin-main">
+        <main class="admin-main admin-catalogue-main">
             <div class="admin-page-heading">
                 <div>
                     <p class="admin-kicker">Live source of truth</p>
@@ -102,12 +102,7 @@
                         </div>
                         <div class="admin-catalogue-panel-actions">
                             <button class="admin-button admin-button-quiet admin-refresh-button" id="admin-refresh" type="button" title="Reload catalogue">
-                                <svg class="admin-button-icon admin-reload-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                    <path d="M20 11a8 8 0 0 0-14.7-4.3L4 8"></path>
-                                    <path d="M4 4v4h4"></path>
-                                    <path d="M4 13a8 8 0 0 0 14.7 4.3L20 16"></path>
-                                    <path d="M20 20v-4h-4"></path>
-                                </svg>
+                                <img class="admin-button-icon admin-reload-icon" src="../refresh-double-svgrepo-com.svg" alt="" aria-hidden="true">
                                 <span>Reload catalogue</span>
                             </button>
                             <span class="admin-result-count" id="admin-result-count">—</span>

@@ -8,6 +8,7 @@ const adminScriptPath = path.join('admin', 'admin.js');
 const adminUtilsPath = path.join('admin', 'admin-utils.js');
 const statisticsIndexPath = path.join('admin', 'statistics.html');
 const statisticsScriptPath = path.join('admin', 'statistics.js');
+const reloadAssetPath = 'refresh-double-svgrepo-com.svg';
 const migrationPath = path.join('supabase', 'migrations', '20260902_mainspring_admin_access.sql');
 
 const readIfPresent = (filePath) => fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -151,8 +152,12 @@ test('admin navigation and reload controls use the refined page hierarchy', () =
     assert.match(catalogueTopbar, /href="statistics\.html">Sales statistics<\/a>[\s\S]*?href="\.\.\/" target="_blank"/);
     assert.match(statisticsTopbar, /href="\.\/">Catalogue<\/a>[\s\S]*?href="\.\.\/" target="_blank"/);
     assert.match(statisticsIndex, /class="admin-back-link" href="\.\/"[\s\S]*?admin-kicker">Commission view/);
-    assert.match(adminIndex, /class="admin-catalogue-panel-actions"[\s\S]*?id="admin-refresh"[\s\S]*?admin-reload-icon[\s\S]*?id="admin-result-count"/);
+    assert.match(adminIndex, /<main class="admin-main admin-catalogue-main">/);
+    assert.match(adminIndex, /class="admin-catalogue-panel-actions"[\s\S]*?id="admin-refresh"[\s\S]*?class="admin-button-icon admin-reload-icon" src="\.\.\/refresh-double-svgrepo-com\.svg"[\s\S]*?id="admin-result-count"/);
+    assert.doesNotMatch(adminIndex, /<svg class="admin-button-icon admin-reload-icon"/);
+    assert.ok(fs.existsSync(reloadAssetPath), 'the supplied reload SVG is in the repository');
     assert.doesNotMatch(summary, /admin-refresh|Sales statistics/);
+    assert.match(adminCss, /\.admin-catalogue-main[\s\S]*?padding-bottom: 0/);
     assert.match(adminCss, /\.admin-back-link/);
     assert.match(adminCss, /\.admin-catalogue-panel-actions/);
     assert.match(adminCss, /\.admin-reload-icon/);
@@ -263,7 +268,7 @@ test('admin reload resets catalogue filters and the top bar uses the supplied lo
     assert.match(adminIndex, /class="admin-logo"/);
     assert.match(adminIndex, /src="\.\.\/header-icon-light\.png"/);
     assert.match(adminIndex, /admin-utils\.js\?v=5/);
-    assert.match(adminIndex, /admin\.css\?v=5/);
+    assert.match(adminIndex, /admin\.css\?v=6/);
     assert.match(adminIndex, /admin\.js\?v=5/);
     assert.doesNotMatch(adminIndex, /class="admin-wordmark"[^>]*>Mainspring<\/a>/);
 });
