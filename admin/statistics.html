@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Mainspring Admin | Sales statistics</title>
+    <link rel="icon" type="image/svg+xml" href="../mainspring-favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-client.js?v=1"></script>
+    <script src="admin-utils.js?v=5"></script>
+    <link rel="stylesheet" href="admin.css?v=5">
+</head>
+
+<body>
+    <div class="admin-login-shell" id="admin-login" aria-labelledby="admin-login-title">
+        <div class="admin-login-panel">
+            <a class="admin-logo-link" href="../" aria-label="Return to Mainspring website">
+                <img class="admin-logo" src="../header-icon-light.png" alt="Mainspring">
+            </a>
+            <p class="admin-kicker">Private workspace</p>
+            <h1 id="admin-login-title">Sales statistics</h1>
+            <p class="admin-login-intro">Sign in with an approved Mainspring administrator account to review catalogue sales.</p>
+
+            <form id="admin-login-form" novalidate>
+                <div class="admin-field">
+                    <label for="admin-email">Email address</label>
+                    <input id="admin-email" name="email" type="email" autocomplete="username" required>
+                </div>
+                <div class="admin-field">
+                    <label for="admin-password">Password</label>
+                    <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <button class="admin-button admin-button-primary admin-button-wide" id="admin-login-button" type="submit">
+                    Sign in
+                </button>
+                <p class="admin-feedback" id="admin-auth-message" role="alert" aria-live="polite"></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-app" id="admin-statistics-app" hidden>
+        <header class="admin-topbar">
+            <div class="admin-topbar-brand">
+                <a class="admin-logo-link" href="../" aria-label="Return to Mainspring website">
+                    <img class="admin-logo" src="../header-icon-light.png" alt="Mainspring">
+                </a>
+                <span class="admin-topbar-divider" aria-hidden="true"></span>
+                <span class="admin-topbar-label">Sales statistics</span>
+            </div>
+            <div class="admin-topbar-actions">
+                <span class="admin-session-email" id="admin-session-email"></span>
+                <a class="admin-button admin-button-quiet" href="./">Catalogue</a>
+                <a class="admin-button admin-button-quiet" href="../" target="_blank" rel="noopener">View website</a>
+                <button class="admin-button admin-button-quiet" id="admin-sign-out" type="button">Sign out</button>
+            </div>
+        </header>
+
+        <main class="admin-main admin-statistics-page">
+            <div class="admin-page-heading">
+                <div>
+                    <p class="admin-kicker">Commission view</p>
+                    <h1>Sales statistics</h1>
+                    <p class="admin-page-intro">A clear view of completed sales across the full catalogue. Monthly totals are based on recorded sale dates.</p>
+                </div>
+                <div class="admin-heading-note" aria-label="Reporting basis">
+                    <span class="admin-heading-note-label">Reporting basis</span>
+                    <strong>All sold products</strong>
+                    <span>Watches and accessories are counted together.</span>
+                </div>
+            </div>
+
+            <section class="admin-statistics-overview" aria-label="Sales overview">
+                <article class="admin-statistics-metric admin-statistics-metric-primary">
+                    <span class="admin-summary-label">Total sold</span>
+                    <strong id="admin-statistics-total">—</strong>
+                    <span class="admin-statistics-metric-caption">Products across the catalogue</span>
+                </article>
+                <article class="admin-statistics-metric">
+                    <span class="admin-summary-label">Recorded sale dates</span>
+                    <strong id="admin-statistics-recorded">—</strong>
+                    <span class="admin-statistics-metric-caption">Included in monthly totals</span>
+                </article>
+                <article class="admin-statistics-metric admin-statistics-metric-muted">
+                    <span class="admin-summary-label">Date not recorded</span>
+                    <strong id="admin-statistics-undated">—</strong>
+                    <span class="admin-statistics-metric-caption">Not assigned to a month</span>
+                </article>
+            </section>
+
+            <section class="admin-statistics-panel" aria-labelledby="admin-statistics-month-title">
+                <div class="admin-statistics-panel-heading">
+                    <div>
+                        <p class="admin-kicker">Monthly view</p>
+                        <h2 id="admin-statistics-month-title">Sales by month</h2>
+                    </div>
+                    <span class="admin-statistics-panel-note">Combined catalogue</span>
+                </div>
+                <p class="admin-statistics-description">Choose a month to review the products included in that total.</p>
+                <div class="admin-statistics-months" id="admin-statistics-months" aria-live="polite"></div>
+            </section>
+
+            <section class="admin-statistics-details" id="admin-statistics-details" aria-labelledby="admin-statistics-details-title">
+                <div class="admin-statistics-panel-heading">
+                    <div>
+                        <p class="admin-kicker">Sale detail</p>
+                        <h2 id="admin-statistics-details-title">Selected month</h2>
+                    </div>
+                    <span class="admin-statistics-detail-count" id="admin-statistics-detail-count"></span>
+                </div>
+                <p class="admin-statistics-description" id="admin-statistics-details-description">Select a month above to review its sold products.</p>
+                <div class="admin-statistics-table-wrap">
+                    <table class="admin-statistics-table">
+                        <caption class="admin-sr-only">Products sold during the selected month</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col">Reference</th>
+                                <th scope="col">Category</th>
+                                <th scope="col">Sale date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-statistics-details-body"></tbody>
+                    </table>
+                </div>
+            </section>
+            <p class="admin-feedback admin-statistics-feedback" id="admin-statistics-feedback" role="status" aria-live="polite">Checking your access...</p>
+        </main>
+    </div>
+
+    <noscript>
+        <p class="admin-noscript">JavaScript is required to use Mainspring sales statistics.</p>
+    </noscript>
+    <script src="statistics.js?v=2"></script>
+</body>
+
+</html>

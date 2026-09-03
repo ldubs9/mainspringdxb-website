@@ -458,89 +458,243 @@ button:disabled {
 
 .admin-filter-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
 }
 
-.admin-sold-report {
-    padding: 16px 22px 18px;
-    border-bottom: 1px solid var(--admin-line);
+.admin-statistics-link {
+    align-self: center;
+    margin: 0 2px 0 12px;
+    border-color: var(--admin-gold);
+    color: var(--admin-ink);
+    white-space: nowrap;
+}
+
+.admin-statistics-link:hover:not(:disabled) {
+    border-color: var(--admin-ink);
+}
+
+.admin-statistics-page .admin-page-heading {
+    margin-bottom: 32px;
+}
+
+.admin-statistics-overview {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr 1fr;
+    margin-bottom: 28px;
+    border-top: 1px solid var(--admin-line-strong);
+    border-bottom: 1px solid var(--admin-line-strong);
+}
+
+.admin-statistics-metric {
+    display: grid;
+    align-content: center;
+    min-height: 156px;
+    gap: 5px;
+    padding: 24px 26px;
+    border-right: 1px solid var(--admin-line);
     background: var(--admin-panel);
 }
 
-.admin-sold-report-heading {
+.admin-statistics-metric:last-child {
+    border-right: 0;
+}
+
+.admin-statistics-metric-primary {
+    background: var(--admin-wash);
+}
+
+.admin-statistics-metric strong {
+    color: var(--admin-ink);
+    font-family: 'Fraunces', serif;
+    font-size: clamp(3rem, 6vw, 5.2rem);
+    font-weight: 500;
+    letter-spacing: -0.055em;
+    line-height: 0.95;
+}
+
+.admin-statistics-metric-caption {
+    color: var(--admin-muted);
+    font-size: 0.74rem;
+}
+
+.admin-statistics-metric-muted {
+    background: rgba(244, 241, 235, 0.46);
+}
+
+.admin-statistics-panel,
+.admin-statistics-details {
+    margin-bottom: 28px;
+    border-top: 1px solid var(--admin-line-strong);
+    border-bottom: 1px solid var(--admin-line-strong);
+    padding: 28px;
+    background: var(--admin-panel);
+}
+
+.admin-statistics-panel-heading {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
+    gap: 20px;
 }
 
-.admin-sold-report-heading h3 {
+.admin-statistics-panel-heading h2 {
     margin: 0;
     font-family: 'Fraunces', serif;
-    font-size: 1.35rem;
+    font-size: clamp(1.8rem, 3vw, 2.8rem);
     font-weight: 500;
-    line-height: 1.1;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
 }
 
-.admin-sold-report-note {
+.admin-statistics-panel-note {
     flex: 0 0 auto;
+    padding-top: 7px;
     color: var(--admin-gold);
-    font-size: 0.63rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
 }
 
-.admin-sold-report-description {
-    margin: 10px 0 0;
+.admin-statistics-description {
+    max-width: 62ch;
+    margin: 12px 0 0;
     color: var(--admin-muted);
-    font-size: 0.74rem;
-    line-height: 1.45;
+    font-size: 0.84rem;
 }
 
-.admin-sold-month-summary {
+.admin-statistics-months {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+    margin-top: 22px;
 }
 
-.admin-sold-month-summary-item {
+.admin-statistics-month-card {
     display: flex;
     min-width: 0;
-    min-height: 38px;
-    align-items: center;
+    min-height: 104px;
+    align-items: flex-end;
     justify-content: space-between;
-    gap: 8px;
+    gap: 18px;
     border: 1px solid var(--admin-line);
     border-radius: var(--admin-radius);
-    padding: 7px 10px;
+    padding: 16px;
     background: var(--admin-wash);
-    color: var(--admin-muted);
-    font-size: 0.72rem;
+    color: var(--admin-ink);
     text-align: left;
-    transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+    transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
 }
 
-.admin-sold-month-summary-item:hover,
-.admin-sold-month-summary-item[aria-pressed="true"] {
+.admin-statistics-month-card:hover,
+.admin-statistics-month-card[aria-pressed="true"] {
     border-color: var(--admin-gold);
     background: rgba(173, 135, 71, 0.1);
-    color: var(--admin-ink);
+    transform: translateY(-2px);
 }
 
-.admin-sold-month-summary-item strong {
-    color: var(--admin-ink);
+.admin-statistics-month-card.is-undated {
+    background: rgba(244, 241, 235, 0.5);
+    color: var(--admin-muted);
+}
+
+.admin-statistics-month-card-copy {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.admin-statistics-month-card-label {
+    overflow: hidden;
+    font-size: 0.96rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-statistics-month-card-caption {
+    color: var(--admin-muted);
+    font-size: 0.68rem;
+}
+
+.admin-statistics-month-card-total {
+    flex: 0 0 auto;
     font-family: 'Fraunces', serif;
-    font-size: 1.12rem;
+    font-size: 2.35rem;
+    font-weight: 500;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+}
+
+.admin-statistics-empty {
+    margin: 22px 0 0;
+    color: var(--admin-muted);
+}
+
+.admin-statistics-details {
+    margin-bottom: 14px;
+}
+
+.admin-statistics-detail-count {
+    padding-top: 9px;
+    color: var(--admin-muted);
+    font-size: 0.8rem;
+}
+
+.admin-statistics-table-wrap {
+    margin-top: 22px;
+    overflow-x: auto;
+    border-top: 1px solid var(--admin-line);
+}
+
+.admin-statistics-table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.admin-statistics-table th {
+    padding: 12px 10px;
+    color: var(--admin-muted);
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.admin-statistics-table td {
+    padding: 14px 10px;
+    border-top: 1px solid var(--admin-line);
+    color: var(--admin-muted);
+    vertical-align: top;
+}
+
+.admin-statistics-table-product {
+    width: 38%;
+    color: var(--admin-ink) !important;
     font-weight: 500;
 }
 
-.admin-sold-report-empty {
-    margin: 12px 0 0;
+.admin-statistics-table-reference {
+    width: 22%;
+}
+
+.admin-statistics-table-category {
+    width: 16%;
+}
+
+.admin-statistics-table-date {
+    width: 24%;
+    white-space: nowrap;
+}
+
+.admin-statistics-table-empty {
+    padding: 24px 10px !important;
     color: var(--admin-muted);
-    font-size: 0.74rem;
+    text-align: left;
 }
 
 .admin-list-feedback {
@@ -1179,6 +1333,12 @@ button:disabled {
         margin: 12px 18px;
     }
 
+    .admin-statistics-link {
+        grid-column: 1 / -1;
+        justify-self: start;
+        margin: 12px 18px 0;
+    }
+
     .admin-workspace {
         grid-template-columns: 1fr;
     }
@@ -1251,6 +1411,40 @@ button:disabled {
 
     .admin-filter-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-statistics-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-statistics-metric {
+        min-height: 132px;
+        border-right: 0;
+        border-bottom: 1px solid var(--admin-line);
+    }
+
+    .admin-statistics-metric:last-child {
+        border-bottom: 0;
+    }
+
+    .admin-statistics-panel,
+    .admin-statistics-details {
+        padding-right: 18px;
+        padding-left: 18px;
+    }
+
+    .admin-statistics-panel-heading {
+        display: grid;
+        gap: 8px;
+    }
+
+    .admin-statistics-panel-note,
+    .admin-statistics-detail-count {
+        padding-top: 0;
+    }
+
+    .admin-statistics-months {
+        grid-template-columns: 1fr;
     }
 
     .admin-product-row {
@@ -1330,11 +1524,6 @@ button:disabled {
     .admin-image-actions {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 5px;
-    }
-
-    .admin-sold-report {
-        padding-right: 16px;
-        padding-left: 16px;
     }
 
     .admin-image-actions button:first-child {

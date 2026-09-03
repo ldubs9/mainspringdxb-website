@@ -60,7 +60,6 @@
         imageUrls: [],
         selectedImageIndex: 0,
         page: 1,
-        soldMonth: '',
         dirty: false,
         isSaving: false,
         saveStatus: 'idle',
@@ -86,9 +85,6 @@
         search: document.getElementById('admin-product-search'),
         statusFilter: document.getElementById('admin-status-filter'),
         categoryFilter: document.getElementById('admin-category-filter'),
-        soldMonthFilter: document.getElementById('admin-sold-month-filter'),
-        soldReport: document.getElementById('admin-sold-report'),
-        soldMonthSummary: document.getElementById('admin-sold-month-summary'),
         listFeedback: document.getElementById('admin-list-feedback'),
         productList: document.getElementById('admin-product-list'),
         resultCount: document.getElementById('admin-result-count'),
@@ -761,77 +757,9 @@
         elements.categoryFilter.value = categories.includes(current) ? current : '';
     }
 
-    function populateSoldMonthFilter() {
-        const isSoldView = elements.statusFilter.value === 'sold';
-        const category = elements.categoryFilter.value;
-        const current = state.soldMonth || elements.soldMonthFilter.value;
-        const monthCounts = utils.countSoldByMonth(state.products, category);
-        const availableMonths = new Set(monthCounts.map(({ month }) => month));
-
-        elements.soldMonthFilter.replaceChildren();
-        const allMonths = document.createElement('option');
-        allMonths.value = '';
-        allMonths.textContent = 'All sold months';
-        elements.soldMonthFilter.appendChild(allMonths);
-        monthCounts.forEach(({ month, count }) => {
-            const option = document.createElement('option');
-            option.value = month;
-            option.textContent = `${utils.formatSoldMonth(month)} · ${count} sold`;
-            elements.soldMonthFilter.appendChild(option);
-        });
-
-        state.soldMonth = isSoldView && availableMonths.has(current) ? current : '';
-        elements.soldMonthFilter.value = state.soldMonth;
-        elements.soldMonthFilter.disabled = !isSoldView;
-    }
-
-    function renderSoldReport() {
-        const isSoldView = elements.statusFilter.value === 'sold';
-        elements.soldReport.hidden = !isSoldView;
-        elements.soldMonthSummary.replaceChildren();
-        if (!isSoldView) return;
-
-        const monthCounts = utils.countSoldByMonth(state.products, elements.categoryFilter.value);
-        if (!monthCounts.length) {
-            const empty = document.createElement('p');
-            empty.className = 'admin-sold-report-empty';
-            empty.textContent = 'No sold products are available for this category.';
-            elements.soldMonthSummary.appendChild(empty);
-            return;
-        }
-
-        monthCounts.forEach(({ month, count }) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'admin-sold-month-summary-item';
-            button.setAttribute('aria-pressed', String(state.soldMonth === month));
-            button.setAttribute(
-                'aria-label',
-                `${utils.formatSoldMonth(month)}: ${count} sold product${count === 1 ? '' : 's'}`
-            );
-            button.title = state.soldMonth === month ? 'Show all sold months' : `Show ${utils.formatSoldMonth(month)}`;
-
-            const label = document.createElement('span');
-            label.textContent = utils.formatSoldMonth(month);
-            const total = document.createElement('strong');
-            total.textContent = String(count);
-            button.append(label, total);
-            button.addEventListener('click', () => {
-                state.soldMonth = state.soldMonth === month ? '' : month;
-                elements.soldMonthFilter.value = state.soldMonth;
-                applyFilters();
-            });
-            elements.soldMonthSummary.appendChild(button);
-        });
-    }
-
-    function productMatches(product, search, status, category, soldMonth) {
+    function productMatches(product, search, status, category) {
         if (status && utils.normalizeStatus(product.status) !== status) return false;
         if (category && product.category !== category) return false;
-        if (status === 'sold' && soldMonth) {
-            const productMonth = utils.getSoldMonthKey(product.sold_at) || utils.UNKNOWN_SOLD_MONTH;
-            if (productMonth !== soldMonth) return false;
-        }
         if (!search) return true;
         const haystack = [
             product.reference_code,
@@ -844,15 +772,13 @@
     }
 
     function applyFilters(resetPage = true) {
-        populateSoldMonthFilter();
         const search = elements.search.value.trim().toLowerCase();
         const status = elements.statusFilter.value;
         const category = elements.categoryFilter.value;
-        state.filteredProducts = state.products.filter((product) => productMatches(product, search, status, category, state.soldMonth));
+        state.filteredProducts = state.products.filter((product) => productMatches(product, search, status, category));
         if (status === 'sold') state.filteredProducts = utils.sortSoldProducts(state.filteredProducts);
         if (resetPage) state.page = 1;
         renderProductList();
-        renderSoldReport();
     }
 
     function createMarkerButton(product, marker) {
@@ -991,8 +917,6 @@
         elements.search.value = '';
         elements.statusFilter.value = '';
         elements.categoryFilter.value = '';
-        elements.soldMonthFilter.value = '';
-        state.soldMonth = '';
         state.page = 1;
     }
 
@@ -1015,10 +939,8 @@
             });
             state.products = [];
             state.filteredProducts = [];
-            populateSoldMonthFilter();
             renderSummary();
             renderProductList();
-            renderSoldReport();
             setFeedback(elements.listFeedback, 'Unable to load the catalogue. Check your access and try again.', 'error');
         }
     }
@@ -1124,10 +1046,6 @@
         elements.search.addEventListener('input', () => applyFilters());
         elements.statusFilter.addEventListener('change', () => applyFilters());
         elements.categoryFilter.addEventListener('change', () => applyFilters());
-        elements.soldMonthFilter.addEventListener('change', () => {
-            state.soldMonth = elements.soldMonthFilter.value;
-            applyFilters();
-        });
         elements.form.addEventListener('submit', saveProduct);
         root.addEventListener('beforeunload', (event) => {
             if (!hasUnsavedChanges()) return;

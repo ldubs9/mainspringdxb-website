@@ -6,12 +6,16 @@ const path = require('node:path');
 const adminIndexPath = path.join('admin', 'index.html');
 const adminScriptPath = path.join('admin', 'admin.js');
 const adminUtilsPath = path.join('admin', 'admin-utils.js');
+const statisticsIndexPath = path.join('admin', 'statistics.html');
+const statisticsScriptPath = path.join('admin', 'statistics.js');
 const migrationPath = path.join('supabase', 'migrations', '20260902_mainspring_admin_access.sql');
 
 const readIfPresent = (filePath) => fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
 const adminIndex = readIfPresent(adminIndexPath);
 const adminScript = readIfPresent(adminScriptPath);
 const adminCss = readIfPresent(path.join('admin', 'admin.css'));
+const statisticsIndex = readIfPresent(statisticsIndexPath);
+const statisticsScript = readIfPresent(statisticsScriptPath);
 const migration = readIfPresent(migrationPath);
 
 const PRODUCT_FIELDS = [
@@ -87,7 +91,7 @@ test('admin marker choices apply a noticeable transparent overlay to the product
     assert.match(adminCss, /z-index: 1/);
 });
 
-test('admin sold reporting derives months and ordering from sold_at only', () => {
+test('admin sold reporting derives combined months and ordering from sold_at only', () => {
     const utils = require(path.resolve(adminUtilsPath));
     const products = [
         { id: 1, reference_code: 'REF-1', status: 'sold', category: 'watch', sold_at: '2026-08-02 10:00:00+00' },
@@ -100,29 +104,41 @@ test('admin sold reporting derives months and ordering from sold_at only', () =>
 
     assert.equal(utils.getSoldMonthKey(products[0].sold_at), '2026-08');
     assert.equal(utils.getSoldMonthKey(products[4].sold_at), null);
-    assert.deepEqual(utils.countSoldByMonth(products, 'watch'), [
-        { month: '2026-09', count: 2 },
+    assert.deepEqual(utils.countSoldByMonth(products), [
+        { month: '2026-09', count: 3 },
         { month: '2026-08', count: 1 },
         { month: utils.UNKNOWN_SOLD_MONTH, count: 1 },
     ]);
+    assert.equal(utils.formatSoldMonth(utils.UNKNOWN_SOLD_MONTH), 'Date not recorded');
     assert.deepEqual(
         utils.sortSoldProducts(products.filter((product) => product.status === 'sold')).map((product) => product.id),
         [4, 2, 3, 1, 5]
     );
 });
 
-test('admin catalogue exposes a sold month filter and monthly commission report', () => {
-    assert.match(adminIndex, /id="admin-sold-month-filter"/);
-    assert.match(adminIndex, /id="admin-sold-report"/);
-    assert.match(adminIndex, /id="admin-sold-month-summary"/);
-    assert.match(adminScript, /soldMonthFilter/);
-    assert.match(adminScript, /function populateSoldMonthFilter[\s\S]*?countSoldByMonth/);
-    assert.match(adminScript, /function renderSoldReport[\s\S]*?countSoldByMonth/);
-    assert.match(adminScript, /getSoldMonthKey\(product\.sold_at\)/);
+test('admin catalogue links to a separate statistics page and keeps filters focused', () => {
+    assert.match(adminIndex, /href="statistics\.html"/);
+    assert.match(adminIndex, /Sales statistics/);
+    assert.doesNotMatch(adminIndex, /admin-sold-month-filter|admin-sold-report|admin-sold-month-summary/);
+    assert.doesNotMatch(adminScript, /soldMonthFilter|renderSoldReport|populateSoldMonthFilter|soldMonth/);
     assert.match(adminScript, /sortSoldProducts\(/);
-    assert.match(adminScript, /soldMonth/);
-    assert.match(adminCss, /\.admin-sold-report/);
-    assert.match(adminCss, /\.admin-sold-month-summary/);
+});
+
+test('statistics page presents combined monthly sales without technical missing-field labels', () => {
+    assert.ok(statisticsIndex, 'admin/statistics.html exists');
+    assert.ok(statisticsScript, 'admin/statistics.js exists');
+    assert.match(statisticsIndex, /Sales statistics/);
+    assert.match(statisticsIndex, /id="admin-statistics-app"/);
+    assert.match(statisticsIndex, /id="admin-statistics-months"/);
+    assert.match(statisticsIndex, /id="admin-statistics-details"/);
+    assert.match(statisticsScript, /from\('mainspring_products'\)/);
+    assert.match(statisticsScript, /countSoldByMonth\(state\.products\)/);
+    assert.match(statisticsScript, /sortSoldProducts\(/);
+    assert.match(statisticsScript, /sold_at/);
+    assert.match(statisticsScript, /Date not recorded/);
+    assert.doesNotMatch(`${adminIndex}\n${adminScript}\n${statisticsIndex}\n${statisticsScript}\n${adminCss}`, /Missing sold_at/);
+    assert.match(adminCss, /\.admin-statistics-page/);
+    assert.match(adminCss, /\.admin-statistics-month-card/);
 });
 
 test('admin specification fields expose only the approved dropdown values', () => {
@@ -229,9 +245,9 @@ test('admin reload resets catalogue filters and the top bar uses the supplied lo
     assert.match(adminScript, /elements\.refresh\.addEventListener\('click', handleRefresh\)/);
     assert.match(adminIndex, /class="admin-logo"/);
     assert.match(adminIndex, /src="\.\.\/header-icon-light\.png"/);
-    assert.match(adminIndex, /admin-utils\.js\?v=4/);
-    assert.match(adminIndex, /admin\.css\?v=4/);
-    assert.match(adminIndex, /admin\.js\?v=4/);
+    assert.match(adminIndex, /admin-utils\.js\?v=5/);
+    assert.match(adminIndex, /admin\.css\?v=5/);
+    assert.match(adminIndex, /admin\.js\?v=5/);
     assert.doesNotMatch(adminIndex, /class="admin-wordmark"[^>]*>Mainspring<\/a>/);
 });
 

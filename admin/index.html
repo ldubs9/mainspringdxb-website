@@ -12,8 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-client.js?v=1"></script>
-    <script src="admin-utils.js?v=4"></script>
-    <link rel="stylesheet" href="admin.css?v=4">
+    <script src="admin-utils.js?v=5"></script>
+    <link rel="stylesheet" href="admin.css?v=5">
 </head>
 
 <body>
@@ -90,6 +90,7 @@
                     <span class="admin-summary-label">Sold</span>
                     <strong id="admin-sold-count">—</strong>
                 </div>
+                <a class="admin-button admin-button-quiet admin-statistics-link" href="statistics.html">Sales statistics</a>
                 <button class="admin-button admin-button-quiet admin-refresh-button" id="admin-refresh" type="button">Reload catalogue</button>
             </section>
 
@@ -117,23 +118,8 @@
                             <select id="admin-category-filter">
                                 <option value="">All categories</option>
                             </select>
-                            <label class="admin-sr-only" for="admin-sold-month-filter">Filter sold products by month</label>
-                            <select id="admin-sold-month-filter" aria-describedby="admin-sold-report-note" disabled>
-                                <option value="">All sold months</option>
-                            </select>
                         </div>
                     </div>
-                    <section class="admin-sold-report" id="admin-sold-report" aria-labelledby="admin-sold-report-title" hidden>
-                        <div class="admin-sold-report-heading">
-                            <div>
-                                <p class="admin-kicker">Commission view</p>
-                                <h3 id="admin-sold-report-title">Sold by month</h3>
-                            </div>
-                            <span class="admin-sold-report-note" id="admin-sold-report-note">Based on sold_at</span>
-                        </div>
-                        <p class="admin-sold-report-description">Select a month to show its sold products. Dates without sold_at remain visible as a separate data-quality count.</p>
-                        <div class="admin-sold-month-summary" id="admin-sold-month-summary" aria-live="polite"></div>
-                    </section>
                     <p class="admin-list-feedback" id="admin-list-feedback" role="status" aria-live="polite">Checking your access...</p>
                     <div class="admin-product-list" id="admin-product-list" aria-live="polite"></div>
                     <div class="admin-pagination" id="admin-pagination" aria-label="Product list pages"></div>
@@ -240,7 +226,7 @@
     <noscript>
         <p class="admin-noscript">JavaScript is required to use the Mainspring admin panel.</p>
     </noscript>
-    <script src="admin.js?v=4"></script>
+    <script src="admin.js?v=5"></script>
 </body>
 
 </html>

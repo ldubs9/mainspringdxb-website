@@ -172,7 +172,7 @@
     }
 
     function formatSoldMonth(month) {
-        if (month === UNKNOWN_SOLD_MONTH) return 'Missing sold_at';
+        if (month === UNKNOWN_SOLD_MONTH) return 'Date not recorded';
         if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return 'Unknown month';
         const date = new Date(`${month}-01T00:00:00Z`);
         return new Intl.DateTimeFormat('en-US', {
@@ -180,6 +180,17 @@
             year: 'numeric',
             timeZone: 'UTC',
         }).format(date);
+    }
+
+    function formatSoldDate(value) {
+        const timestamp = getTimestampMilliseconds(value);
+        if (timestamp === null) return 'Date not recorded';
+        return new Intl.DateTimeFormat('en-US', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            timeZone: 'UTC',
+        }).format(new Date(timestamp));
     }
 
     function normalizeText(value) {
@@ -262,6 +273,7 @@
         SYSTEM_FIELDS,
         buildProductUpdate,
         countSoldByMonth,
+        formatSoldDate,
         formatSoldMonth,
         getSoldMonthKey,
         getSaveButtonState,
