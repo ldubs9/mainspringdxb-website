@@ -11,6 +11,7 @@ const migrationPath = path.join('supabase', 'migrations', '20260902_mainspring_a
 const readIfPresent = (filePath) => fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
 const adminIndex = readIfPresent(adminIndexPath);
 const adminScript = readIfPresent(adminScriptPath);
+const adminCss = readIfPresent(path.join('admin', 'admin.css'));
 const migration = readIfPresent(migrationPath);
 
 const PRODUCT_FIELDS = [
@@ -73,6 +74,112 @@ test('admin status editor exposes the three approved states and keeps the separa
     assert.ok(adminScript.includes('status'));
     assert.ok(/localStorage|marker|color/i.test(adminScript));
     assert.doesNotMatch(adminScript, /admin_tag|admin_marker/);
+});
+
+test('admin marker choices apply a noticeable transparent overlay to the product row', () => {
+    assert.match(adminScript, /const selectedMarker = state\.markers\[String\(product\.id\)\] \|\| 'none';/);
+    assert.match(adminScript, /row\.dataset\.marker = selectedMarker;/);
+    assert.match(adminCss, /\.admin-product-row::before[\s\S]*?pointer-events: none/);
+    assert.match(adminCss, /\.admin-product-row\[data-marker="green"\]::before/);
+    assert.match(adminCss, /\.admin-product-row\[data-marker="amber"\]::before/);
+    assert.match(adminCss, /\.admin-product-row\[data-marker="red"\]::before/);
+    assert.match(adminCss, /\.admin-product-row\[data-marker="blue"\]::before/);
+    assert.match(adminCss, /z-index: 1/);
+});
+
+test('admin specification fields expose only the approved dropdown values', () => {
+    const utils = require(path.resolve(adminUtilsPath));
+    assert.deepEqual(utils.CONDITION_OPTIONS, [
+        'New - Unworn',
+        'Used - Like New',
+        'Used - Excellent',
+        'Used - Very Good',
+        'Used - Good',
+    ]);
+    assert.deepEqual(utils.CATEGORY_OPTIONS, ['watch', 'accessory']);
+    assert.deepEqual(utils.ACCESSORY_SUBCATEGORY_OPTIONS, [
+        'watch-straps',
+        'watch-box',
+        'standing-clocks',
+        'books',
+        'pocket-watch',
+        'bags-and-more',
+    ]);
+    assert.deepEqual(utils.GENDER_OPTIONS, ['Unisex', 'Ladies', 'Mens']);
+    assert.match(adminScript, /name: 'condition',[\s\S]*?type: 'select'/);
+    assert.match(adminScript, /name: 'category',[\s\S]*?type: 'select'/);
+    assert.match(adminScript, /name: 'subcategory',[\s\S]*?type: 'select'/);
+    assert.match(adminScript, /name: 'gender',[\s\S]*?type: 'select'/);
+});
+
+test('admin update validation rejects non-canonical specification values', () => {
+    const utils = require(path.resolve(adminUtilsPath));
+    const validDraft = {
+        id: 1,
+        image_urls: [],
+        condition: 'New - Unworn',
+        category: 'watch',
+        subcategory: null,
+        gender: 'Unisex',
+    };
+
+    assert.equal(utils.buildProductUpdate(validDraft).subcategory, null);
+    assert.throws(() => utils.buildProductUpdate({ ...validDraft, condition: 'Brand New' }), /condition/i);
+    assert.throws(() => utils.buildProductUpdate({ ...validDraft, category: 'clock' }), /category/i);
+    assert.throws(() => utils.buildProductUpdate({ ...validDraft, category: 'accessory', subcategory: 'other' }), /subcategory/i);
+    assert.throws(() => utils.buildProductUpdate({ ...validDraft, gender: 'Men' }), /gender/i);
+    assert.equal(
+        utils.buildProductUpdate({
+            ...validDraft,
+            category: 'accessory',
+            subcategory: 'watch-box',
+        }).subcategory,
+        'watch-box'
+    );
+});
+
+test('admin save button states distinguish saved, dirty, and saving products', () => {
+    const utils = require(path.resolve(adminUtilsPath));
+    assert.deepEqual(
+        utils.getSaveButtonState({ dirty: false, isSaving: false, saveStatus: 'saved' }),
+        { label: 'Saved', disabled: true }
+    );
+    assert.deepEqual(
+        utils.getSaveButtonState({ dirty: true, isSaving: false, saveStatus: 'idle' }),
+        { label: 'Save changes', disabled: false }
+    );
+    assert.deepEqual(
+        utils.getSaveButtonState({ dirty: true, isSaving: true, saveStatus: 'idle' }),
+        { label: 'Saving...', disabled: true }
+    );
+    assert.match(adminScript, /renderEditor\(savedProduct, \{ saveStatus: 'saved' \}\)/);
+    assert.match(adminScript, /state\.saveStatus = 'idle'/);
+});
+
+test('admin image drop targets resolve before and after positions without breaking order', () => {
+    const utils = require(path.resolve(adminUtilsPath));
+    assert.equal(utils.resolveDropIndex(0, 2, 'before', 4), 1);
+    assert.equal(utils.resolveDropIndex(0, 2, 'after', 4), 2);
+    assert.equal(utils.resolveDropIndex(3, 1, 'before', 4), 1);
+    assert.equal(utils.resolveDropIndex(3, 1, 'after', 4), 2);
+    assert.equal(utils.resolveDropIndex(1, 1, 'after', 4), 1);
+    assert.equal(utils.resolveDropIndex(0, 9, 'before', 4), null);
+    assert.match(adminScript, /resolveDropIndex\(/);
+    assert.match(adminScript, /is-drag-over-before/);
+    assert.match(adminScript, /is-drag-over-after/);
+    assert.match(adminScript, /function bindImageDrag[\s\S]*?pointerdown[\s\S]*?pointermove[\s\S]*?pointerup[\s\S]*?pointercancel/);
+    assert.match(adminScript, /setPointerCapture/);
+});
+
+test('admin reload resets catalogue filters and the top bar uses the supplied logo asset', () => {
+    assert.match(adminScript, /function resetCatalogueFilters[\s\S]*?elements\.search\.value = ''[\s\S]*?elements\.statusFilter\.value = ''[\s\S]*?elements\.categoryFilter\.value = ''[\s\S]*?state\.page = 1/);
+    assert.match(adminScript, /elements\.refresh\.addEventListener\('click', handleRefresh\)/);
+    assert.match(adminIndex, /class="admin-logo"/);
+    assert.match(adminIndex, /src="\.\.\/header-icon-light\.png"/);
+    assert.match(adminIndex, /admin-utils\.js\?v=2/);
+    assert.match(adminIndex, /admin\.css\?v=2/);
+    assert.match(adminIndex, /admin\.js\?v=2/);
+    assert.doesNotMatch(adminIndex, /class="admin-wordmark"[^>]*>Mainspring<\/a>/);
 });
 
 test('admin save updates only the selected product and reads the saved row back', () => {

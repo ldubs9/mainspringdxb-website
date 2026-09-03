@@ -28,10 +28,10 @@
         { name: 'brand', label: 'Brand', type: 'text', section: 'content' },
         { name: 'model', label: 'Model', type: 'text', section: 'content' },
         { name: 'caption', label: 'Caption', type: 'textarea', section: 'content', wide: true },
-        { name: 'condition', label: 'Condition', type: 'text', section: 'specifications' },
+        { name: 'condition', label: 'Condition', type: 'select', options: utils.CONDITION_OPTIONS, section: 'specifications' },
         { name: 'price', label: 'Price (AED)', type: 'number', section: 'specifications', min: '0', step: '0.01' },
-        { name: 'category', label: 'Category', type: 'text', section: 'specifications' },
-        { name: 'subcategory', label: 'Subcategory', type: 'text', section: 'specifications' },
+        { name: 'category', label: 'Category', type: 'select', options: utils.CATEGORY_OPTIONS, section: 'specifications' },
+        { name: 'subcategory', label: 'Subcategory', type: 'select', options: utils.ACCESSORY_SUBCATEGORY_OPTIONS, section: 'specifications' },
         { name: 'created_at', label: 'Created at', type: 'text', section: 'system', readOnly: true },
         { name: 'watch_reference', label: 'Watch reference', type: 'text', section: 'specifications' },
         { name: 'watch_year', label: 'Watch year', type: 'text', section: 'specifications' },
@@ -39,7 +39,7 @@
         { name: 'status', label: 'Status', type: 'status', section: 'status' },
         { name: 'updated_at', label: 'Updated at', type: 'text', section: 'system', readOnly: true },
         { name: 'size', label: 'Size', type: 'text', section: 'specifications' },
-        { name: 'gender', label: 'Gender', type: 'text', section: 'specifications' },
+        { name: 'gender', label: 'Gender', type: 'select', options: utils.GENDER_OPTIONS, section: 'specifications' },
         { name: 'country', label: 'Country of origin', type: 'text', section: 'specifications' },
         { name: 'movement', label: 'Movement', type: 'text', section: 'specifications' },
         { name: 'id', label: 'Database id', type: 'text', section: 'system', readOnly: true },
@@ -62,7 +62,11 @@
         page: 1,
         dirty: false,
         isSaving: false,
+        saveStatus: 'idle',
         draggedImageIndex: null,
+        dragOverImageIndex: null,
+        dragOverPosition: null,
+        pointerDrag: null,
         markers: readMarkers(),
         authTransition: 0,
     };
@@ -186,6 +190,49 @@
         }).format(amount);
     }
 
+    function appendSelectOption(select, value, label, disabled = false) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        option.disabled = disabled;
+        select.appendChild(option);
+        return option;
+    }
+
+    function populateSelect(input, definition, value) {
+        const normalizedValue = value === null || value === undefined ? '' : String(value).trim();
+        const hasApprovedValue = definition.options.includes(normalizedValue);
+        input.replaceChildren();
+
+        if (normalizedValue && !hasApprovedValue) {
+            appendSelectOption(input, '__legacy__', `Current value: ${normalizedValue}`, true);
+        } else {
+            appendSelectOption(input, '', definition.placeholder || `Select ${definition.label.toLowerCase()}`, true);
+        }
+
+        definition.options.forEach((optionValue) => {
+            appendSelectOption(input, optionValue, optionValue);
+        });
+        input.value = hasApprovedValue ? normalizedValue : (normalizedValue ? '__legacy__' : '');
+    }
+
+    function syncSubcategoryField(category, value) {
+        const input = elements.form.elements.namedItem('subcategory');
+        const definition = PRODUCT_FIELD_DEFINITIONS.find((field) => field.name === 'subcategory');
+        if (!input || !definition) return;
+
+        if (category === 'accessory') {
+            populateSelect(input, definition, value === undefined ? input.value : value);
+            input.disabled = false;
+            return;
+        }
+
+        input.replaceChildren();
+        appendSelectOption(input, '', 'Not applicable for watches', true);
+        input.value = '';
+        input.disabled = true;
+    }
+
     function createField(definition, product) {
         const wrapper = document.createElement('div');
         wrapper.className = `admin-field${definition.wide ? ' admin-field-wide' : ''}`;
@@ -196,9 +243,14 @@
         wrapper.appendChild(label);
 
         const value = product[definition.name];
-        const input = definition.type === 'textarea'
-            ? document.createElement('textarea')
-            : document.createElement('input');
+        let input;
+        if (definition.type === 'textarea') {
+            input = document.createElement('textarea');
+        } else if (definition.type === 'select') {
+            input = document.createElement('select');
+        } else {
+            input = document.createElement('input');
+        }
         input.id = `admin-field-${definition.name}`;
         input.name = definition.name;
         input.autocomplete = 'off';
@@ -208,14 +260,24 @@
             input.min = definition.min;
             input.step = definition.step;
             input.inputMode = 'decimal';
+        } else if (definition.type === 'select') {
+            input.setAttribute('aria-label', definition.label);
+            populateSelect(input, definition, value);
         } else if (definition.type !== 'textarea') {
             input.type = 'text';
         }
 
-        input.value = value === null || value === undefined ? '' : String(value);
+        if (definition.type !== 'select') {
+            input.value = value === null || value === undefined ? '' : String(value);
+        }
         if (definition.readOnly) {
             input.readOnly = true;
             input.tabIndex = -1;
+        } else if (definition.type === 'select') {
+            input.addEventListener('change', () => {
+                if (definition.name === 'category') syncSubcategoryField(input.value);
+                markDirty();
+            });
         } else {
             input.addEventListener('input', markDirty);
         }
@@ -237,13 +299,15 @@
             .filter((definition) => ['content', 'specifications', 'drafts', 'system'].includes(definition.section))
             .filter((definition) => definition.name !== 'status')
             .forEach((definition) => containers[definition.section].appendChild(createField(definition, product)));
+        syncSubcategoryField(product.category, product.subcategory);
     }
 
-    function renderEditor(product) {
+    function renderEditor(product, { saveStatus = 'idle' } = {}) {
         state.selectedProduct = cloneProduct(product);
         state.imageUrls = state.selectedProduct.image_urls.slice();
         state.selectedImageIndex = 0;
         state.dirty = false;
+        state.saveStatus = saveStatus;
         elements.editorEmpty.hidden = true;
         elements.form.hidden = false;
         elements.editorKicker.textContent = product.reference_code || `Product ${product.id}`;
@@ -266,17 +330,150 @@
 
     function markDirty() {
         state.dirty = true;
+        state.saveStatus = 'idle';
         updateSaveState();
     }
 
     function updateSaveState() {
         elements.editorState.textContent = state.dirty ? 'Unsaved changes' : 'No unsaved changes';
         elements.editorState.classList.toggle('is-dirty', state.dirty);
-        elements.saveButton.disabled = !state.dirty || state.isSaving;
-        elements.saveButton.textContent = state.isSaving ? 'Saving...' : 'Save changes';
+        const buttonState = utils.getSaveButtonState({
+            dirty: state.dirty,
+            isSaving: state.isSaving,
+            saveStatus: state.saveStatus,
+        });
+        elements.saveButton.disabled = buttonState.disabled;
+        elements.saveButton.textContent = buttonState.label;
+        elements.saveButton.classList.toggle('is-saved', buttonState.label === 'Saved');
         elements.saveNote.textContent = state.dirty
             ? 'Review the complete product before saving.'
             : 'Changes are not saved automatically.';
+    }
+
+    function renderImageDragFeedback() {
+        elements.imageManager.querySelectorAll('.admin-image-item').forEach((item) => {
+            const index = Number(item.dataset.index);
+            item.classList.toggle('is-dragging', index === state.draggedImageIndex);
+            item.classList.toggle(
+                'is-drag-over-before',
+                index === state.dragOverImageIndex && state.dragOverPosition === 'before'
+            );
+            item.classList.toggle(
+                'is-drag-over-after',
+                index === state.dragOverImageIndex && state.dragOverPosition === 'after'
+            );
+        });
+    }
+
+    function clearImageDragState() {
+        state.draggedImageIndex = null;
+        state.dragOverImageIndex = null;
+        state.dragOverPosition = null;
+        elements.imageManager.classList.remove('is-dragging');
+    }
+
+    function getImageItemAtPoint(event) {
+        const target = document.elementFromPoint(event.clientX, event.clientY);
+        const item = target && typeof target.closest === 'function'
+            ? target.closest('.admin-image-item')
+            : null;
+        return item && elements.imageManager.contains(item) ? item : null;
+    }
+
+    function getDropPosition(event, item) {
+        const rect = item.getBoundingClientRect();
+        const midpointX = rect.left + (rect.width / 2);
+        const midpointY = rect.top + (rect.height / 2);
+        const horizontalDistance = Math.abs(event.clientX - midpointX);
+        const verticalDistance = Math.abs(event.clientY - midpointY);
+        if (horizontalDistance >= verticalDistance) {
+            return event.clientX < midpointX ? 'before' : 'after';
+        }
+        return event.clientY < midpointY ? 'before' : 'after';
+    }
+
+    function updateImageDragTarget(event) {
+        const item = getImageItemAtPoint(event);
+        if (!item) {
+            state.dragOverImageIndex = null;
+            state.dragOverPosition = null;
+            renderImageDragFeedback();
+            return;
+        }
+
+        const targetIndex = Number(item.dataset.index);
+        if (!Number.isInteger(targetIndex)) return;
+        state.dragOverImageIndex = targetIndex;
+        state.dragOverPosition = getDropPosition(event, item);
+        renderImageDragFeedback();
+    }
+
+    function finishPointerImageDrag(event, cancelled = false) {
+        const drag = state.pointerDrag;
+        if (!drag || drag.pointerId !== event.pointerId) return;
+
+        const targetItem = !cancelled && drag.active ? getImageItemAtPoint(event) : null;
+        const targetIndex = targetItem
+            ? Number(targetItem.dataset.index)
+            : state.dragOverImageIndex;
+        const position = targetItem ? getDropPosition(event, targetItem) : state.dragOverPosition;
+        const fromIndex = drag.index;
+        state.pointerDrag = null;
+        clearImageDragState();
+
+        if (!cancelled && drag.active && Number.isInteger(targetIndex) && position) {
+            const toIndex = utils.resolveDropIndex(
+                fromIndex,
+                targetIndex,
+                position,
+                state.imageUrls.length
+            );
+            if (toIndex !== null && toIndex !== fromIndex) {
+                moveImage(fromIndex, toIndex);
+                return;
+            }
+        }
+        renderImageManager();
+    }
+
+    function bindImageDrag(item, caption, index) {
+        caption.addEventListener('pointerdown', (event) => {
+            if (event.pointerType !== 'touch' && event.button !== 0) return;
+            if (state.pointerDrag) return;
+            state.pointerDrag = {
+                active: false,
+                caption,
+                index,
+                pointerId: event.pointerId,
+                startX: event.clientX,
+                startY: event.clientY,
+            };
+            if (typeof caption.setPointerCapture === 'function') {
+                caption.setPointerCapture(event.pointerId);
+            }
+        });
+
+        caption.addEventListener('pointermove', (event) => {
+            const drag = state.pointerDrag;
+            if (!drag || drag.pointerId !== event.pointerId) return;
+            const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+            if (!drag.active && distance < 6) return;
+            if (!drag.active) {
+                drag.active = true;
+                state.draggedImageIndex = index;
+                elements.imageManager.classList.add('is-dragging');
+            }
+            event.preventDefault();
+            updateImageDragTarget(event);
+        });
+
+        caption.addEventListener('pointerup', (event) => finishPointerImageDrag(event));
+        caption.addEventListener('pointercancel', (event) => finishPointerImageDrag(event, true));
+        caption.addEventListener('lostpointercapture', (event) => {
+            if (state.pointerDrag && state.pointerDrag.pointerId === event.pointerId) {
+                finishPointerImageDrag(event, true);
+            }
+        });
     }
 
     function renderImageManager() {
@@ -292,7 +489,6 @@
         state.imageUrls.forEach((url, index) => {
             const item = document.createElement('article');
             item.className = 'admin-image-item';
-            item.draggable = true;
             item.dataset.index = String(index);
             item.classList.toggle('is-selected', state.selectedImageIndex === index);
             item.classList.toggle('is-thumbnail', index === 0);
@@ -327,11 +523,16 @@
 
             const caption = document.createElement('div');
             caption.className = 'admin-image-caption';
+            caption.title = 'Drag to reorder';
             const position = document.createElement('span');
             position.textContent = `Image ${index + 1}`;
             const role = document.createElement('strong');
             role.textContent = index === 0 ? 'Thumbnail' : 'Gallery';
-            caption.append(position, role);
+            const dragHint = document.createElement('span');
+            dragHint.className = 'admin-image-drag-hint';
+            dragHint.textContent = 'Drag';
+            dragHint.setAttribute('aria-hidden', 'true');
+            caption.append(position, role, dragHint);
             item.appendChild(caption);
 
             const actions = document.createElement('div');
@@ -360,37 +561,31 @@
             actions.appendChild(downButton);
             item.appendChild(actions);
 
-            item.addEventListener('dragstart', (event) => {
-                state.draggedImageIndex = index;
-                item.classList.add('is-dragging');
-                event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', String(index));
-            });
-            item.addEventListener('dragover', (event) => {
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'move';
-            });
-            item.addEventListener('drop', (event) => {
-                event.preventDefault();
-                const fromIndex = Number(event.dataTransfer.getData('text/plain'));
-                const resolvedFrom = Number.isInteger(fromIndex) ? fromIndex : state.draggedImageIndex;
-                moveImage(resolvedFrom, index);
-            });
-            item.addEventListener('dragend', () => {
-                state.draggedImageIndex = null;
-                item.classList.remove('is-dragging');
-            });
-
+            bindImageDrag(item, caption, index);
             elements.imageManager.appendChild(item);
         });
     }
 
-    function moveImage(fromIndex, toIndex) {
+    function moveImage(fromIndex, toIndex, { restoreFocus = true } = {}) {
+        if (!Number.isInteger(fromIndex) || !Number.isInteger(toIndex)) return;
         if (fromIndex === toIndex) return;
+        if (fromIndex < 0 || toIndex < 0 || fromIndex >= state.imageUrls.length || toIndex >= state.imageUrls.length) return;
+
         state.imageUrls = utils.reorderImages(state.imageUrls, fromIndex, toIndex);
-        state.selectedImageIndex = toIndex;
+        if (state.selectedImageIndex === fromIndex) {
+            state.selectedImageIndex = toIndex;
+        } else if (fromIndex < state.selectedImageIndex && state.selectedImageIndex <= toIndex) {
+            state.selectedImageIndex -= 1;
+        } else if (toIndex <= state.selectedImageIndex && state.selectedImageIndex < fromIndex) {
+            state.selectedImageIndex += 1;
+        }
         markDirty();
         renderImageManager();
+        if (restoreFocus) {
+            const movedItem = elements.imageManager.querySelector(`[data-index="${toIndex}"]`);
+            const movedImage = movedItem && movedItem.querySelector('.admin-image-select');
+            if (movedImage) movedImage.focus({ preventScroll: true });
+        }
         setFeedback(elements.imageFeedback, 'Image order changed. Save changes to publish it.', '');
     }
 
@@ -400,6 +595,9 @@
         state.selectedImageIndex = 0;
         markDirty();
         renderImageManager();
+        const thumbnailItem = elements.imageManager.querySelector('[data-index="0"]');
+        const thumbnailImage = thumbnailItem && thumbnailItem.querySelector('.admin-image-select');
+        if (thumbnailImage) thumbnailImage.focus({ preventScroll: true });
         setFeedback(elements.imageFeedback, 'Thumbnail selected. Save changes to publish it.', '');
     }
 
@@ -484,7 +682,7 @@
             state.products = state.products.map((item) => item.id === savedProduct.id ? savedProduct : item);
             renderSummary();
             applyFilters(false);
-            renderEditor(savedProduct);
+            renderEditor(savedProduct, { saveStatus: 'saved' });
             setFeedback(elements.saveFeedback, 'Changes saved and verified.', 'success');
         } catch (error) {
             console.error('Mainspring admin save failed', {
@@ -568,7 +766,9 @@
     function createProductRow(product) {
         const row = document.createElement('article');
         const normalizedStatus = utils.normalizeStatus(product.status);
+        const selectedMarker = state.markers[String(product.id)] || 'none';
         row.className = `admin-product-row is-${normalizedStatus}`;
+        row.dataset.marker = selectedMarker;
         row.classList.toggle('is-selected', state.selectedProduct && state.selectedProduct.id === product.id);
 
         const mainButton = document.createElement('button');
@@ -678,6 +878,13 @@
         return products;
     }
 
+    function resetCatalogueFilters() {
+        elements.search.value = '';
+        elements.statusFilter.value = '';
+        elements.categoryFilter.value = '';
+        state.page = 1;
+    }
+
     async function loadProducts() {
         setFeedback(elements.listFeedback, 'Loading catalogue...', '');
         try {
@@ -701,6 +908,12 @@
             renderProductList();
             setFeedback(elements.listFeedback, 'Unable to load the catalogue. Check your access and try again.', 'error');
         }
+    }
+
+    async function handleRefresh() {
+        if (hasUnsavedChanges() && !root.confirm('Discard unsaved product changes and reload the catalogue?')) return;
+        resetCatalogueFilters();
+        await loadProducts();
     }
 
     function selectProduct(product) {
@@ -794,7 +1007,7 @@
     function bindEvents() {
         elements.loginForm.addEventListener('submit', handleLogin);
         elements.signOut.addEventListener('click', handleSignOut);
-        elements.refresh.addEventListener('click', loadProducts);
+        elements.refresh.addEventListener('click', handleRefresh);
         elements.search.addEventListener('input', () => applyFilters());
         elements.statusFilter.addEventListener('change', () => applyFilters());
         elements.categoryFilter.addEventListener('change', () => applyFilters());

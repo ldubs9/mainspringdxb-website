@@ -9,6 +9,23 @@
     'use strict';
 
     const STATUS_OPTIONS = Object.freeze(['available', 'reserved', 'sold']);
+    const CONDITION_OPTIONS = Object.freeze([
+        'New - Unworn',
+        'Used - Like New',
+        'Used - Excellent',
+        'Used - Very Good',
+        'Used - Good',
+    ]);
+    const CATEGORY_OPTIONS = Object.freeze(['watch', 'accessory']);
+    const ACCESSORY_SUBCATEGORY_OPTIONS = Object.freeze([
+        'watch-straps',
+        'watch-box',
+        'standing-clocks',
+        'books',
+        'pocket-watch',
+        'bags-and-more',
+    ]);
+    const GENDER_OPTIONS = Object.freeze(['Unisex', 'Ladies', 'Mens']);
     const SYSTEM_FIELDS = Object.freeze(['id', 'created_at', 'updated_at', 'sold_price', 'sold_at']);
     const EDITABLE_FIELDS = Object.freeze([
         'reference_code',
@@ -56,6 +73,17 @@
         return source;
     }
 
+    function resolveDropIndex(fromIndex, targetIndex, position, length) {
+        if (!Number.isInteger(length) || length < 1) return null;
+        if (!Number.isInteger(fromIndex) || fromIndex < 0 || fromIndex >= length) return null;
+        if (!Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= length) return null;
+        if (!['before', 'after'].includes(position)) return null;
+        if (fromIndex === targetIndex) return targetIndex;
+
+        const insertionIndex = targetIndex + (position === 'after' ? 1 : 0);
+        return fromIndex < insertionIndex ? insertionIndex - 1 : insertionIndex;
+    }
+
     function setThumbnail(images, index) {
         return reorderImages(images, index, 0);
     }
@@ -99,6 +127,14 @@
         return normalized || null;
     }
 
+    function normalizeOption(value, field, options) {
+        const normalized = normalizeText(value);
+        if (!options.includes(normalized)) {
+            throw new Error(`${field} must be one of: ${options.join(', ')}.`);
+        }
+        return normalized;
+    }
+
     function normalizeNumeric(value, field) {
         if (value === null || value === undefined || String(value).trim() === '') {
             return field === 'price' ? 0 : null;
@@ -121,12 +157,23 @@
         const imageError = validateImageUrls(imageUrls);
         if (imageError) throw new Error(imageError);
 
+        const category = normalizeOption(draft.category, 'category', CATEGORY_OPTIONS);
         const payload = {};
         EDITABLE_FIELDS.forEach((field) => {
             if (field === 'image_urls') {
                 payload[field] = imageUrls;
             } else if (field === 'status') {
                 payload[field] = normalizeStatus(draft[field]);
+            } else if (field === 'condition') {
+                payload[field] = normalizeOption(draft[field], 'condition', CONDITION_OPTIONS);
+            } else if (field === 'category') {
+                payload[field] = category;
+            } else if (field === 'subcategory') {
+                payload[field] = category === 'accessory'
+                    ? normalizeOption(draft[field], 'subcategory', ACCESSORY_SUBCATEGORY_OPTIONS)
+                    : null;
+            } else if (field === 'gender') {
+                payload[field] = normalizeOption(draft[field], 'gender', GENDER_OPTIONS);
             } else if (NUMERIC_FIELDS.includes(field)) {
                 payload[field] = normalizeNumeric(draft[field], field);
             } else {
@@ -137,15 +184,27 @@
         return payload;
     }
 
+    function getSaveButtonState({ dirty = false, isSaving = false, saveStatus = 'idle' } = {}) {
+        if (isSaving) return { label: 'Saving...', disabled: true };
+        if (!dirty && saveStatus === 'saved') return { label: 'Saved', disabled: true };
+        return { label: 'Save changes', disabled: !dirty };
+    }
+
     return Object.freeze({
+        ACCESSORY_SUBCATEGORY_OPTIONS,
+        CATEGORY_OPTIONS,
+        CONDITION_OPTIONS,
         EDITABLE_FIELDS,
+        GENDER_OPTIONS,
         NUMERIC_FIELDS,
         STATUS_OPTIONS,
         SYSTEM_FIELDS,
         buildProductUpdate,
+        getSaveButtonState,
         isSafeImageUrl,
         normalizeStatus,
         reorderImages,
+        resolveDropIndex,
         setThumbnail,
         validateImageUrls,
     });

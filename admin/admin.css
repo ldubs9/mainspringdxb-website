@@ -89,14 +89,17 @@ button:disabled {
     box-shadow: var(--admin-shadow);
 }
 
-.admin-wordmark {
-    display: inline-block;
-    color: var(--admin-ink);
-    font-family: 'Fraunces', serif;
-    font-size: 1.45rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+.admin-logo-link {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
     text-decoration: none;
+}
+
+.admin-logo {
+    display: block;
+    width: auto;
+    height: 60px;
 }
 
 .admin-kicker {
@@ -109,8 +112,12 @@ button:disabled {
     text-transform: uppercase;
 }
 
+.admin-login-panel .admin-logo {
+    height: 78px;
+}
+
 .admin-login-panel .admin-kicker {
-    margin-top: 52px;
+    margin-top: 28px;
 }
 
 .admin-login-panel h1,
@@ -190,7 +197,8 @@ button:disabled {
 }
 
 .admin-product-form input[readonly],
-.admin-product-form input:disabled {
+.admin-product-form input:disabled,
+.admin-product-form select:disabled {
     background: var(--admin-wash);
     color: var(--admin-muted);
     cursor: default;
@@ -468,11 +476,50 @@ button:disabled {
 }
 
 .admin-product-row {
+    position: relative;
+    isolation: isolate;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
     padding: 10px 12px 10px 22px;
     border-bottom: 1px solid var(--admin-line);
+    background: var(--admin-panel);
+}
+
+.admin-product-row::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: transparent;
+    content: '';
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+}
+
+.admin-product-row > * {
+    position: relative;
+    z-index: 1;
+}
+
+.admin-product-row[data-marker="green"]::before {
+    background: linear-gradient(90deg, rgba(47, 106, 74, 0.3), rgba(47, 106, 74, 0.12));
+    opacity: 1;
+}
+
+.admin-product-row[data-marker="amber"]::before {
+    background: linear-gradient(90deg, rgba(168, 108, 36, 0.3), rgba(168, 108, 36, 0.12));
+    opacity: 1;
+}
+
+.admin-product-row[data-marker="red"]::before {
+    background: linear-gradient(90deg, rgba(167, 66, 62, 0.3), rgba(167, 66, 62, 0.12));
+    opacity: 1;
+}
+
+.admin-product-row[data-marker="blue"]::before {
+    background: linear-gradient(90deg, rgba(75, 103, 133, 0.3), rgba(75, 103, 133, 0.12));
+    opacity: 1;
 }
 
 .admin-product-row.is-selected {
@@ -810,10 +857,13 @@ button:disabled {
 }
 
 .admin-image-item {
+    position: relative;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     border: 1px solid var(--admin-line);
     background: var(--admin-wash);
-    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, opacity 180ms ease;
 }
 
 .admin-image-item.is-selected {
@@ -826,8 +876,36 @@ button:disabled {
 }
 
 .admin-image-item.is-dragging {
-    opacity: 0.45;
-    transform: scale(0.98);
+    z-index: 2;
+    opacity: 0.52;
+    transform: scale(0.985);
+    box-shadow: 0 12px 30px rgba(28, 24, 18, 0.14);
+}
+
+.admin-image-manager.is-dragging {
+    user-select: none;
+}
+
+.admin-image-item.is-drag-over-before::before,
+.admin-image-item.is-drag-over-after::after {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 3px;
+    background: var(--admin-gold);
+    box-shadow: 0 0 0 3px rgba(173, 135, 71, 0.14);
+    content: '';
+    pointer-events: none;
+    z-index: 3;
+}
+
+.admin-image-item.is-drag-over-before::before {
+    left: -3px;
+}
+
+.admin-image-item.is-drag-over-after::after {
+    right: -3px;
 }
 
 .admin-image-select {
@@ -853,14 +931,22 @@ button:disabled {
 }
 
 .admin-image-caption {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
     align-items: center;
-    justify-content: space-between;
     gap: 8px;
+    min-height: 42px;
     padding: 8px 10px;
     border-top: 1px solid var(--admin-line);
     color: var(--admin-muted);
     font-size: 0.68rem;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.admin-image-caption:active {
+    cursor: grabbing;
 }
 
 .admin-image-caption strong {
@@ -868,19 +954,37 @@ button:disabled {
     font-weight: 600;
 }
 
+.admin-image-drag-hint {
+    color: var(--admin-gold);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .admin-image-actions {
     display: grid;
-    grid-template-columns: 1fr auto auto;
-    gap: 5px;
+    grid-template-columns: minmax(0, 1fr) 40px 40px;
+    align-items: stretch;
+    gap: 6px;
+    min-height: 46px;
+    margin-top: auto;
     padding: 8px 10px 10px;
 }
 
 .admin-image-actions button {
-    min-height: 30px;
+    display: flex;
+    min-width: 0;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
     border: 1px solid var(--admin-line-strong);
     background: var(--admin-panel);
     color: var(--admin-muted);
     font-size: 0.67rem;
+    line-height: 1.2;
+    padding: 6px 8px;
+    text-align: center;
 }
 
 .admin-image-actions button:hover:not(:disabled) {
@@ -889,7 +993,14 @@ button:disabled {
 }
 
 .admin-image-actions button:disabled {
+    background: var(--admin-wash);
     color: var(--admin-line-strong);
+}
+
+.admin-button-primary.is-saved {
+    border-color: var(--admin-green);
+    background: var(--admin-green);
+    color: var(--admin-panel);
 }
 
 .admin-save-bar {
@@ -1112,6 +1223,23 @@ button:disabled {
 
     .admin-image-manager {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-image-caption {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .admin-image-drag-hint {
+        display: none;
+    }
+
+    .admin-image-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .admin-image-actions button:first-child {
+        grid-column: 1 / -1;
     }
 
     .admin-save-bar {

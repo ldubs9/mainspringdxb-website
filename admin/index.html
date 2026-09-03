@@ -12,14 +12,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../js/supabase-client.js?v=1"></script>
-    <script src="admin-utils.js?v=1"></script>
-    <link rel="stylesheet" href="admin.css?v=1">
+    <script src="admin-utils.js?v=2"></script>
+    <link rel="stylesheet" href="admin.css?v=2">
 </head>
 
 <body>
     <div class="admin-login-shell" id="admin-login" aria-labelledby="admin-login-title">
         <div class="admin-login-panel">
-            <a class="admin-wordmark" href="../" aria-label="Return to Mainspring website">Mainspring</a>
+            <a class="admin-logo-link" href="../" aria-label="Return to Mainspring website">
+                <img class="admin-logo" src="../header-icon-light.png" alt="Mainspring">
+            </a>
             <p class="admin-kicker">Private workspace</p>
             <h1 id="admin-login-title">Product catalogue</h1>
             <p class="admin-login-intro">Sign in with an approved Mainspring administrator account to manage the live catalogue.</p>
@@ -44,7 +46,9 @@
     <div class="admin-app" id="admin-app" hidden>
         <header class="admin-topbar">
             <div class="admin-topbar-brand">
-                <a class="admin-wordmark" href="../">Mainspring</a>
+                <a class="admin-logo-link" href="../" aria-label="Return to Mainspring website">
+                    <img class="admin-logo" src="../header-icon-light.png" alt="Mainspring">
+                </a>
                 <span class="admin-topbar-divider" aria-hidden="true"></span>
                 <span class="admin-topbar-label">Admin catalogue</span>
             </div>
@@ -221,7 +225,7 @@
     <noscript>
         <p class="admin-noscript">JavaScript is required to use the Mainspring admin panel.</p>
     </noscript>
-    <script src="admin.js?v=1"></script>
+    <script src="admin.js?v=2"></script>
 </body>
 
 </html>
