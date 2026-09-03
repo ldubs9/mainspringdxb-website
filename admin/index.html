@@ -54,6 +54,7 @@
             </div>
             <div class="admin-topbar-actions">
                 <span class="admin-session-email" id="admin-session-email"></span>
+                <a class="admin-button admin-button-quiet" href="statistics.html">Sales statistics</a>
                 <a class="admin-button admin-button-quiet" href="../" target="_blank" rel="noopener">View website</a>
                 <button class="admin-button admin-button-quiet" id="admin-sign-out" type="button">Sign out</button>
             </div>
@@ -90,8 +91,6 @@
                     <span class="admin-summary-label">Sold</span>
                     <strong id="admin-sold-count">—</strong>
                 </div>
-                <a class="admin-button admin-button-quiet admin-statistics-link" href="statistics.html">Sales statistics</a>
-                <button class="admin-button admin-button-quiet admin-refresh-button" id="admin-refresh" type="button">Reload catalogue</button>
             </section>
 
             <section class="admin-workspace" aria-label="Product catalogue editor">
@@ -101,7 +100,18 @@
                             <p class="admin-kicker">Inventory</p>
                             <h2 id="catalogue-title">All products</h2>
                         </div>
-                        <span class="admin-result-count" id="admin-result-count">—</span>
+                        <div class="admin-catalogue-panel-actions">
+                            <button class="admin-button admin-button-quiet admin-refresh-button" id="admin-refresh" type="button" title="Reload catalogue">
+                                <svg class="admin-button-icon admin-reload-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                    <path d="M20 11a8 8 0 0 0-14.7-4.3L4 8"></path>
+                                    <path d="M4 4v4h4"></path>
+                                    <path d="M4 13a8 8 0 0 0 14.7 4.3L20 16"></path>
+                                    <path d="M20 20v-4h-4"></path>
+                                </svg>
+                                <span>Reload catalogue</span>
+                            </button>
+                            <span class="admin-result-count" id="admin-result-count">—</span>
+                        </div>
                     </div>
                     <div class="admin-toolbar">
                         <label class="admin-search-label" for="admin-product-search">Search catalogue</label>

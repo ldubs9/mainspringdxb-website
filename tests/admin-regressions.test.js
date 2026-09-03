@@ -141,6 +141,23 @@ test('statistics page presents combined monthly sales without technical missing-
     assert.match(adminCss, /\.admin-statistics-month-card/);
 });
 
+test('admin navigation and reload controls use the refined page hierarchy', () => {
+    const catalogueTopbar = adminIndex.match(/<div class="admin-topbar-actions">[\s\S]*?<\/div>/)?.[0] || '';
+    const statisticsTopbar = statisticsIndex.match(/<div class="admin-topbar-actions">[\s\S]*?<\/div>/)?.[0] || '';
+    const summaryStart = adminIndex.indexOf('<section class="admin-summary"');
+    const summaryEnd = adminIndex.indexOf('</section>', summaryStart);
+    const summary = adminIndex.slice(summaryStart, summaryEnd);
+
+    assert.match(catalogueTopbar, /href="statistics\.html">Sales statistics<\/a>[\s\S]*?href="\.\.\/" target="_blank"/);
+    assert.match(statisticsTopbar, /href="\.\/">Catalogue<\/a>[\s\S]*?href="\.\.\/" target="_blank"/);
+    assert.match(statisticsIndex, /class="admin-back-link" href="\.\/"[\s\S]*?admin-kicker">Commission view/);
+    assert.match(adminIndex, /class="admin-catalogue-panel-actions"[\s\S]*?id="admin-refresh"[\s\S]*?admin-reload-icon[\s\S]*?id="admin-result-count"/);
+    assert.doesNotMatch(summary, /admin-refresh|Sales statistics/);
+    assert.match(adminCss, /\.admin-back-link/);
+    assert.match(adminCss, /\.admin-catalogue-panel-actions/);
+    assert.match(adminCss, /\.admin-reload-icon/);
+});
+
 test('admin specification fields expose only the approved dropdown values', () => {
     const utils = require(path.resolve(adminUtilsPath));
     assert.deepEqual(utils.CONDITION_OPTIONS, [
