@@ -1,7 +1,10 @@
-        // Supabase Configuration
-        const SUPABASE_URL = 'https://sldb.swiftloop.tech';
-        // Using the anon (public) key — safe to expose in frontend code
-        const SUPABASE_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NTgzMjI0MCwiZXhwIjo0OTMxNTA1ODQwLCJyb2xlIjoiYW5vbiJ9.G7a98S-SVHYk1h5hU2VjVmbu_RF42KOK8jVDrR1kOZM';
+        // Supabase configuration and the storefront client are shared with the
+        // authenticated admin app. This client intentionally never persists a
+        // customer session in the storefront browser.
+        if (!window.MainspringSupabase || typeof window.MainspringSupabase.createStorefrontClient !== 'function') {
+            throw new Error('Shared Supabase client failed to load');
+        }
+        const supabaseClient = window.MainspringSupabase.createStorefrontClient();
 
         // Customer-facing product numbers.
         // Internally (database, Telegram bot, staff email) a product keeps its
@@ -15,15 +18,6 @@
             const value = String(code || '').trim();
             return value ? value.replace(/^PN-/i, 'REF-') : '';
         }
-
-        // Initialize Supabase
-        const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
-            auth: {
-                autoRefreshToken: false,
-                persistSession: false
-            }
-        });
 
         if (!window.MainspringSearch) {
             throw new Error('Product search helpers failed to load');
@@ -117,11 +111,21 @@
             document.getElementById('cartBadgeMobile').style.display = totalItems > 0 ? 'flex' : 'none';
         }
 
+        function isSafeImageUrl(value) {
+            if (typeof value !== 'string' || !value.trim()) return false;
+            try {
+                const parsed = new URL(value.trim(), window.location.origin);
+                return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+            } catch (_error) {
+                return false;
+            }
+        }
+
         function getProductThumbnail(product) {
-            if (product.image_url) return product.image_url;
-            return Array.isArray(product.image_urls) && product.image_urls.length > 0
+            const candidate = product.image_url || (Array.isArray(product.image_urls) && product.image_urls.length > 0
                 ? product.image_urls[0]
-                : '';
+                : '');
+            return isSafeImageUrl(candidate) ? candidate.trim() : '';
         }
 
         function encodeProductForCart(product) {
@@ -184,8 +188,8 @@
 
             try {
                 const { data, error } = await supabaseClient
-                    .from('mainspring_products')
-                    .select('id,image_urls,reference_code,reference_number,model,name,brand')
+                    .from('mainspring_public_products')
+                    .select('id,image_urls,reference_code,model,name,brand')
                     .in('id', missingIds);
                 if (error) throw error;
 
@@ -250,7 +254,7 @@
             cartItemsEl.innerHTML = cart.map(item => `
                 <div class="cart-item">
                     <div class="cart-item-image">
-                        ${item.image_url
+                        ${item.image_url && isSafeImageUrl(item.image_url)
                             ? `<img class="cart-item-thumbnail" src="${escapeHtml(item.image_url)}" alt="${escapeHtml(`${item.brand || ''} ${item.name || ''}`.trim())}">`
                             : '<i class="fas fa-clock"></i>'}
                     </div>
@@ -1437,8 +1441,8 @@
 
             try {
                 const createGlobalProductSearchQuery = () => excludeUnavailableProducts(supabaseClient
-                    .from('mainspring_products')
-                    .select('*')
+                    .from('mainspring_public_products')
+                    .select(PUBLIC_PRODUCT_COLUMNS)
                     .or(searchFilter));
                 const data = await fetchAllProductSearchResults(createGlobalProductSearchQuery, value);
 
@@ -1618,7 +1622,7 @@
             if (brandsFilterLoaded) return;
             try {
                 const { data, error } = await supabaseClient
-                    .from('mainspring_products')
+                    .from('mainspring_public_products')
                     .select('brand')
                     .eq('category', 'watch')
                     .not('brand', 'is', null)
@@ -1661,7 +1665,7 @@
             if (conditionsFilterLoaded) return;
             try {
                 const { data, error } = await supabaseClient
-                    .from('mainspring_products')
+                    .from('mainspring_public_products')
                     .select('condition')
                     .eq('category', 'watch')
                     .not('condition', 'is', null)
@@ -1699,7 +1703,7 @@
         // Load watches from Supabase
         // Sold and archived products are never shown on the site.
         function excludeUnavailableProducts(query) {
-            return query.or('status.not.in.(sold,archived),status.is.null');
+            return query.or('status.not.in.(sold,reserved,archived),status.is.null');
         }
 
         // Listing queries are fired from typing and from rapid filter changes.
@@ -1746,8 +1750,8 @@
                     return q;
                 }
 
-                const createWatchQuery = (columns = '*', options) => applyWatchFilters(
-                    supabaseClient.from('mainspring_products').select(columns, options)
+                const createWatchQuery = (columns = PUBLIC_PRODUCT_COLUMNS, options) => applyWatchFilters(
+                    supabaseClient.from('mainspring_public_products').select(columns, options)
                 );
                 const sortWatches = (query) => {
                     if (sortBy === 'price-low') return query.order('price', { ascending: true });
@@ -1806,26 +1810,73 @@
             showProductDetail(event, productIdentifier);
         }
 
+        const PUBLIC_PRODUCT_COLUMNS = [
+            'id',
+            'reference_code',
+            'name',
+            'brand',
+            'model',
+            'caption',
+            'condition',
+            'price',
+            'category',
+            'subcategory',
+            'created_at',
+            'watch_reference',
+            'watch_year',
+            'product_details',
+            'status',
+            'updated_at',
+            'size',
+            'gender',
+            'country',
+            'movement',
+            'image_urls',
+            'deliverables',
+        ].join(',');
+
         function escapeMarkup(value) {
             return String(value ?? '').replace(/[&<>"']/g, c => (
                 { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
             ));
         }
 
-        // Navbar search results are deliberately minimal: a square image with the
+        // JSON is used for inline handlers that remain in the legacy storefront
+        // renderer. Encode HTML-sensitive characters before placing it in an
+        // attribute so edited catalogue text cannot become executable markup.
+        function safeInlineJson(value) {
+            return JSON.stringify(value)
+                .replace(/</g, '\\u003c')
+                .replace(/>/g, '\\u003e')
+                .replace(/&/g, '\\u0026')
+                .replace(/\u2028/g, '\\u2028')
+                .replace(/\u2029/g, '\\u2029');
+        }
+
+        function renderDetailMeta(label, value) {
+            if (value === null || value === undefined || String(value).trim() === '') return '';
+            return `
+                    <div class="meta-item">
+                        <span class="meta-label">${escapeMarkup(label)}</span>
+                        <span class="meta-value">${escapeMarkup(String(value).trim())}</span>
+                    </div>`;
+        }
+
         // brand and model underneath. They do not reuse the listing card markup.
         function renderSearchResults(products, grid) {
             grid.innerHTML = products.map(product => {
-                const firstImage = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
+                const firstImageCandidate = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
+                const firstImage = isSafeImageUrl(firstImageCandidate) ? firstImageCandidate.trim() : null;
                 const brand = escapeMarkup(product.brand || '');
                 const model = escapeMarkup(product.model || product.name || '');
-                const identifier = escapeMarkup(toPublicRef(product.reference_code) || product.id);
+                const identifier = toPublicRef(product.reference_code) || product.id;
+                const openProductCall = escapeMarkup(`openProductFromSearch(event, ${safeInlineJson(identifier)})`);
                 const alt = escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}`.trim());
 
                 return `
                 <div class="search-card" role="button" tabindex="0"
-                    onclick="openProductFromSearch(event, '${identifier}')"
-                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProductFromSearch(event, '${identifier}');}">
+                    onclick="${openProductCall}"
+                    onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${openProductCall};}">
                     <div class="search-card-image">
                         ${firstImage
                         ? `<img src="${escapeMarkup(firstImage)}" alt="${alt}" loading="lazy">`
@@ -1853,57 +1904,67 @@
 
             grid.innerHTML = products.map(product => {
                 // image_urls is an array — use the first image if available
-                const firstImage = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
-                // Display name: use "brand + model" if model exists, otherwise just name
+                const firstImageCandidate = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
+                const firstImage = isSafeImageUrl(firstImageCandidate) ? firstImageCandidate.trim() : null;
                 const displayName = product.model ? product.model : product.name;
                 const displayBrand = product.brand || '';
-                const safeDisplayName = (displayName || '').replace(/'/g, "\\'");
-                const safeBrand = (displayBrand || '').replace(/'/g, "\\'");
-                const isSold = product.status === 'sold';
-                const isUnavailable = isSold;
+                const displayNameMarkup = escapeMarkup(displayName || '');
+                const displayBrandMarkup = escapeMarkup(displayBrand);
+                const isUnavailable = ['sold', 'reserved'].includes(product.status);
+                const unavailableLabel = product.status === 'reserved' ? 'Reserved' : 'Sold';
+                const unavailableStatus = product.status === 'reserved' ? 'reserved' : 'sold';
 
                 let additionalInfo = '';
                 if (product.category === 'watch') {
                     // For watches: show watch_year and watch_reference
                     const year = product.watch_year || product.year || '';
                     const reference = product.watch_reference || product.reference_number || '';
+                    const yearMarkup = escapeMarkup(year);
+                    const referenceMarkup = escapeMarkup(reference);
                     if (year || reference) {
                         additionalInfo = `<p style="font-size: 0.75rem; color: var(--gray); margin-bottom: 4px;">`;
-                        if (year) additionalInfo += `${year}`;
+                        if (year) additionalInfo += `${yearMarkup}`;
                         if (year && reference) additionalInfo += ` • `;
-                        if (reference) additionalInfo += `Ref: ${reference}`;
+                        if (reference) additionalInfo += `Ref: ${referenceMarkup}`;
                         additionalInfo += `</p>`;
                     }
                 }
 
-                const statusClass = isSold ? ' sold' : '';
+                const statusClass = isUnavailable ? ` ${unavailableStatus}` : '';
                 const productIdentifier = toPublicRef(product.reference_code) || product.id;
-                const openProductCall = `showProductDetail(event, '${productIdentifier}')`;
+                const openProductCall = escapeMarkup(`showProductDetail(event, ${safeInlineJson(productIdentifier)})`);
                 const encodedCartProduct = encodeProductForCart(product);
+                const addToCartCall = escapeMarkup(`event.stopPropagation(); addToCartEncodedProduct(${safeInlineJson(encodedCartProduct)})`);
+                const wishlistCall = escapeMarkup(`event.stopPropagation(); addToWishlist(${safeInlineJson({
+                    id: product.id,
+                    name: displayName,
+                    brand: displayBrand,
+                    price: product.price,
+                })})`);
 
                 return `
                 <div class="product-card${statusClass}">
                     <div class="product-image" onclick="${openProductCall}">
                         ${firstImage ?
-                        `<img src="${firstImage}" alt="${displayBrand} ${displayName}" loading="lazy">` :
+                        `<img src="${escapeMarkup(firstImage)}" alt="${escapeMarkup(`${displayBrand} ${displayName}`)}" loading="lazy">` :
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
                     }
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name" onclick="${openProductCall}">${displayName}</h3>
-                        <p class="product-brand">${displayBrand}</p>
+                        <h3 class="product-name" onclick="${openProductCall}">${displayNameMarkup}</h3>
+                        <p class="product-brand">${displayBrandMarkup}</p>
                         ${additionalInfo}
-                        <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
+                        <p class="product-price" data-price-aed="${escapeMarkup(product.price)}">${escapeMarkup(formatPrice(product.price))}</p>
                         <div style="display: flex; gap: 8px; margin-top: auto; padding-top: 15px;">
                             ${isUnavailable ? `
                             <button disabled style="flex: 1; padding: 10px; background: var(--gray); color: white; border: none; cursor: default; font-size: 0.8rem; opacity: 0.7;">
-                                <i class="fas fa-ban"></i> Sold
+                                <i class="fas fa-ban"></i> ${unavailableLabel}
                             </button>
                             ` : `
-                            <button onclick="event.stopPropagation(); addToCartEncodedProduct('${encodedCartProduct}')" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
+                            <button onclick="${addToCartCall}" style="flex: 1; padding: 10px; background: var(--primary-green); color: white; border: none; cursor: pointer; font-size: 0.8rem; border-radius: 0;">
                                 <i class="fas fa-shopping-bag"></i> Add to Cart
                             </button>
-                            <button onclick="event.stopPropagation(); addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})" style="padding: 10px 12px; background: none; border: 1px solid var(--cream-dark); cursor: pointer; font-size: 0.8rem; color: var(--primary-green); border-radius: 0;">
+                            <button onclick="${wishlistCall}" style="padding: 10px 12px; background: none; border: 1px solid var(--cream-dark); cursor: pointer; font-size: 0.8rem; color: var(--primary-green); border-radius: 0;">
                                 <i class="far fa-heart"></i>
                             </button>
                             `}
@@ -1937,12 +1998,10 @@
 
             try {
                 let query = supabaseClient
-                    .from('mainspring_products')
-                    .select('*')
+                    .from('mainspring_public_products')
+                    .select(PUBLIC_PRODUCT_COLUMNS)
                     .eq('category', 'watch')
-                    // Live inventory uses status 'active' (the bulk) and 'available'.
-                    // 'sold', 'archived' and 'draft' are intentionally excluded from the featured rail.
-                    .in('status', ['active', 'available'])
+                    .eq('status', 'available')
                     .order('reference_code', { ascending: false, nullsFirst: false })
                     .limit(12);
 
@@ -2467,9 +2526,9 @@
                 const sortBy = document.getElementById('accessorySortFilter')?.value || 'newest';
                 const statusFilter = document.getElementById('accessoryStatusFilter')?.value || '';
 
-                const createAccessoryQuery = (columns = '*', options) => {
+                const createAccessoryQuery = (columns = PUBLIC_PRODUCT_COLUMNS, options) => {
                     let query = supabaseClient
-                        .from('mainspring_products')
+                        .from('mainspring_public_products')
                         .select(columns, options)
                         .eq('category', 'accessory');
 
@@ -2586,9 +2645,9 @@
             // Try to load from Supabase first (fetch by ID or reference_code, no status filter)
             let product = null;
             try {
-                let query = supabaseClient
-                    .from('mainspring_products')
-                    .select('*');
+                let query = excludeUnavailableProducts(supabaseClient
+                    .from('mainspring_public_products')
+                    .select(PUBLIC_PRODUCT_COLUMNS));
 
                 if (isNumericId) {
                     query = query.eq('id', productIdentifier);
@@ -2602,64 +2661,63 @@
                     product = data;
                 }
             } catch (e) {
-                console.log('Supabase fetch failed, using demo data');
+                console.warn('Supabase product fetch failed:', e && e.message ? e.message : e);
             }
 
-            // Demo product data (fallback)
             if (!product) {
-                const demoProducts = {
-                    1: { id: 1, brand: 'Rolex', model: 'Submariner Date', name: 'Submariner Date', price: 14500, caption: 'The Oyster Perpetual Submariner Date is a reference among divers\' watches.', image_urls: [] },
-                    2: { id: 2, brand: 'Rolex', model: 'Daytona Cosmograph', name: 'Daytona Cosmograph', price: 28500, caption: 'The Cosmograph Daytona is the ultimate racing watch.', image_urls: [] },
-                    3: { id: 3, brand: 'Omega', model: 'Speedmaster Professional', name: 'Speedmaster Professional', price: 7500, caption: 'The iconic moonwatch, the only chronograph worn on the Moon.', image_urls: [] },
-                    4: { id: 4, brand: 'Patek Philippe', model: 'Nautilus 5711', name: 'Nautilus 5711', price: 125000, caption: 'An icon of luxury sports watches. Designed by Gérald Genta in 1974.', image_urls: [] },
-                    5: { id: 5, brand: 'Audemars Piguet', model: 'Royal Oak', name: 'Royal Oak', price: 45000, caption: 'Revolutionized the watch industry when launched in 1972.', image_urls: [] }
-                };
-                product = demoProducts[productIdentifier];
-                if (!product) {
-                    const numericId = isNumericId ? Number(productIdentifier) : 1;
-                    const brands = ['Rolex', 'Omega', 'Patek Philippe', 'Cartier', 'Tudor'];
-                    const models = ['Classic', 'Sport', 'Diver', 'Chronograph', 'Dress'];
-                    product = {
-                        id: numericId,
-                        brand: brands[numericId % brands.length],
-                        model: `${models[numericId % models.length]} ${numericId}`,
-                        name: `${models[numericId % models.length]} ${numericId}`,
-                        price: (numericId * 2500) + 5000,
-                        caption: 'Experience the pinnacle of Swiss craftsmanship with this exceptional timepiece.',
-                        image_urls: []
-                    };
-                }
+                detailInfo.innerHTML = `
+                    <div class="detail-unavailable-message">
+                        <h1>Product unavailable</h1>
+                        <p>This product is no longer available in the public catalogue.</p>
+                    </div>
+                `;
+                return;
             }
 
             // Normalize column names for display
             const displayName = product.model || product.name || 'Timepiece';
             const displayBrand = product.brand || '';
-            const safeDisplayName = displayName.replace(/'/g, "\\'");
-            const safeBrand = displayBrand.replace(/'/g, "\\'");
-            const refNumber = product.reference_number || '';
+            const displayNameMarkup = escapeMarkup(displayName);
+            const displayBrandMarkup = escapeMarkup(displayBrand);
 
             currentProduct = product;
             // Reset gallery index so the new product always starts at the first image
             currentImageIndex = 0;
             // image_urls is an array — use it directly for the gallery
-            productImages = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls : [];
+            productImages = (Array.isArray(product.image_urls) ? product.image_urls : [])
+                .filter(isSafeImageUrl)
+                .map(image => image.trim());
 
             // Render gallery
             renderGallery();
 
             // Render detail info
             const watchYear = product.watch_year || product.year || '';
-            const watchReference = product.watch_reference || product.reference_number || '';
+            const watchReference = product.watch_reference || product.reference_number || product.reference_code || '';
             const watchDetails = product.product_details || '';
-
-            const isSoldProduct = product.status === 'sold';
-            const isUnavailableProduct = isSoldProduct;
-            const unavailableLabel = 'SOLD';
+            const caption = product.caption || '';
+            const isUnavailableProduct = ['sold', 'reserved'].includes(product.status);
+            const unavailableLabel = product.status === 'reserved' ? 'RESERVED' : 'SOLD';
+            const contactProduct = {
+                id: product.id,
+                name: displayName,
+                brand: displayBrand,
+                price: product.price,
+                reference_number: watchReference,
+            };
+            const wishlistProduct = {
+                id: product.id,
+                name: displayName,
+                brand: displayBrand,
+                price: product.price,
+            };
+            const whatsappCall = escapeMarkup(`inquireViaWhatsApp(${safeInlineJson(contactProduct)})`);
+            const wishlistCall = escapeMarkup(`addToWishlist(${safeInlineJson(wishlistProduct)})`);
 
             detailInfo.innerHTML = `
                 ${isUnavailableProduct ? `<div style="background: var(--gray); color: white; padding: 10px 20px; margin-bottom: 20px; text-align: center; font-family: 'Fraunces', serif; font-size: 0.9rem; letter-spacing: 3px;">${unavailableLabel}</div>` : ''}
-                <p class="detail-brand">${displayBrand}</p>
-                <h1 class="detail-name">${displayName}</h1>
+                <p class="detail-brand">${displayBrandMarkup}</p>
+                <h1 class="detail-name">${displayNameMarkup}</h1>
                 ${(() => {
                     const primaryFields = [product.gender, product.movement, product.country];
                     const fallbackFields = [product.size, product.watch_year, product.watch_reference];
@@ -2680,11 +2738,11 @@
                         }
                     }
                     return infoItems.length > 0
-                        ? `<p style="font-size: 1.1rem; color: var(--gray); margin-bottom: 8px;">${infoItems.join(', ')}</p>`
+                        ? `<p style="font-size: 1.1rem; color: var(--gray); margin-bottom: 8px;">${infoItems.map(escapeMarkup).join(', ')}</p>`
                         : '';
                 })()}
-                <p class="detail-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
-                <p class="detail-description">${product.caption || ''}</p>
+                <p class="detail-price" data-price-aed="${escapeMarkup(product.price)}">${escapeMarkup(formatPrice(product.price))}</p>
+                <p class="detail-description">${escapeMarkup(caption)}</p>
                 ${isUnavailableProduct ? `
                 <div class="detail-actions">
                     <button class="btn-primary" disabled style="opacity: 0.5; cursor: default;"><i class="fas fa-ban"></i> ${unavailableLabel}</button>
@@ -2695,76 +2753,30 @@
                 </div>
                 ` : `
                 <div class="detail-actions">
-                    <button class="btn-primary btn-whatsapp-action" style="background: #25D366;" onclick="inquireViaWhatsApp({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}, reference_number: '${refNumber}'})"><i class="fab fa-whatsapp"></i> WhatsApp Us</button>
+                    <button class="btn-primary btn-whatsapp-action" style="background: #25D366;" onclick="${whatsappCall}"><i class="fab fa-whatsapp"></i> WhatsApp Us</button>
                     <div class="detail-actions-row">
                         <button class="btn-primary btn-cart-action" onclick="addToCart(currentProduct)"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
-                        <button class="btn-secondary btn-wishlist-action" onclick="addToWishlist({id: ${product.id}, name: '${safeDisplayName}', brand: '${safeBrand}', price: ${product.price}})"><i class="far fa-heart"></i></button>
+                        <button class="btn-secondary btn-wishlist-action" onclick="${wishlistCall}"><i class="far fa-heart"></i></button>
                     </div>
                 </div>
                 `}
                 <div class="detail-meta">
-                    <div class="meta-item">
-                        <span class="meta-label">Brand</span>
-                        <span class="meta-value">${displayBrand}</span>
-                    </div>
-                    <div class="meta-item">
-                        <span class="meta-label">Model</span>
-                        <span class="meta-value">${displayName}</span>
-                    </div>
-                    ${watchReference ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Reference Number</span>
-                        <span class="meta-value">${watchReference}</span>
-                    </div>` : ''}
-                    ${watchYear ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Year</span>
-                        <span class="meta-value">${watchYear}</span>
-                    </div>` : ''}
-                    ${product.condition ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Condition</span>
-                        <span class="meta-value">${product.condition}</span>
-                    </div>` : ''}
-                    ${product.gender ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Gender</span>
-                        <span class="meta-value">${product.gender}</span>
-                    </div>` : ''}
-                    ${product.movement ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Movement</span>
-                        <span class="meta-value">${product.movement}</span>
-                    </div>` : ''}
-                    ${product.deliverables && String(product.deliverables).trim() ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Deliverables</span>
-                        <span class="meta-value">${String(product.deliverables).trim()}</span>
-                    </div>` : ''}
-                    ${product.country ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Country of Origin</span>
-                        <span class="meta-value">${product.country}</span>
-                    </div>` : ''}
-                    ${product.size ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Size</span>
-                        <span class="meta-value">${product.size}</span>
-                    </div>` : ''}
-                    ${product.bracelet ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Bracelet</span>
-                        <span class="meta-value">${product.bracelet}</span>
-                    </div>` : ''}
-                    ${product.material ? `
-                    <div class="meta-item">
-                        <span class="meta-label">Material</span>
-                        <span class="meta-value">${product.material}</span>
-                    </div>` : ''}
+                    ${renderDetailMeta('Brand', displayBrand)}
+                    ${renderDetailMeta('Model', displayName)}
+                    ${renderDetailMeta('Reference Number', watchReference)}
+                    ${renderDetailMeta('Year', watchYear)}
+                    ${renderDetailMeta('Condition', product.condition)}
+                    ${renderDetailMeta('Gender', product.gender)}
+                    ${renderDetailMeta('Movement', product.movement)}
+                    ${renderDetailMeta('Deliverables', product.deliverables)}
+                    ${renderDetailMeta('Country of Origin', product.country)}
+                    ${renderDetailMeta('Size', product.size)}
+                    ${renderDetailMeta('Bracelet', product.bracelet)}
+                    ${renderDetailMeta('Material', product.material)}
                     ${watchDetails ? `
                     <div style="border-top: 1px solid var(--cream-dark); padding-top: 20px; margin-top: 20px;">
                         <h4 style="font-size: 1rem; color: var(--black); margin-bottom: 15px;">Details</h4>
-                        <p style="color: var(--gray); line-height: 1.8;">${watchDetails}</p>
+                        <p style="color: var(--gray); line-height: 1.8;">${escapeMarkup(watchDetails)}</p>
                     </div>` : ''}
                 </div>
             `;
@@ -2789,8 +2801,8 @@
                     `<button class="gallery-dot ${i === currentImageIndex ? 'active' : ''}" onclick="selectImage(${i})"></button>`
                 ).join('');
                 main.innerHTML = `
-                    <img src="${productImages[currentImageIndex]}" alt="Product Image" onclick="openImageZoom()">
-                    ${currentProduct && currentProduct.reference_code ? `<div class="gallery-ref-code">${toPublicRef(currentProduct.reference_code)}</div>` : ''}
+                    <img src="${escapeMarkup(productImages[currentImageIndex])}" alt="Product Image" onclick="openImageZoom()">
+                    ${currentProduct && currentProduct.reference_code ? `<div class="gallery-ref-code">${escapeMarkup(toPublicRef(currentProduct.reference_code))}</div>` : ''}
                     <div class="gallery-nav-bar">
                         <button class="gallery-nav prev" onclick="prevImage()"><i class="fas fa-chevron-left"></i></button>
                         <div class="gallery-dots">${dotsHtml}</div>
@@ -2799,7 +2811,7 @@
                 `;
                 thumbs.innerHTML = productImages.map((img, i) => `
                     <div class="gallery-thumb ${i === currentImageIndex ? 'active' : ''}" onclick="selectImage(${i})">
-                        <img src="${img}" alt="Thumbnail">
+                        <img src="${escapeMarkup(img)}" alt="Thumbnail">
                     </div>
                 `).join('');
                 // Update scroll buttons after render
@@ -3105,8 +3117,8 @@
                 //    straps, not books). Category-wide comes after, as a filler.
                 if (subcategory) {
                     const { data: sameSubcategoryProducts, error: subcategoryError } = await excludeUnavailableProducts(supabaseClient
-                        .from('mainspring_products')
-                        .select('*')
+                        .from('mainspring_public_products')
+                        .select(PUBLIC_PRODUCT_COLUMNS)
                         .eq('subcategory', subcategory)
                         .neq('id', currentProductId))
                         .limit(4);
@@ -3120,8 +3132,8 @@
                 if (recommendations.length < 4) {
                     const recommendedIds = new Set(recommendations.map(p => p.id));
                     const { data: sameCategoryProducts, error: categoryError } = await excludeUnavailableProducts(supabaseClient
-                        .from('mainspring_products')
-                        .select('*')
+                        .from('mainspring_public_products')
+                        .select(PUBLIC_PRODUCT_COLUMNS)
                         .eq('category', category)
                         .neq('id', currentProductId))
                         .limit(4);
@@ -3136,8 +3148,8 @@
                 if (recommendations.length < 4) {
                     const recommendedIds = new Set(recommendations.map(p => p.id));
                     let additionalQuery = excludeUnavailableProducts(supabaseClient
-                        .from('mainspring_products')
-                        .select('*')
+                        .from('mainspring_public_products')
+                        .select(PUBLIC_PRODUCT_COLUMNS)
                         .neq('id', currentProductId));
 
                     // Prefer same brand
@@ -3158,8 +3170,8 @@
                 if (recommendations.length < 4) {
                     const recommendedIds = new Set(recommendations.map(p => p.id));
                     const { data: anyProducts, error: anyError } = await excludeUnavailableProducts(supabaseClient
-                        .from('mainspring_products')
-                        .select('*')
+                        .from('mainspring_public_products')
+                        .select(PUBLIC_PRODUCT_COLUMNS)
                         .neq('id', currentProductId))
                         .limit(4 - recommendations.length);
 
@@ -3180,26 +3192,29 @@
 
             grid.innerHTML = recommendations.map(product => {
                 // Extract first image from image_urls array if available
-                const firstImage = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
-                // Display name: use "brand + model" if model exists, otherwise just name
+                const firstImageCandidate = (Array.isArray(product.image_urls) && product.image_urls.length > 0) ? product.image_urls[0] : null;
+                const firstImage = isSafeImageUrl(firstImageCandidate) ? firstImageCandidate.trim() : null;
                 const displayName = product.model ? product.model : product.name;
                 const displayBrand = product.brand || '';
-                const safeDisplayName = (displayName || '').replace(/'/g, "\\'");
-                const safeBrand = (displayBrand || '').replace(/'/g, "\\'");
+                const displayNameMarkup = escapeMarkup(displayName || '');
+                const displayBrandMarkup = escapeMarkup(displayBrand);
+                const conditionMarkup = escapeMarkup(product.condition || '');
+                const productIdentifier = toPublicRef(product.reference_code) || product.id;
+                const openProductCall = escapeMarkup(`showProductDetail(event, ${safeInlineJson(productIdentifier)})`);
 
                 return `
                 <div class="product-card">
-                    <div class="product-image" onclick="showProductDetail(event, '${toPublicRef(product.reference_code) || product.id}')">
+                    <div class="product-image" onclick="${openProductCall}">
                         ${firstImage ?
-                        `<img src="${firstImage}" alt="${displayBrand} ${displayName}" loading="lazy">` :
+                        `<img src="${escapeMarkup(firstImage)}" alt="${escapeMarkup(`${displayBrand} ${displayName}`)}" loading="lazy">` :
                         `<div class="product-placeholder"><i class="fas fa-clock"></i></div>`
                     }
                     </div>
                     <div class="product-info">
-                        <h3 class="product-name" onclick="showProductDetail(event, '${toPublicRef(product.reference_code) || product.id}')">${displayName}</h3>
-                        <p class="product-brand">${displayBrand}</p>
-                        ${product.condition ? `<p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 8px;">${product.condition}</p>` : ''}
-                        <p class="product-price" data-price-aed="${product.price}">${formatPrice(product.price)}</p>
+                        <h3 class="product-name" onclick="${openProductCall}">${displayNameMarkup}</h3>
+                        <p class="product-brand">${displayBrandMarkup}</p>
+                        ${product.condition ? `<p style="font-size: 0.8rem; color: var(--gray); margin-bottom: 8px;">${conditionMarkup}</p>` : ''}
+                        <p class="product-price" data-price-aed="${escapeMarkup(product.price)}">${escapeMarkup(formatPrice(product.price))}</p>
                     </div>
                 </div>
             `;

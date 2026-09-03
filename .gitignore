@@ -1,0 +1,14 @@
+# Local secrets and environment overrides
+.env
+.env.*
+!.env.example
+
+# Operating-system and editor files
+.DS_Store
+.vscode/
+.idea/
+
+# Local test and browser artifacts
+coverage/
+playwright-report/
+test-results/

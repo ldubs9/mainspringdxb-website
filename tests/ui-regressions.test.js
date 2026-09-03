@@ -20,14 +20,14 @@ test('checkout WhatsApp icons inherit the light button foreground color', () => 
 });
 
 test('product metadata renders non-empty deliverables immediately after movement', () => {
-    const movement = app.indexOf('<span class="meta-label">Movement</span>');
-    const deliverables = app.indexOf('<span class="meta-label">Deliverables</span>');
-    const country = app.indexOf('<span class="meta-label">Country of Origin</span>');
+    const movement = app.indexOf("renderDetailMeta('Movement', product.movement)");
+    const deliverables = app.indexOf("renderDetailMeta('Deliverables', product.deliverables)");
+    const country = app.indexOf("renderDetailMeta('Country of Origin', product.country)");
 
     assert.ok(movement >= 0, 'movement metadata is present');
     assert.ok(deliverables > movement, 'deliverables follows movement');
     assert.ok(country > deliverables, 'deliverables precedes country');
-    assert.match(app, /product\.deliverables\s*&&\s*String\(product\.deliverables\)\.trim\(\)/);
+    assert.match(app, /renderDetailMeta\('Deliverables',\s*product\.deliverables\)/);
 });
 
 test('hero copy remains fully visible while scrolling the hero', () => {
@@ -100,7 +100,7 @@ test('product listing queries exclude sold and archived products by default', ()
     const watches = app.slice(watchesStart, watchesEnd);
 
     assert.ok(helperStart >= 0, 'unavailable-product filter helper is present');
-    assert.match(helper, /query\.or\('status\.not\.in\.\(sold,archived\),status\.is\.null'\)/);
+    assert.match(helper, /query\.or\('status\.not\.in\.\(sold,reserved,archived\),status\.is\.null'\)/);
     assert.match(watches, /q = excludeUnavailableProducts\(q\)/);
 });
 
@@ -115,15 +115,14 @@ test('watch condition control uses product conditions rather than availability s
 
 test('condition filter changes use fresh component and application assets', () => {
     assert.match(loader, /const COMPONENTS_VERSION = '10'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=20'/);
-    assert.match(index, /js\/loader\.js\?v=10/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=21'/);
+    assert.match(index, /js\/loader\.js\?v=11/);
 });
 
-test('inventory UI has no reservation status or reserve action', () => {
-    assert.doesNotMatch(app, /reserved/i);
-    assert.doesNotMatch(watches, /reserved/i);
-    assert.doesNotMatch(accessories, /reserved/i);
-    assert.doesNotMatch(stylesCss, /reserved/i);
+test('reserved inventory is excluded from public UI while remaining an admin state', () => {
+    assert.ok(app.includes('status.not.in.(sold,reserved,archived)'));
+    assert.doesNotMatch(watches, /reserve action/i);
+    assert.doesNotMatch(accessories, /reserve action/i);
 });
 
 test('recommendation card headings use the same left-aligned model treatment as collection cards', () => {

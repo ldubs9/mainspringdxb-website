@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Mainspring Admin | Product Catalogue</title>
+    <link rel="icon" type="image/svg+xml" href="../mainspring-favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/supabase-client.js?v=1"></script>
+    <script src="admin-utils.js?v=1"></script>
+    <link rel="stylesheet" href="admin.css?v=1">
+</head>
+
+<body>
+    <div class="admin-login-shell" id="admin-login" aria-labelledby="admin-login-title">
+        <div class="admin-login-panel">
+            <a class="admin-wordmark" href="../" aria-label="Return to Mainspring website">Mainspring</a>
+            <p class="admin-kicker">Private workspace</p>
+            <h1 id="admin-login-title">Product catalogue</h1>
+            <p class="admin-login-intro">Sign in with an approved Mainspring administrator account to manage the live catalogue.</p>
+
+            <form id="admin-login-form" novalidate>
+                <div class="admin-field">
+                    <label for="admin-email">Email address</label>
+                    <input id="admin-email" name="email" type="email" autocomplete="username" required>
+                </div>
+                <div class="admin-field">
+                    <label for="admin-password">Password</label>
+                    <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+                </div>
+                <button class="admin-button admin-button-primary admin-button-wide" id="admin-login-button" type="submit">
+                    Sign in
+                </button>
+                <p class="admin-feedback" id="admin-auth-message" role="alert" aria-live="polite"></p>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-app" id="admin-app" hidden>
+        <header class="admin-topbar">
+            <div class="admin-topbar-brand">
+                <a class="admin-wordmark" href="../">Mainspring</a>
+                <span class="admin-topbar-divider" aria-hidden="true"></span>
+                <span class="admin-topbar-label">Admin catalogue</span>
+            </div>
+            <div class="admin-topbar-actions">
+                <span class="admin-session-email" id="admin-session-email"></span>
+                <a class="admin-button admin-button-quiet" href="../" target="_blank" rel="noopener">View website</a>
+                <button class="admin-button admin-button-quiet" id="admin-sign-out" type="button">Sign out</button>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <div class="admin-page-heading">
+                <div>
+                    <p class="admin-kicker">Live source of truth</p>
+                    <h1>Product catalogue</h1>
+                    <p class="admin-page-intro">Edit catalogue content, inventory state, and product image order. Changes are saved explicitly and appear on the public website from Supabase.</p>
+                </div>
+                <div class="admin-heading-note" aria-label="Editing policy">
+                    <span class="admin-heading-note-label">Editing policy</span>
+                    <strong>System fields stay protected</strong>
+                    <span>IDs, sale metadata, and timestamps are read-only.</span>
+                </div>
+            </div>
+
+            <section class="admin-summary" id="admin-summary" aria-label="Catalogue summary">
+                <div class="admin-summary-item">
+                    <span class="admin-summary-label">Loaded</span>
+                    <strong id="admin-total-count">—</strong>
+                </div>
+                <div class="admin-summary-item">
+                    <span class="admin-summary-label">Available</span>
+                    <strong id="admin-available-count">—</strong>
+                </div>
+                <div class="admin-summary-item">
+                    <span class="admin-summary-label">Reserved</span>
+                    <strong id="admin-reserved-count">—</strong>
+                </div>
+                <div class="admin-summary-item">
+                    <span class="admin-summary-label">Sold</span>
+                    <strong id="admin-sold-count">—</strong>
+                </div>
+                <button class="admin-button admin-button-quiet admin-refresh-button" id="admin-refresh" type="button">Reload catalogue</button>
+            </section>
+
+            <section class="admin-workspace" aria-label="Product catalogue editor">
+                <aside class="admin-catalogue-panel" aria-labelledby="catalogue-title">
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="admin-kicker">Inventory</p>
+                            <h2 id="catalogue-title">All products</h2>
+                        </div>
+                        <span class="admin-result-count" id="admin-result-count">—</span>
+                    </div>
+                    <div class="admin-toolbar">
+                        <label class="admin-search-label" for="admin-product-search">Search catalogue</label>
+                        <input id="admin-product-search" type="search" placeholder="Brand, model, reference..." autocomplete="off">
+                        <div class="admin-filter-row">
+                            <label class="admin-sr-only" for="admin-status-filter">Filter by status</label>
+                            <select id="admin-status-filter">
+                                <option value="">All statuses</option>
+                                <option value="available">Available</option>
+                                <option value="reserved">Reserved</option>
+                                <option value="sold">Sold</option>
+                            </select>
+                            <label class="admin-sr-only" for="admin-category-filter">Filter by category</label>
+                            <select id="admin-category-filter">
+                                <option value="">All categories</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="admin-list-feedback" id="admin-list-feedback" role="status" aria-live="polite">Checking your access...</p>
+                    <div class="admin-product-list" id="admin-product-list" aria-live="polite"></div>
+                    <div class="admin-pagination" id="admin-pagination" aria-label="Product list pages"></div>
+                </aside>
+
+                <section class="admin-editor-panel" aria-labelledby="editor-title">
+                    <div class="admin-editor-empty" id="admin-editor-empty">
+                        <div class="admin-empty-mark" aria-hidden="true">+</div>
+                        <p class="admin-kicker">Product editor</p>
+                        <h2>Select a product</h2>
+                        <p>Choose an item from the catalogue to edit its content, status, or image layout.</p>
+                    </div>
+
+                    <form class="admin-product-form" id="admin-product-form" hidden>
+                        <div class="admin-editor-heading">
+                            <div>
+                                <p class="admin-kicker" id="admin-editor-kicker">Product editor</p>
+                                <h2 id="editor-title">Edit product</h2>
+                                <p class="admin-editor-subtitle" id="admin-editor-subtitle"></p>
+                            </div>
+                            <div class="admin-editor-state" id="admin-editor-state" aria-live="polite">No unsaved changes</div>
+                        </div>
+
+                        <div class="admin-status-callout" id="admin-status-callout">
+                            <div>
+                                <strong>Inventory status</strong>
+                                <span>Only available products can be purchased from the public website.</span>
+                            </div>
+                            <label for="admin-field-status">Status</label>
+                            <select id="admin-field-status" name="status">
+                                <option value="available">Available</option>
+                                <option value="reserved">Reserved</option>
+                                <option value="sold">Sold</option>
+                            </select>
+                        </div>
+
+                        <div class="admin-form-layout">
+                            <section class="admin-form-section admin-form-section-wide" aria-labelledby="admin-images-title">
+                                <div class="admin-section-heading">
+                                    <div>
+                                        <p class="admin-kicker">Visual order</p>
+                                        <h3 id="admin-images-title">Product images</h3>
+                                    </div>
+                                    <span class="admin-section-hint">Drag to reorder</span>
+                                </div>
+                                <p class="admin-section-description">The first image is the public thumbnail. Select an image to focus it, or use “Set as thumbnail” to move it to the first position.</p>
+                                <div class="admin-image-manager" id="admin-image-manager"></div>
+                                <p class="admin-feedback" id="admin-image-feedback" role="status" aria-live="polite"></p>
+                            </section>
+
+                            <section class="admin-form-section" aria-labelledby="admin-content-title">
+                                <div class="admin-section-heading">
+                                    <div>
+                                        <p class="admin-kicker">Catalogue copy</p>
+                                        <h3 id="admin-content-title">Product details</h3>
+                                    </div>
+                                </div>
+                                <div class="admin-form-grid" id="admin-content-fields"></div>
+                            </section>
+
+                            <section class="admin-form-section" aria-labelledby="admin-specs-title">
+                                <div class="admin-section-heading">
+                                    <div>
+                                        <p class="admin-kicker">Product data</p>
+                                        <h3 id="admin-specs-title">Specifications</h3>
+                                    </div>
+                                </div>
+                                <div class="admin-form-grid" id="admin-specification-fields"></div>
+                            </section>
+
+                            <section class="admin-form-section" aria-labelledby="admin-drafts-title">
+                                <div class="admin-section-heading">
+                                    <div>
+                                        <p class="admin-kicker">Working copy</p>
+                                        <h3 id="admin-drafts-title">Draft content</h3>
+                                    </div>
+                                </div>
+                                <div class="admin-form-grid" id="admin-draft-fields"></div>
+                            </section>
+
+                            <section class="admin-form-section" aria-labelledby="admin-system-title">
+                                <div class="admin-section-heading">
+                                    <div>
+                                        <p class="admin-kicker">Database metadata</p>
+                                        <h3 id="admin-system-title">System-managed fields</h3>
+                                    </div>
+                                </div>
+                                <p class="admin-section-description">These values are shown for reference and cannot be changed from the admin panel.</p>
+                                <div class="admin-form-grid" id="admin-system-fields"></div>
+                            </section>
+                        </div>
+
+                        <div class="admin-save-bar">
+                            <span class="admin-save-note" id="admin-save-note">Changes are not saved automatically.</span>
+                            <button class="admin-button admin-button-primary" id="admin-save-button" type="submit">Save changes</button>
+                        </div>
+                        <p class="admin-feedback admin-save-feedback" id="admin-save-feedback" role="status" aria-live="polite"></p>
+                    </form>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <noscript>
+        <p class="admin-noscript">JavaScript is required to use the Mainspring admin panel.</p>
+    </noscript>
+    <script src="admin.js?v=1"></script>
+</body>
+
+</html>

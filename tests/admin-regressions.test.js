@@ -1,0 +1,140 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const adminIndexPath = path.join('admin', 'index.html');
+const adminScriptPath = path.join('admin', 'admin.js');
+const adminUtilsPath = path.join('admin', 'admin-utils.js');
+const migrationPath = path.join('supabase', 'migrations', '20260902_mainspring_admin_access.sql');
+
+const readIfPresent = (filePath) => fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+const adminIndex = readIfPresent(adminIndexPath);
+const adminScript = readIfPresent(adminScriptPath);
+const migration = readIfPresent(migrationPath);
+
+const PRODUCT_FIELDS = [
+    'reference_code',
+    'name',
+    'brand',
+    'model',
+    'caption',
+    'condition',
+    'price',
+    'category',
+    'subcategory',
+    'created_at',
+    'watch_reference',
+    'watch_year',
+    'product_details',
+    'status',
+    'updated_at',
+    'size',
+    'gender',
+    'country',
+    'movement',
+    'id',
+    'image_urls',
+    'deliverables',
+    'sold_price',
+    'sold_at',
+    'cost_price',
+    'draft_description',
+    'draft_social',
+];
+
+
+test('admin route is an authenticated static application', () => {
+    assert.ok(adminIndex, 'admin/index.html exists');
+    assert.ok(adminIndex.includes('id="admin-login"'));
+    assert.ok(adminIndex.includes('type="password"'));
+    assert.ok(adminIndex.includes('@supabase/supabase-js'));
+    assert.ok(adminIndex.includes('admin-utils.js'));
+    assert.ok(adminIndex.includes('admin.js'));
+});
+
+test('admin editor represents every exported product field and marks system fields read-only', () => {
+    assert.ok(adminScript, 'admin/admin.js exists');
+    for (const field of PRODUCT_FIELDS) {
+        assert.ok(adminScript.includes(field), `${field} is represented`);
+    }
+
+    for (const field of ['id', 'created_at', 'updated_at', 'sold_price', 'sold_at']) {
+        const fieldStart = adminScript.indexOf(`name: '${field}'`);
+        assert.ok(fieldStart >= 0, `${field} definition exists`);
+        assert.ok(adminScript.slice(fieldStart, fieldStart + 220).includes('readOnly: true'), `${field} is read-only`);
+    }
+});
+
+test('admin status editor exposes the three approved states and keeps the separate color marker non-persistent', () => {
+    for (const status of ['available', 'reserved', 'sold']) {
+        assert.ok(adminScript.includes(`value="${status}"`) || adminScript.includes(`'${status}'`), `${status} is exposed`);
+    }
+    assert.ok(adminScript.includes('status'));
+    assert.ok(/localStorage|marker|color/i.test(adminScript));
+    assert.doesNotMatch(adminScript, /admin_tag|admin_marker/);
+});
+
+test('admin save updates only the selected product and reads the saved row back', () => {
+    assert.ok(adminScript.includes("from('mainspring_products')"));
+    assert.ok(adminScript.includes('update(contentPayload)'));
+    assert.ok(adminScript.includes('transition_mainspring_product_status'));
+    assert.ok(adminScript.includes('status'));
+    assert.ok(adminScript.includes('image_urls'));
+    assert.ok(adminScript.includes("eq('id', product.id)"));
+    assert.ok(adminScript.includes("select('*')"));
+    assert.ok(/read.?back|reload|verify/i.test(adminScript));
+});
+
+test('admin image utilities reorder without mutating the source and promote a thumbnail', () => {
+    assert.ok(fs.existsSync(adminUtilsPath), 'admin/admin-utils.js exists');
+    const utils = require(path.resolve(adminUtilsPath));
+    assert.deepEqual(utils.reorderImages(['a', 'b', 'c'], 2, 0), ['c', 'a', 'b']);
+    assert.deepEqual(utils.setThumbnail(['a', 'b', 'c'], 1), ['b', 'a', 'c']);
+    const source = ['a', 'b'];
+    utils.setThumbnail(source, 1);
+    assert.deepEqual(source, ['a', 'b']);
+});
+
+test('admin image URL validation rejects executable schemes', () => {
+    const utils = require(path.resolve(adminUtilsPath));
+    assert.equal(utils.isSafeImageUrl('https://cdn.example/image.jpg'), true);
+    assert.equal(utils.isSafeImageUrl('http://cdn.example/image.jpg'), true);
+    assert.equal(utils.isSafeImageUrl('javascript:alert(1)'), false);
+    assert.equal(utils.isSafeImageUrl('data:text/html,<script>alert(1)</script>'), false);
+});
+
+test('public renderers escape admin-editable values and share the unavailable-product policy', () => {
+    const app = fs.readFileSync('js/app.js', 'utf8');
+    assert.ok(app.includes('escapeMarkup(firstImage)'));
+    assert.ok(app.includes("escapeMarkup(displayName || '')"));
+    assert.ok(app.includes("escapeMarkup(displayBrand)"));
+    assert.ok(app.includes("excludeUnavailableProducts(supabaseClient"));
+    assert.doesNotMatch(app, /const demoProducts/);
+});
+
+test('admin migration creates a closed admin allowlist and RLS-protected product writes', () => {
+    const sql = migration.toLowerCase();
+    assert.ok(migration, 'admin migration exists');
+    assert.ok(sql.includes('create table if not exists public.mainspring_admin_users'));
+    assert.ok(sql.includes('references auth.users(id)'));
+    assert.ok(sql.includes('alter table public.mainspring_admin_users enable row level security'));
+    assert.ok(sql.includes('create or replace function public.is_mainspring_admin'));
+    assert.ok(sql.includes('auth.uid()'));
+    assert.ok(sql.includes('create policy'));
+    assert.ok(sql.includes('alter table public.mainspring_products enable row level security'));
+    assert.ok(sql.includes('create view public.mainspring_public_products'));
+    assert.ok(sql.includes("where status = 'available'"));
+    assert.ok(sql.includes('grant select on table public.mainspring_public_products to anon, authenticated'));
+    assert.doesNotMatch(sql, /grant select on table public\.mainspring_products to anon/);
+    assert.ok(sql.includes('for update to authenticated'));
+    assert.ok(sql.includes('is_mainspring_admin'));
+    assert.ok(sql.includes('grant update'));
+    assert.ok(sql.includes('transition_mainspring_product_status'));
+    assert.ok(sql.includes('grant execute on function public.transition_mainspring_product_status'));
+    assert.ok(sql.includes("'available', 'reserved', 'sold'"));
+});
+
+test('admin sources never contain a service-role credential', () => {
+    assert.doesNotMatch(adminIndex + adminScript, /service[_ -]?role|sb_secret|secret_key/i);
+});

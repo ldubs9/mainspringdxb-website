@@ -142,7 +142,7 @@ test('final stylesheet keeps navbar search independent from listing-card styles'
     assert.match(pageStyles, /\.search-card-meta\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
     assert.doesNotMatch(app.slice(app.indexOf('function renderSearchResults'), app.indexOf('function renderProducts')), /product-card/);
     assert.match(index, /css\/pages\.css\?v=10/);
-    assert.match(loader, /js\/app\.js\?v=20/);
+    assert.match(loader, /js\/app\.js\?v=21/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -198,11 +198,11 @@ test('cart enforces one unit per inventory record and renders no quantity contro
     assert.doesNotMatch(app.slice(checkoutStart, checkoutEnd), /item-qty|x\$\{item\.qty\}/);
     assert.doesNotMatch(styles, /\.cart-item-qty/);
     assert.match(app, /function hydrateCartProductDetails/);
-    assert.match(app, /\.from\('mainspring_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
+    assert.match(app, /\.from\('mainspring_public_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
     assert.match(index, /css\/styles\.css\?v=12/);
-    assert.match(index, /js\/loader\.js\?v=10/);
-    assert.match(loader, /js\/app\.js\?v=20/);
+    assert.match(index, /js\/loader\.js\?v=11/);
+    assert.match(loader, /js\/app\.js\?v=21/);
 });
 
 test('cash checkout creates an order before opening a product-specific WhatsApp inquiry', () => {
@@ -212,7 +212,7 @@ test('cash checkout creates an order before opening a product-specific WhatsApp 
     const messageStart = app.indexOf('function buildCashInquiryMessage');
     const messageEnd = app.indexOf('function startCashInquiryWhatsApp', messageStart);
     const helperStart = app.indexOf('function toPublicRef');
-    const helperEnd = app.indexOf('// Initialize Supabase', helperStart);
+    const helperEnd = app.indexOf('if (!window.MainspringSearch)', helperStart);
     const helpers = app.slice(helperStart, helperEnd);
     const buildCashInquiryMessage = new Function(`${helpers}\n${app.slice(messageStart, messageEnd)}; return buildCashInquiryMessage;`)();
     const message = buildCashInquiryMessage([
