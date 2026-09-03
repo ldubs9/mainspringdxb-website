@@ -273,7 +273,7 @@
 
         // Checkout — Secure multi-step flow
         // Edge Functions URL (used by order tracking)
-        const EDGE_FN_URL = SUPABASE_URL + '/functions/v1';
+        const EDGE_FN_URL = window.MainspringSupabase.config.url + '/functions/v1';
 
         // Payments service (Coolify "mainspringpayments" app). Handles
         // /create-order, /ziina-checkout and /ziina-webhook.

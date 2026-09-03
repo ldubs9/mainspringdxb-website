@@ -14,6 +14,7 @@ const homeCss = fs.readFileSync('css/home.css', 'utf8');
 const homeMotion = fs.readFileSync('js/home-motion.js', 'utf8');
 const loader = fs.readFileSync('js/loader.js', 'utf8');
 const index = fs.readFileSync('index.html', 'utf8');
+const supabaseClient = fs.readFileSync('js/supabase-client.js', 'utf8');
 
 test('checkout WhatsApp icons inherit the light button foreground color', () => {
     assert.match(pagesCss, /\.checkout-confirm-btn\s+\.fa-whatsapp\s*\{[^}]*color:\s*inherit\s*!important;/s);
@@ -115,8 +116,14 @@ test('watch condition control uses product conditions rather than availability s
 
 test('condition filter changes use fresh component and application assets', () => {
     assert.match(loader, /const COMPONENTS_VERSION = '10'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=21'/);
-    assert.match(index, /js\/loader\.js\?v=11/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=22'/);
+    assert.match(index, /js\/loader\.js\?v=12/);
+});
+
+test('storefront derives Edge Functions URL from the shared Supabase client', () => {
+    assert.match(supabaseClient, /config = Object\.freeze\(\{[\s\S]*url:/);
+    assert.match(app, /const EDGE_FN_URL = window\.MainspringSupabase\.config\.url \+ '\/functions\/v1';/);
+    assert.doesNotMatch(app, /const EDGE_FN_URL = SUPABASE_URL/);
 });
 
 test('reserved inventory is excluded from public UI while remaining an admin state', () => {
