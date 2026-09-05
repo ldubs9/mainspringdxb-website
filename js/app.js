@@ -275,6 +275,11 @@
         // Edge Functions URL (used by order tracking)
         const EDGE_FN_URL = window.MainspringSupabase.config.url + '/functions/v1';
 
+        // Supabase anon key for storefront REST calls. Derived from the same
+        // shared client config so the storefront never holds the secret
+        // service-role key (which stays server-side only).
+        const SUPABASE_KEY = window.MainspringSupabase.config.anonKey;
+
         // Payments service (Coolify "mainspringpayments" app). Handles
         // /create-order, /ziina-checkout and /ziina-webhook.
         const PAYMENTS_BASE = window.PAYMENTS_BASE || 'https://pay.mainspring.swiftloop.tech';

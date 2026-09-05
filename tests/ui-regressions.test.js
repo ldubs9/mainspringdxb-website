@@ -162,7 +162,7 @@ test('watch condition control uses product conditions rather than availability s
 
 test('condition filter changes use fresh component and application assets', () => {
     assert.match(loader, /const COMPONENTS_VERSION = '10'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=23'/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=24'/);
     assert.match(index, /js\/loader\.js\?v=13/);
 });
 
@@ -170,6 +170,11 @@ test('storefront derives Edge Functions URL from the shared Supabase client', ()
     assert.match(supabaseClient, /config = Object\.freeze\(\{[\s\S]*url:/);
     assert.match(app, /const EDGE_FN_URL = window\.MainspringSupabase\.config\.url \+ '\/functions\/v1';/);
     assert.doesNotMatch(app, /const EDGE_FN_URL = SUPABASE_URL/);
+});
+
+test('storefront SUPABASE_KEY is derived from the shared client, not a hardcoded global', () => {
+    assert.match(app, /const SUPABASE_KEY = window\.MainspringSupabase\.config\.anonKey;/);
+    assert.doesNotMatch(app, /const SUPABASE_KEY = 'eyJ0eX/);
 });
 
 test('reserved inventory is excluded from public UI while remaining an admin state', () => {
