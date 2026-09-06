@@ -28,6 +28,7 @@
             createLatestRequestGuard,
         } = window.MainspringSearch;
         const globalSearchRequestGuard = createLatestRequestGuard();
+        const detailRequestGuard = createLatestRequestGuard();
         let globalSearchDebounceTimer = null;
 
         function escapeHtml(str) {
@@ -40,6 +41,23 @@
                     "'": '&#39;'
                 }[character];
             });
+        }
+
+        // Never surface raw exception text (identifiers, stack traces, config
+        // keys) to customers. Only deliberately customer-facing backend
+        // conditions are shown; anything unexpected becomes a generic fallback.
+        // The real cause still reaches the console for operator diagnostics.
+        function friendlyErrorMessage(error, fallback) {
+            const raw = String((error && error.message) || error || '').trim();
+            if (!raw) return fallback;
+            const allowedReason = [
+                /^order not found[.!]?$/i,
+                /^already (paid|completed)\.?$/i,
+                /^insufficient stock\.?$/i,
+                /^no items? in (your )?cart\.?$/i,
+            ].some(function (re) { return re.test(raw); });
+            if (allowedReason && raw.length <= 160) return raw;
+            return fallback;
         }
 
         // Handle browser back/forward buttons
@@ -632,10 +650,13 @@
                     };
                 }
                 const body = document.getElementById('checkoutBody');
+                const friendlyMessage = discountRejected
+                    ? 'The discount changed before checkout. Please review your order.'
+                    : friendlyErrorMessage(err, 'We could not process your order. Please try again, or contact us for assistance.');
                 body.innerHTML = `
                     ${renderStepIndicator(2)}
                     <div class="checkout-error">
-                        <strong>Something went wrong:</strong> ${err.message || 'Please try again.'}
+                        <strong>Something went wrong:</strong> ${escapeHtml(friendlyMessage)}
                     </div>
                     <button class="checkout-confirm-btn" onclick="${discountRejected ? 'renderCheckoutStep1()' : 'renderCheckoutStep2()'}">${discountRejected ? 'REVIEW ORDER' : 'TRY AGAIN'}</button>
                 `;
@@ -919,7 +940,7 @@
                 const data = await res.json();
 
                 if (!res.ok) {
-                    resultEl.innerHTML = `<div class="checkout-error">${data.error || 'Order not found.'}</div>`;
+                    resultEl.innerHTML = `<div class="checkout-error">${escapeHtml(friendlyErrorMessage(data.error, 'We couldn\'t look up your order. Please check your details and try again, or contact us.'))}</div>`;
                     return;
                 }
 
@@ -1570,6 +1591,8 @@
                 if (pageName !== 'home') showPage('home', skipPushState);
                 return;
             }
+
+            if (pageName !== 'detail') detailRequestGuard.invalidate();
 
             closeTransientOverlays();
 
@@ -2639,8 +2662,18 @@
                 return;
             }
 
+            const requestId = detailRequestGuard.next();
             const detailInfo = document.getElementById('detailInfo');
+            const recommendationsGrid = document.getElementById('recommendationsGrid');
+
+            currentProduct = null;
+            currentImageIndex = 0;
+            productImages = [];
+            renderGallery();
             detailInfo.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+            if (recommendationsGrid) {
+                recommendationsGrid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+            }
 
             showPage('detail', true);
 
@@ -2652,12 +2685,14 @@
             // Determine if identifier is a numeric ID or a reference_number string
             const isNumericId = /^\d+$/.test(String(productIdentifier));
 
-            // Try to load from Supabase first (fetch by ID or reference_code, no status filter)
+            // The public view already contains only available inventory. Keep the
+            // detail lookup on the same allowlisted surface as the listing.
             let product = null;
+            let productLookupError = null;
             try {
-                let query = excludeUnavailableProducts(supabaseClient
+                let query = supabaseClient
                     .from('mainspring_public_products')
-                    .select(PUBLIC_PRODUCT_COLUMNS));
+                    .select(PUBLIC_PRODUCT_COLUMNS);
 
                 if (isNumericId) {
                     query = query.eq('id', productIdentifier);
@@ -2665,20 +2700,35 @@
                     query = query.eq('reference_code', toInternalRef(productIdentifier));
                 }
 
-                const { data, error } = await query.single();
+                const { data, error } = await query.maybeSingle();
 
-                if (!error && data) {
+                if (error) {
+                    productLookupError = error;
+                    console.warn('Supabase product fetch failed:', error && error.message ? error.message : error);
+                } else if (data) {
                     product = data;
                 }
             } catch (e) {
+                productLookupError = e;
                 console.warn('Supabase product fetch failed:', e && e.message ? e.message : e);
             }
 
+            if (!detailRequestGuard.isCurrent(requestId)) return;
+
             if (!product) {
+                const lookupMessage = productLookupError
+                    ? 'We could not load this product right now. Please try again.'
+                    : 'This product is no longer available in the public catalogue.';
+                const lookupTitle = productLookupError ? 'Unable to load product' : 'Product unavailable';
+                const retryCall = productLookupError
+                    ? escapeMarkup(`showProductDetail(${safeInlineJson(productIdentifier)})`)
+                    : '';
+                if (recommendationsGrid) recommendationsGrid.innerHTML = '';
                 detailInfo.innerHTML = `
                     <div class="detail-unavailable-message">
-                        <h1>Product unavailable</h1>
-                        <p>This product is no longer available in the public catalogue.</p>
+                        <h1>${lookupTitle}</h1>
+                        <p>${lookupMessage}</p>
+                        ${retryCall ? `<button class="btn-primary" onclick="${retryCall}">Try again</button>` : ''}
                     </div>
                 `;
                 return;
@@ -2792,11 +2842,11 @@
             `;
 
             // Load recommendations
-            loadRecommendations(product);
+            loadRecommendations(product, requestId);
 
             // Update URL with resolved reference_code if it differs from what was initially pushed
             const urlIdentifier = toPublicRef(product.reference_code) || product.id;
-            if (String(urlIdentifier) !== String(productIdentifier)) {
+            if (detailRequestGuard.isCurrent(requestId) && String(urlIdentifier) !== String(productIdentifier)) {
                 history.replaceState({ page: 'detail', productId: urlIdentifier }, '', `?page=detail&product=${encodeURIComponent(urlIdentifier)}`);
             }
         }
@@ -3109,8 +3159,9 @@
         }
 
         // Load recommendations
-        async function loadRecommendations(currentProduct) {
+        async function loadRecommendations(currentProduct, requestId) {
             const grid = document.getElementById('recommendationsGrid');
+            if (!grid || !detailRequestGuard.isCurrent(requestId)) return;
             grid.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
 
             let recommendations = [];
@@ -3193,6 +3244,8 @@
             } catch (e) {
                 console.log('Failed to load recommendations:', e);
             }
+
+            if (!detailRequestGuard.isCurrent(requestId)) return;
 
             // Display recommendations or show message if none available
             if (recommendations.length === 0) {

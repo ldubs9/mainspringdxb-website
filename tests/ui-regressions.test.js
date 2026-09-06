@@ -162,7 +162,7 @@ test('watch condition control uses product conditions rather than availability s
 
 test('condition filter changes use fresh component and application assets', () => {
     assert.match(loader, /const COMPONENTS_VERSION = '10'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=24'/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=26'/);
     assert.match(index, /js\/loader\.js\?v=13/);
 });
 
@@ -258,4 +258,53 @@ test('active zoom navigation wins even when the background page retains input fo
 
     assert.equal(prevented, true);
     assert.deepEqual(calls, ['next']);
+});
+
+test('product detail navigation ignores stale loads and does not mix gallery with unavailable state', () => {
+    const detailStart = app.indexOf('async function showProductDetail');
+    const detailEnd = app.indexOf('// Render gallery\n        function renderGallery', detailStart);
+    const detailRenderer = app.slice(detailStart, detailEnd);
+    const requestIdLine = detailRenderer.indexOf('const requestId = detailRequestGuard.next();');
+    const staleCheck = detailRenderer.indexOf('if (!detailRequestGuard.isCurrent(requestId)) return;');
+    const unavailableBranch = detailRenderer.indexOf('if (!product)');
+
+    assert.ok(detailStart >= 0, 'product detail renderer is present');
+    assert.ok(requestIdLine >= 0, 'detail loads have a request identity');
+    assert.ok(staleCheck >= 0 && staleCheck < unavailableBranch, 'stale loads cannot overwrite the current detail');
+    assert.match(detailRenderer, /await query\.maybeSingle\(\)/);
+    assert.match(detailRenderer, /currentProduct = null;[\s\S]*?productImages = \[\];[\s\S]*?renderGallery\(\);/);
+    assert.match(detailRenderer, /loadRecommendations\(product, requestId\)/);
+});
+
+test('checkout never surfaces raw error text to the customer', () => {
+    assert.match(app, /function friendlyErrorMessage/);
+    // The checkout catch must not interpolate raw exception text into the DOM.
+    const checkoutCatchStart = app.indexOf('function confirmCheckout');
+    const checkoutCatchEnd = app.indexOf('function handleZiinaPayment', checkoutCatchStart);
+    const checkoutCatch = app.slice(checkoutCatchStart, checkoutCatchEnd);
+    assert.doesNotMatch(checkoutCatch, /\$\{err\.message/);
+    assert.doesNotMatch(checkoutCatch, /checkout-error">\$\{\s*err\b/);
+    assert.match(checkoutCatch, /friendlyErrorMessage\(err/);
+});
+
+test('friendlyErrorMessage blocks unexpected text but keeps harmless reasons', () => {
+    const helperStart = app.indexOf('function friendlyErrorMessage');
+    const helperEnd = app.indexOf('// Handle browser back/forward buttons', helperStart);
+    assert.ok(helperStart >= 0, 'friendlyErrorMessage helper exists');
+    assert.ok(helperEnd > helperStart, 'helper has a bounded body');
+    const friendlyErrorMessage = new Function(
+        `${app.slice(helperStart, helperEnd)}; return friendlyErrorMessage;`
+    )();
+
+    // Unexpected / internal detail must be hidden behind a generic fallback.
+    const blocked = friendlyErrorMessage(
+        new Error("Can't find variable: SUPABASE_KEY"),
+        'generic fallback'
+    );
+    assert.equal(blocked, 'generic fallback');
+    assert.equal(friendlyErrorMessage('Order not found', 'fallback'), 'Order not found');
+    assert.equal(friendlyErrorMessage('already paid', 'fallback'), 'already paid');
+    // stray identifiers must not be shown even when they resemble a reason.
+    const hidden = friendlyErrorMessage('order not found: SUPABASE_KEY', 'fallback');
+    assert.equal(hidden, 'fallback');
 });
