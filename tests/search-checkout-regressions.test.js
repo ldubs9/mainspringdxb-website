@@ -9,6 +9,7 @@ const pageStyles = fs.readFileSync('css/pages.css', 'utf8');
 const index = fs.readFileSync('index.html', 'utf8');
 const loader = fs.readFileSync('js/loader.js', 'utf8');
 const header = fs.readFileSync('components/header.html', 'utf8');
+const searchResultsPage = fs.readFileSync('components/page-search-results.html', 'utf8');
 const payments = fs.readFileSync('coolify/mainspring-payments/index.js', 'utf8');
 const migrationPath = 'supabase/migrations/20260807_payment_finalizes_inventory.sql';
 const searchModulePath = path.resolve('js/product-search.js');
@@ -111,38 +112,57 @@ test('navbar and collection searches use the shared all-record search path', () 
     assert.match(app, /fetchAllProductSearchResults\(createGlobalProductSearchQuery/);
     assert.match(app, /fetchAllProductSearchResults\(createWatchSearchQuery/);
     assert.match(app, /globalSearchRequestGuard\.isCurrent/);
+    assert.match(app, /function submitGlobalSearch[\s\S]*?clearTimeout\(globalSearchDebounceTimer\)[\s\S]*?performGlobalSearch/);
     assert.doesNotMatch(app, /\.limit\(40\)/);
     assert.match(index, /js\/product-search\.js\?v=4/);
 });
 
-test('selecting a navbar result closes the overlay before opening the product', () => {
-    assert.match(app, /function openProductFromSearch[\s\S]*?closeGlobalSearch\(\)[\s\S]*?showProductDetail/);
+test('navbar search opens a dedicated history-backed results page', () => {
+    assert.match(header, /onclick="openSearchResults\(\)"/);
+    assert.match(app, /function openSearchResults[\s\S]*?showPage\('search-results'/);
+    assert.match(app, /state\.page === 'search-results'[\s\S]*?showSearchResults\(/);
+    assert.match(app, /history\.pushState\(\{ page: 'search-results', query:/);
+    assert.match(loader, /components\/page-search-results\.html/);
+    assert.doesNotMatch(index, /mount-search-overlay/);
+});
+
+test('selecting a navbar result opens the product without losing the search route', () => {
+    assert.match(app, /function openProductFromSearch[\s\S]*?showProductDetail/);
     assert.match(app, /openProductFromSearch\(event,/);
+    assert.match(app, /state\.page === 'search-results'[\s\S]*?showSearchResults\(state\.query, true\)/);
 });
 
-test('navbar search overlay uses rounded chrome and standalone square result cards', () => {
-    assert.match(styles, /\.search-panel\s*\{[^}]*border-radius:\s*18px/s);
+test('search results page uses clean page chrome and standalone square result cards', () => {
+    assert.match(searchResultsPage, /id="page-search-results"/);
+    assert.match(searchResultsPage, /id="globalSearchInput"/);
+    assert.match(searchResultsPage, /id="globalSearchResults"/);
+    assert.match(pageStyles, /\.search-results-page\s*\{[^}]*background:\s*var\(--ms-warm\)/s);
     assert.match(pageStyles, /\.search-card-image\s*\{[^}]*aspect-ratio:\s*1\s*\/\s*1/s);
-    assert.match(pageStyles, /\.search-card:hover \.search-card-image img\s*\{[^}]*transform:\s*scale\(1\.06\)/s);
-    assert.match(pageStyles, /\.search-card-brand\s*\{[^}]*font-size:\s*0\.682rem/s);
-    assert.match(pageStyles, /\.search-card-model\s*\{[^}]*font-size:\s*0\.697rem/s);
+    assert.match(pageStyles, /\.search-card:hover \.search-card-image img[\s\S]*?transform:\s*scale\(1\.06\)/s);
+    assert.match(pageStyles, /\.search-card-price\s*\{/);
+    assert.match(pageStyles, /\.search-card-year\s*\{/);
+    assert.doesNotMatch(styles, /\.search-overlay\s*\{/);
 });
 
-test('mobile navbar search keeps compact brand and model metadata', () => {
-    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-image\s*\{[^}]*border-radius:\s*10px/s);
-    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-brand\s*\{[^}]*font-size:\s*0\.638rem/s);
-    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-model\s*\{[^}]*font-size:\s*0\.646rem/s);
+test('search result cards expose brand, model, price, and year metadata', () => {
+    assert.match(app, /class="search-card-price"/);
+    assert.match(app, /class="search-card-year"/);
+    assert.match(app, /product\.watch_year/);
+    assert.match(app, /formatPrice\(product\.price\)/);
+    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card\s*\{[^}]*border-radius:\s*10px/s);
+    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-price\s*\{/s);
+    assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-year\s*\{/s);
     assert.match(app, /class="search-card-image"/);
     assert.match(app, /class="search-card-brand"/);
     assert.match(app, /class="search-card-model"/);
 });
 
-test('final stylesheet keeps navbar search independent from listing-card styles', () => {
+test('final stylesheet keeps search results independent from listing-card styles', () => {
     assert.match(pageStyles, /Standalone markup \(\.search-card\) rather than the listing card/);
     assert.match(pageStyles, /\.search-card-meta\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
     assert.doesNotMatch(app.slice(app.indexOf('function renderSearchResults'), app.indexOf('function renderProducts')), /product-card/);
-    assert.match(index, /css\/pages\.css\?v=10/);
-    assert.match(loader, /js\/app\.js\?v=26/);
+    assert.match(index, /css\/pages\.css\?v=11/);
+    assert.match(loader, /js\/app\.js\?v=27/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -200,9 +220,9 @@ test('cart enforces one unit per inventory record and renders no quantity contro
     assert.match(app, /function hydrateCartProductDetails/);
     assert.match(app, /\.from\('mainspring_public_products'\)[\s\S]*?\.in\('id',\s*missingIds\)/);
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
-    assert.match(index, /css\/styles\.css\?v=12/);
-    assert.match(index, /js\/loader\.js\?v=13/);
-    assert.match(loader, /js\/app\.js\?v=26/);
+    assert.match(index, /css\/styles\.css\?v=13/);
+    assert.match(index, /js\/loader\.js\?v=14/);
+    assert.match(loader, /js\/app\.js\?v=27/);
 });
 
 test('cash checkout creates an order before opening a product-specific WhatsApp inquiry', () => {

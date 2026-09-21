@@ -1,0 +1,29 @@
+        <section class="page-section" id="page-search-results">
+            <div class="search-results-page">
+                <div class="search-results-container">
+                    <div class="search-results-header">
+                        <div>
+                            <span class="section-label">Catalogue Search</span>
+                            <h1>Find your next timepiece</h1>
+                            <p class="search-results-intro" id="searchResultsSummary">Search watches and accessories across our catalogue.</p>
+                        </div>
+                    </div>
+
+                    <form class="search-results-form" onsubmit="event.preventDefault(); submitGlobalSearch(document.getElementById('globalSearchInput').value);">
+                        <label class="sr-only" for="globalSearchInput">Search watches and accessories</label>
+                        <div class="search-results-input-wrap">
+                            <input class="search-results-input" id="globalSearchInput"
+                                placeholder="Search watches &amp; accessories..." autocomplete="off"
+                                oninput="queueGlobalSearch(this.value)" />
+                            <button class="search-results-submit" type="submit" aria-label="Search catalogue">
+                                <i class="fas fa-search" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="globalSearchResults" class="search-results-grid" aria-live="polite">
+                        <div class="search-message">Type to search watches and accessories</div>
+                    </div>
+                </div>
+            </div>
+        </section>

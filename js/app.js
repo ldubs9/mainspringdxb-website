@@ -68,7 +68,9 @@
                 return;
             }
 
-            if (state.page === 'detail' && state.productId) {
+            if (state.page === 'search-results') {
+                showSearchResults(state.query, true);
+            } else if (state.page === 'detail' && state.productId) {
                 showProductDetail(state.productId, true);
             } else if (state.page === 'watches') {
                 currentPage = state.pg || 1;
@@ -1425,40 +1427,106 @@
             document.body.style.overflow = '';
         }
 
-        // Toggle Search - Focus on search input
+        let renderedGlobalSearchTerm = null;
+
+        function updateSearchResultsUrl(value) {
+            const page = document.getElementById('page-search-results');
+            if (!page || !page.classList.contains('active')) return;
+
+            const query = String(value || '').trim();
+            const params = new URLSearchParams({ page: 'search-results' });
+            if (query) params.set('q', query);
+            history.replaceState({ page: 'search-results', query: query }, '', `?${params.toString()}`);
+        }
+
+        function updateSearchResultsSummary(value) {
+            const summary = document.getElementById('searchResultsSummary');
+            if (!summary) return;
+            const query = String(value || '').trim();
+            summary.textContent = query
+                ? `Showing results for “${query}” across watches and accessories.`
+                : 'Search watches and accessories across our catalogue.';
+        }
+
+        // Navbar search is a normal history-backed page, not a modal overlay.
+        // Keeping the query in the URL lets browser Back restore the exact search.
+        function openSearchResults() {
+            showSearchResults('', false);
+        }
+
+        // Keep the old global name as a harmless compatibility alias for cached
+        // markup or external links from an earlier storefront build.
         function toggleSearch() {
-            const overlay = document.getElementById('globalSearchOverlay');
-            const wasActive = overlay.classList.contains('active');
-            if (wasActive) {
-                closeGlobalSearch();
-                return;
+            openSearchResults();
+        }
+
+        function showSearchResults(value = '', skipPushState = false) {
+            const query = String(value || '').trim();
+            showPage('search-results', true, true);
+
+            const input = document.getElementById('globalSearchInput');
+            const resultsContainer = document.getElementById('globalSearchResults');
+            if (input) input.value = query;
+            updateSearchResultsSummary(query);
+
+            clearTimeout(globalSearchDebounceTimer);
+            globalSearchRequestGuard.invalidate();
+
+            if (!query) {
+                renderedGlobalSearchTerm = '';
+                if (resultsContainer) {
+                    resultsContainer.dataset.searchTerm = '';
+                    resultsContainer.innerHTML = '<div class="search-message">Type to search watches and accessories</div>';
+                }
+            } else if (renderedGlobalSearchTerm !== query || !resultsContainer?.children.length) {
+                performGlobalSearch(query);
             }
-            overlay.classList.add('active');
-            document.getElementById('globalSearchInput').value = '';
-            document.getElementById('globalSearchResults').innerHTML = '<div class="search-message">Type to search watches and accessories</div>';
-            document.getElementById('globalSearchInput').focus();
+
+            if (!skipPushState) {
+                const params = new URLSearchParams({ page: 'search-results' });
+                if (query) params.set('q', query);
+                history.pushState({ page: 'search-results', query: query }, '', `?${params.toString()}`);
+            }
+
+            if (input) input.focus();
         }
 
         function closeGlobalSearch() {
             const overlay = document.getElementById('globalSearchOverlay');
-            overlay.classList.remove('active');
+            if (overlay) overlay.classList.remove('active');
             clearTimeout(globalSearchDebounceTimer);
             globalSearchRequestGuard.invalidate();
-            document.getElementById('globalSearchResults').innerHTML = '';
+            // Results live on a route now, so keep the rendered DOM intact for
+            // a zero-request browser Back from product detail.
         }
 
         function queueGlobalSearch(value) {
+            const query = String(value || '').trim();
+            updateSearchResultsUrl(query);
+            updateSearchResultsSummary(query);
             clearTimeout(globalSearchDebounceTimer);
-            globalSearchDebounceTimer = setTimeout(() => performGlobalSearch(value), 180);
+            globalSearchDebounceTimer = setTimeout(() => performGlobalSearch(query), 180);
+        }
+
+        function submitGlobalSearch(value) {
+            clearTimeout(globalSearchDebounceTimer);
+            performGlobalSearch(value);
         }
 
         // Search every matching product record and discard responses from older keystrokes.
         async function performGlobalSearch(value) {
+            const query = String(value || '').trim();
             const resultsContainer = document.getElementById('globalSearchResults');
-            const searchFilter = buildProductSearchFilter(value);
+            if (!resultsContainer) return;
+
+            updateSearchResultsUrl(query);
+            updateSearchResultsSummary(query);
+            const searchFilter = buildProductSearchFilter(query);
             const requestId = globalSearchRequestGuard.next();
 
             if (!searchFilter) {
+                renderedGlobalSearchTerm = '';
+                resultsContainer.dataset.searchTerm = '';
                 resultsContainer.innerHTML = '<div class="search-message">Type to search watches and accessories</div>';
                 return;
             }
@@ -1470,9 +1538,11 @@
                     .from('mainspring_public_products')
                     .select(PUBLIC_PRODUCT_COLUMNS)
                     .or(searchFilter));
-                const data = await fetchAllProductSearchResults(createGlobalProductSearchQuery, value);
+                const data = await fetchAllProductSearchResults(createGlobalProductSearchQuery, query);
 
                 if (!globalSearchRequestGuard.isCurrent(requestId)) return;
+                renderedGlobalSearchTerm = query;
+                resultsContainer.dataset.searchTerm = query;
                 if (!data.length) {
                     resultsContainer.innerHTML = '<div class="search-message">No results found.</div>';
                     return;
@@ -1482,6 +1552,8 @@
             } catch (err) {
                 if (!globalSearchRequestGuard.isCurrent(requestId)) return;
                 console.error('Product search failed:', err);
+                renderedGlobalSearchTerm = query;
+                resultsContainer.dataset.searchTerm = query;
                 resultsContainer.innerHTML = '<div class="search-message">Search is temporarily unavailable. Please try again.</div>';
             }
         }
@@ -1902,12 +1974,17 @@
                 const firstImage = isSafeImageUrl(firstImageCandidate) ? firstImageCandidate.trim() : null;
                 const brand = escapeMarkup(product.brand || '');
                 const model = escapeMarkup(product.model || product.name || '');
+                const price = product.price === null || product.price === undefined || product.price === ''
+                    ? 'Price on request'
+                    : formatPrice(product.price);
+                const year = product.watch_year || '';
                 const identifier = toPublicRef(product.reference_code) || product.id;
                 const openProductCall = escapeMarkup(`openProductFromSearch(event, ${safeInlineJson(identifier)})`);
                 const alt = escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}`.trim());
 
                 return `
                 <div class="search-card" role="button" tabindex="0"
+                    aria-label="${escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}, ${price}, ${year || 'year not listed'}`.trim())}"
                     onclick="${openProductCall}"
                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${openProductCall};}">
                     <div class="search-card-image">
@@ -1918,6 +1995,16 @@
                     <div class="search-card-meta">
                         ${brand ? `<span class="search-card-brand">${brand}</span>` : ''}
                         <span class="search-card-model">${model}</span>
+                        <div class="search-card-details">
+                            <div class="search-card-detail">
+                                <span class="search-card-detail-label">Price</span>
+                                <span class="search-card-price" data-price-aed="${escapeMarkup(product.price)}">${escapeMarkup(price)}</span>
+                            </div>
+                            <div class="search-card-detail">
+                                <span class="search-card-detail-label">Year</span>
+                                <span class="search-card-year">${escapeMarkup(year || '—')}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -3593,6 +3680,7 @@
             const pageName = urlParams.get('page');
             const productId = urlParams.get('product');
             const blogPostId = urlParams.get('post');
+            const searchQuery = urlParams.get('q') || '';
             const urlPageNum = parseInt(urlParams.get('pg')) || 1;
 
             // Filters travel in the query string, so a filtered listing can be
@@ -3611,7 +3699,10 @@
             });
             if (urlParams.get('q')) urlAccessoryFilters.q = urlParams.get('q');
 
-            if (pageName === 'detail' && productId) {
+            if (pageName === 'search-results') {
+                showSearchResults(searchQuery, true);
+                history.replaceState({ page: 'search-results', query: searchQuery }, '', window.location.search);
+            } else if (pageName === 'detail' && productId) {
                 showProductDetail(decodeURIComponent(productId), true);
                 history.replaceState({ page: 'detail', productId: decodeURIComponent(productId) }, '', window.location.search);
             } else if (pageName === 'blog-detail' && blogPostId) {

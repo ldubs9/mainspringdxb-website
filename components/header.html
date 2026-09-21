@@ -23,7 +23,7 @@
             </ul>
         </div>
         <div class="header-right">
-            <i class="header-icon fas fa-search" id="searchIcon" onclick="toggleSearch()"></i>
+            <i class="header-icon fas fa-search" id="searchIcon" role="button" tabindex="0" aria-label="Search catalogue" onclick="openSearchResults()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openSearchResults();}"></i>
             <div class="header-icon-wrapper" onclick="openCart()" style="cursor: pointer;">
                 <i class="header-icon fas fa-shopping-bag"></i>
                 <span class="cart-badge" id="cartBadge" style="display: none;">0</span>

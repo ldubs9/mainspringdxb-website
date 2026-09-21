@@ -161,9 +161,9 @@ test('watch condition control uses product conditions rather than availability s
 });
 
 test('condition filter changes use fresh component and application assets', () => {
-    assert.match(loader, /const COMPONENTS_VERSION = '10'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=26'/);
-    assert.match(index, /js\/loader\.js\?v=13/);
+    assert.match(loader, /const COMPONENTS_VERSION = '11'/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=27'/);
+    assert.match(index, /js\/loader\.js\?v=14/);
 });
 
 test('storefront derives Edge Functions URL from the shared Supabase client', () => {

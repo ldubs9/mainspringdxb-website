@@ -15,7 +15,7 @@
         ['mount-wishlist-sidebar', 'components/wishlist-sidebar.html'],
         ['mount-checkout-overlay', 'components/checkout-overlay.html'],
         ['mount-footer',           'components/footer.html'],
-        ['mount-search-overlay',   'components/search-overlay.html'],
+
     ];
 
     // Page sections (appended in order to <main id="main-pages">)
@@ -23,6 +23,7 @@
         'components/page-home.html',
         'components/page-watches.html',
         'components/page-accessories.html',
+        'components/page-search-results.html',
         'components/page-detail.html',
         'components/page-blog.html',
         'components/page-blog-detail.html',
@@ -39,7 +40,7 @@
     // visitor could keep running last week's markup (with last week's inline
     // handlers) against freshly deployed JS. Bump this whenever any file in
     // components/ changes.
-    const COMPONENTS_VERSION = '10';
+    const COMPONENTS_VERSION = '11';
 
     async function fetchHTML(url) {
         const res = await fetch(`${url}?v=${COMPONENTS_VERSION}`);
@@ -71,7 +72,7 @@
     const script = document.createElement('script');
     // Versioned to bust the browser cache when app.js changes (matches the
     // ?v= convention used for other scripts in index.html).
-    script.src = 'js/app.js?v=26';
+    script.src = 'js/app.js?v=27';
     script.onload = () => {
         // Dispatch a custom event that app.js can listen for
         window.dispatchEvent(new CustomEvent('componentsLoaded'));
