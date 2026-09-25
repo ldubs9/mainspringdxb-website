@@ -162,7 +162,7 @@ test('watch condition control uses product conditions rather than availability s
 
 test('condition filter changes use fresh component and application assets', () => {
     assert.match(loader, /const COMPONENTS_VERSION = '11'/);
-    assert.match(loader, /script\.src = 'js\/app\.js\?v=27'/);
+    assert.match(loader, /script\.src = 'js\/app\.js\?v=28'/);
     assert.match(index, /js\/loader\.js\?v=14/);
 });
 

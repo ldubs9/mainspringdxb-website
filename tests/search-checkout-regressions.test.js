@@ -147,11 +147,14 @@ test('search results page uses clean page chrome and standalone square result ca
 test('search result cards expose brand, model, price, and year metadata', () => {
     assert.match(app, /class="search-card-price"/);
     assert.match(app, /class="search-card-year"/);
+    assert.match(app, /class="search-card-pn"/);
+    assert.match(app, /toPublicRef\(product\.reference_code\)/);
     assert.match(app, /product\.watch_year/);
     assert.match(app, /formatPrice\(product\.price\)/);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card\s*\{[^}]*border-radius:\s*10px/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-price\s*\{/s);
     assert.match(pageStyles, /@media\s*\(max-width:\s*768px\)[\s\S]*?\.search-card-year\s*\{/s);
+    assert.match(pageStyles, /\.search-card-pn\s*\{/);
     assert.match(app, /class="search-card-image"/);
     assert.match(app, /class="search-card-brand"/);
     assert.match(app, /class="search-card-model"/);
@@ -161,8 +164,8 @@ test('final stylesheet keeps search results independent from listing-card styles
     assert.match(pageStyles, /Standalone markup \(\.search-card\) rather than the listing card/);
     assert.match(pageStyles, /\.search-card-meta\s*\{[^}]*display:\s*flex[^}]*flex-direction:\s*column/s);
     assert.doesNotMatch(app.slice(app.indexOf('function renderSearchResults'), app.indexOf('function renderProducts')), /product-card/);
-    assert.match(index, /css\/pages\.css\?v=11/);
-    assert.match(loader, /js\/app\.js\?v=27/);
+    assert.match(index, /css\/pages\.css\?v=12/);
+    assert.match(loader, /js\/app\.js\?v=28/);
 });
 
 test('More uses the same flex alignment box as the other desktop navigation links', () => {
@@ -222,7 +225,7 @@ test('cart enforces one unit per inventory record and renders no quantity contro
     assert.match(styles, /\.cart-item-thumbnail\s*\{[^}]*object-fit:\s*cover/s);
     assert.match(index, /css\/styles\.css\?v=13/);
     assert.match(index, /js\/loader\.js\?v=14/);
-    assert.match(loader, /js\/app\.js\?v=27/);
+    assert.match(loader, /js\/app\.js\?v=28/);
 });
 
 test('cash checkout creates an order before opening a product-specific WhatsApp inquiry', () => {

@@ -1978,13 +1978,14 @@
                     ? 'Price on request'
                     : formatPrice(product.price);
                 const year = product.watch_year || '';
-                const identifier = toPublicRef(product.reference_code) || product.id;
+                const productNumber = toPublicRef(product.reference_code);
+                const identifier = productNumber || product.id;
                 const openProductCall = escapeMarkup(`openProductFromSearch(event, ${safeInlineJson(identifier)})`);
                 const alt = escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}`.trim());
 
                 return `
                 <div class="search-card" role="button" tabindex="0"
-                    aria-label="${escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}, ${price}, ${year || 'year not listed'}`.trim())}"
+                    aria-label="${escapeMarkup(`${product.brand || ''} ${product.model || product.name || ''}, ${price}, ${year || 'year not listed'}, ${productNumber || 'PN not listed'}`.trim())}"
                     onclick="${openProductCall}"
                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();${openProductCall};}">
                     <div class="search-card-image">
@@ -2003,6 +2004,10 @@
                             <div class="search-card-detail">
                                 <span class="search-card-detail-label">Year</span>
                                 <span class="search-card-year">${escapeMarkup(year || '—')}</span>
+                            </div>
+                            <div class="search-card-detail">
+                                <span class="search-card-detail-label">PN</span>
+                                <span class="search-card-pn">${escapeMarkup(productNumber || '—')}</span>
                             </div>
                         </div>
                     </div>
